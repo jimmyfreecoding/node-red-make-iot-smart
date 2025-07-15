@@ -1,0 +1,153 @@
+<!--
+  Copyright 2023, Bart Butenaers & Gerrit Riessen
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<script type="text/javascript">
+(function ($) {
+    RED.nodes.registerType('make-iot-smart', {
+        category: 'config',
+        hasUsers: false,
+        defaults: {
+            name: { value: "AutoLayout" },
+            algorithm: { value: "dagre_lr" },
+            settings: { value: {} }
+        },
+        paletteLabel: 'AutoLayout',
+        label: function () {
+            return this.name;
+        }
+    });
+})(jQuery);
+</script>
+
+<!-- The html for the config node does NOT include input fields, because the data only arrives from user input in the sidebar screen. -->
+<script type="text/x-red" data-template-name="make-iot-smart">
+    <div class="form-tips">This config node is read-only, because it stores the information entered in the 'Auto Layout' sidebar.</div>
+</script>
+
+<script type="text/x-red" data-help-name="make-iot-smart">
+    <p>Configuration for the 'Auto Layout' sidebar.</p>
+</script>
+
+<!-- API配置节点的HTML模板 -->
+<script type="text/x-red" data-template-name="api-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> 名称</label>
+        <input type="text" id="node-config-input-name" placeholder="名称">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-provider"><i class="fa fa-server"></i> API提供商</label>
+        <select id="node-config-input-provider">
+            <option value="DeepSeek">DeepSeek</option>
+            <option value="OpenAI">OpenAI</option>
+            <option value="Anthropic">Anthropic</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-apiKey"><i class="fa fa-key"></i> API密钥</label>
+        <input type="password" id="node-config-input-apiKey">
+    </div>
+    <div class="form-row">
+        <div class="form-tips">此密钥存储在本地，仅用于从此扩展发出API请求。</div>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-model"><i class="fa fa-brain"></i> 模型</label>
+        <select id="node-config-input-model">
+            <option value="deepseek-chat">deepseek-chat</option>
+            <option value="deepseek-coder">deepseek-coder</option>
+        </select>
+    </div>
+    <div class="form-row" id="model-capabilities">
+        <div class="form-tips">
+            <div><i class="fa fa-times" style="color:red;"></i> 不支持图像</div>
+            <div><i class="fa fa-times" style="color:red;"></i> 不支持浏览器使用</div>
+            <div><i class="fa fa-check" style="color:green;"></i> 支持提示缓存</div>
+            <div>最大输入：8,000 tokens</div>
+            <div>缓存写入价格：$0.27/百万tokens</div>
+            <div>缓存读取价格：$0.07/百万tokens</div>
+            <div>输出价格：$1.10/百万tokens</div>
+        </div>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-useDifferentModels">
+            <input type="checkbox" id="node-config-input-useDifferentModels" style="width:auto;">
+            为Plan和Act模式使用不同模型
+        </label>
+    </div>
+    <div class="form-row">
+        <div class="form-tips">在Plan和Act模式之间切换将保留上一模式中使用的API和模型。这在使用强大的推理模型来制定计划，然后使用更便宜的编码模型来执行时可能会有所帮助。</div>
+    </div>
+</script>
+
+<!-- API配置节点的JavaScript注册 -->
+<script type="text/javascript">
+    RED.nodes.registerType('api-config', {
+        category: 'config',
+        defaults: {
+            name: { value: "API配置" },
+            provider: { value: "DeepSeek" },
+            model: { value: "deepseek-chat" },
+            useDifferentModels: { value: false }
+        },
+        credentials: {
+            apiKey: { type: "password" }
+        },
+        label: function() {
+            return this.name || "API配置";
+        },
+        oneditprepare: function() {
+            // 当提供商或模型改变时更新模型能力信息
+            $("#node-config-input-provider, #node-config-input-model").on("change", function() {
+                updateModelCapabilities();
+            });
+            
+            function updateModelCapabilities() {
+                var provider = $("#node-config-input-provider").val();
+                var model = $("#node-config-input-model").val();
+                
+                // 这里可以根据不同的提供商和模型显示不同的能力信息
+                // 简单示例：
+                var capabilities = $("#model-capabilities");
+                capabilities.empty();
+                
+                if (provider === "DeepSeek" && model === "deepseek-chat") {
+                    capabilities.html(`
+                        <div class="form-tips">
+                            <div><i class="fa fa-times" style="color:red;"></i> 不支持图像</div>
+                            <div><i class="fa fa-times" style="color:red;"></i> 不支持浏览器使用</div>
+                            <div><i class="fa fa-check" style="color:green;"></i> 支持提示缓存</div>
+                            <div>最大输入：8,000 tokens</div>
+                            <div>缓存写入价格：$0.27/百万tokens</div>
+                            <div>缓存读取价格：$0.07/百万tokens</div>
+                            <div>输出价格：$1.10/百万tokens</div>
+                        </div>
+                    `);
+                } else {
+                    capabilities.html(`
+                        <div class="form-tips">
+                            <div>选择模型以查看其能力</div>
+                        </div>
+                    `);
+                }
+            }
+            
+            // 初始化显示
+            updateModelCapabilities();
+        }
+    });
+</script>
+
+<!-- API配置节点的帮助信息 -->
+<script type="text/x-red" data-help-name="api-config">
+    <p>API配置节点用于存储AI服务提供商的API密钥和模型选择。</p>
+    <p>支持的提供商包括DeepSeek、OpenAI和Anthropic。</p>
+    <p>您可以为不同的使用场景选择不同的模型，并可以选择为Plan和Act模式使用不同的模型。</p>
+</script>

@@ -1,0 +1,1398 @@
+<!--
+  Copyright 2024 Zheng He
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+
+<script type="text/javascript">
+// 全局函数定义 - 必须在最开始
+function ensureAceEditorLoaded(callback) {
+    if (typeof ace !== 'undefined') {
+        callback();
+        return;
+    }
+    
+    // 如果ACE未加载，尝试从Node-RED加载
+    if (RED && RED.editor && RED.editor.ace) {
+        window.ace = RED.editor.ace;
+        callback();
+        return;
+    }
+    
+    // 最后的降级方案
+    console.warn("ACE编辑器未找到，将使用普通文本显示");
+    callback();
+}
+
+function initializeJSONEditor(editorId, jsonContent) {
+    try {
+        // 验证JSON格式
+        var parsedJSON;
+        try {
+            parsedJSON = JSON.parse(jsonContent);
+        } catch (e) {
+            console.error("JSON格式错误:", e);
+            // 如果不是有效JSON，显示为普通文本
+            document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
+            return;
+        }
+        
+        // 创建ACE编辑器
+        var editor = ace.edit(editorId);
+        editor.setTheme("ace/theme/textmate");
+        editor.session.setMode("ace/mode/json");
+        editor.setValue(JSON.stringify(parsedJSON, null, 2), -1);
+        
+        // 设置编辑器选项
+        editor.setOptions({
+            fontSize: 13,
+            showPrintMargin: false,
+            highlightActiveLine: true,
+            showGutter: true,
+            readOnly: false,
+            maxLines: 20,
+            minLines: 10,
+            wrap: true,
+            autoScrollEditorIntoView: true
+        });
+        
+        // 存储编辑器实例以便后续操作
+        window.jsonEditors = window.jsonEditors || {};
+        window.jsonEditors[editorId] = editor;
+        
+        // 监听内容变化
+        editor.session.on('change', function() {
+            try {
+                var content = editor.getValue();
+                JSON.parse(content); // 验证JSON格式
+                // 如果JSON有效，移除错误样式
+                document.getElementById(editorId).style.borderColor = '#e9ecef';
+            } catch (e) {
+                // 如果JSON无效，添加错误样式
+                document.getElementById(editorId).style.borderColor = '#dc3545';
+            }
+        });
+        
+    } catch (error) {
+        console.error("初始化JSON编辑器失败:", error);
+        // 降级显示为普通代码块
+        document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
+    }
+}
+
+function copyEditorContent(editorId) {
+    try {
+        var editor = window.jsonEditors && window.jsonEditors[editorId];
+        var content;
+        
+        if (editor) {
+            content = editor.getValue();
+        } else {
+            // 降级方案：从DOM获取内容
+            var element = document.getElementById(editorId);
+            content = element.textContent || element.innerText;
+        }
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(content).then(function() {
+                RED.notify("内容已复制到剪贴板", "success");
+            }).catch(function(err) {
+                console.error('复制失败:', err);
+                fallbackCopyTextToClipboard(content);
+            });
+        } else {
+            fallbackCopyTextToClipboard(content);
+        }
+    } catch (error) {
+        console.error("复制编辑器内容时出错:", error);
+        RED.notify("复制失败: " + error.message, "error");
+    }
+}
+
+function applyEditorContent(editorId) {
+    try {
+        var editor = window.jsonEditors && window.jsonEditors[editorId];
+        if (!editor) {
+            RED.notify("编辑器未找到", "error");
+            return;
+        }
+        
+        var content = editor.getValue();
+        
+        // 验证JSON格式
+        try {
+            JSON.parse(content);
+            RED.notify("JSON格式有效，内容已应用", "success");
+            
+            // 这里可以添加实际的应用逻辑，比如：
+            // - 保存到配置文件
+            // - 更新Node-RED配置
+            // - 发送到后端API等
+            
+        } catch (e) {
+            RED.notify("JSON格式错误: " + e.message, "error");
+        }
+        
+    } catch (error) {
+        console.error("应用编辑器内容时出错:", error);
+        RED.notify("应用失败: " + error.message, "error");
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // 避免滚动到底部
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+            RED.notify("内容已复制到剪贴板", "success");
+        } else {
+            RED.notify("复制失败", "error");
+        }
+    } catch (err) {
+        console.error('降级复制方案失败:', err);
+        RED.notify("复制失败", "error");
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// 主要的代码逻辑
+(function() {
+    var globalAutoLayoutConfigNode = null;
+    
+
+
+function createConfigNodeClickHandler(nodeId) {
+    return function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 通过ID获取节点
+        var node = RED.nodes.node(nodeId);
+        if (node) {
+            // 在侧边栏中选中该节点
+            $(this).addClass("selected");
+            
+            // 在信息侧边栏中显示节点信息
+            RED.sidebar.info.refresh(node);
+            
+            // 打开配置对话框
+            RED.editor.editConfig("", node.type, node.id);
+        }
+    };
+}
+
+// 将此函数添加到显示配置节点的UI组件中
+function addConfigNodeToList(node) {
+    var nodeDiv = $('<div class="config-node-item"></div>');
+    
+    // 添加节点标签
+    var labelText = RED.utils.getNodeLabel(node, node.id);
+    var label = $('<div class="config-node-label"></div>').text(labelText);
+    nodeDiv.append(label);
+    
+    // 添加点击处理器
+    nodeDiv.on('click', createConfigNodeClickHandler(node.id));
+    
+    // 添加双击处理器（替代方法）
+    nodeDiv.on('dblclick', function(e) {
+        e.stopPropagation();
+        RED.editor.editConfig("", node.type, node.id);
+    });
+    
+    return nodeDiv;
+}
+
+
+
+    function findSelectedNodes(/*thisNode*/) {
+        /*
+         * Take the selection and create a nodeset from it.
+         */
+        var selection = RED.view.selection();
+        var fixedNodeId = undefined;
+        var ns = undefined;
+
+        if (!selection.nodes || selection.nodes.length == 0) {
+            RED.notify("Select exactly one node.");
+            return;
+        }
+
+        if ( selection.nodes.length == 1 ) {
+            // This is not applicable for the sidebar plugin
+            //if (selection.nodes[0].id == thisNode.id || selection.nodes[0].type == thisNode.type) {
+            //    RED.notify("Please do not select the align node.");
+            //    return;
+            //}
+
+            if ( selection.nodes[0].type == "group") {
+                ns = RED.group.getNodes(selection.nodes[0])
+                if ( ns.length == 0 ) {
+                    RED.notify("Empty group selected, very funny.");
+                    return;
+                }
+                fixedNodeId = ns[0].id;
+            } else {
+                ns = RED.nodes.getAllFlowNodes(selection.nodes[0])
+                fixedNodeId = selection.nodes[0].id;
+            }
+        }
+
+        if ( selection.nodes.length > 1 ) {
+            ns = []
+            for ( var idx = 0 ; idx < selection.nodes.length ; idx++ ) {
+                if ( selection.nodes[idx].type == "group") {
+                    ns = ns.concat(RED.group.getNodes(selection.nodes[idx]))
+                } else {
+                    ns.push(selection.nodes[idx])
+                    fixedNodeId ||= selection.nodes[idx].id;
+                }
+          }
+
+          fixedNodeId ||= ns[0].id;
+        }
+
+        if ( !ns ) {
+            RED.notify("No nodes selected.");
+            return;
+        }
+
+        /* 
+         * From here it's all nodeset based.
+         */
+
+        // Convert nodes to flows.json format since all the wires, i.e. links, are 
+        // contained in one simple json format.
+        let fixedNode = RED.nodes.node(fixedNodeId)
+        var allnodes = RED.nodes.createExportableNodeSet(ns).filter((n) => {
+            return n.type != "tab" && n.type != 'subflow' && n.type != "group" && n.z == fixedNode.z
+        });
+
+        var alledges = [];
+        var allNodeIds = allnodes.map( d => d.id);
+
+        allnodes.forEach((n) => {
+            // Only continue if the node has wires (e.g. a ui_group has no wires)
+            if (n.wires) {
+                for (var widx = 0; widx < (n.wires || []).length; widx++) {
+                    for (var xidx = 0; xidx < n.wires[widx].length; xidx++) {
+                        if ( allNodeIds.indexOf(n.wires[widx][xidx])> -1){
+                            alledges.push({
+                                id: n.id + n.wires[widx][xidx],
+                                sources: [n.id],
+                                targets: [n.wires[widx][xidx]]
+                            });
+                        }
+                    }
+                }
+            }
+        })
+
+        allnodes = allnodes.map((n) => {
+            let bbox = ( ( document.getElementById(n.id) && document.getElementById(n.id).getBBox && document.getElementById(n.id) ) || {
+              getBBox: () => {
+                return {
+                  width: 0,
+                  height: 0
+                }
+              }
+            });
+
+            return {
+                id: n.id,
+                width: bbox.getBBox().width + 3,
+                height: bbox.getBBox().height + 3,
+            }
+        });
+
+        return {
+            allnodes: allnodes,
+            alledges: alledges,
+            fixedNodeId: fixedNodeId
+        };
+    }
+    
+    function moveNodes(fixedNodeId, children) {
+        //var children = payload.nodes;
+        //var fixedNodeId = payload.fixedNodeId;
+
+        var changedNodes = [];
+
+        // Before moving anything we get the offset (x,y) - this is the amount that our
+        // fixed Node moved - our fixed node does not move, this means everything is offset
+        // by the distance it moved.
+        var offsetX = 0;
+        var offsetY = 0;
+        children.forEach((c) => {
+            if (c.id == fixedNodeId) {
+                var nd = RED.nodes.node(c.id) || RED.nodes.junction(c.id);
+                offsetX = c.x - nd.x;
+                offsetY = c.y - nd.y;
+            }
+        });
+
+        children.forEach((c) => {
+            var nd = RED.nodes.node(c.id) || RED.nodes.junction(c.id);
+
+            changedNodes.push({
+                n: nd,
+                ox: nd.x,
+                oy: nd.y,
+                moved: nd.moved
+            });
+
+            nd.x = c.x - offsetX;
+            nd.y = c.y - offsetY;
+            nd.dirty = true;
+        });
+
+        RED.history.push({ t: "move", nodes: changedNodes, dirty: RED.nodes.dirty() });
+        RED.nodes.dirty(true);
+        RED.view.redraw(true);
+    }
+    
+    function getDefaultSettings() {
+        return {
+            "dagre_lr": {
+                "rankdir": "LR",
+                "marginx": 20,
+                "marginy": 20,
+                "nodesep": 30,
+                "ranksep": 50
+            },
+            "dagre_longest_path": {
+                "rankdir": "LR",
+                "marginx": 2,
+                "marginy": 2,
+                "ranker": "longest-path",
+                "nodesep": 2,
+                "ranksep": 2
+            },
+            "elkjs_mr_tree": {
+                "algorithm": "mrtree",
+                "childAreaHeight": 4500,
+                "childAreaWidth": 4500,
+                "org.eclipse.elk.direction": "RIGHT"
+            },
+            "elkjs_layered_upwards": {
+                "algorithm": "org.eclipse.elk.layered",
+                "elk.direction": "UP",
+                "cycleBreaking.strategy": "INTERACTIVE",
+                "layering.strategy": "INTERACTIVE",
+                "crossingMinimization.semiInteractive": true,
+                "separateConnectedComponents": true,
+                "nodePlacement.strategy": "NETWORK_SIMPLEX",
+                "spacing.nodeNode": 70,
+                "spacing.nodeNodeBetweenLayers": 25,
+                "spacing.edgeNode": 25,
+                "spacing.edgeNodeBetweenLayers": 20,
+                "spacing.edgeEdge": 20,
+                "spacing.edgeEdgeBetweenLayers": 15,
+                "elk.hierarchyHandling": "INCLUDE_CHILDREN",
+                "elk.layered.spacing.edgeNodeBetweenLayers": 40,
+                "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
+                "layering.layerConstraint": "FIRST"
+            },
+            "elkjs_layered_downwards": {
+                "algorithm": "org.eclipse.elk.layered",
+                "elk.direction": "DOWN",
+                "cycleBreaking.strategy": "INTERACTIVE",
+                "layering.strategy": "INTERACTIVE",
+                "crossingMinimization.semiInteractive": true,
+                "separateConnectedComponents": true,
+                "nodePlacement.strategy": "NETWORK_SIMPLEX",
+                "spacing.nodeNode": 70,
+                "spacing.nodeNodeBetweenLayers": 25,
+                "spacing.edgeNode": 25,
+                "spacing.edgeNodeBetweenLayers": 20,
+                "spacing.edgeEdge": 20,
+                "spacing.edgeEdgeBetweenLayers": 15
+            },
+            "elkjs_box": {
+                "algorithm": "org.eclipse.elk.box",
+                "org.eclipse.elk.spacing.nodeNode": 20
+            },
+            "pull_request_2267": {
+                // TODO
+            }
+        }
+    }
+  
+    // Ensure that the globalAutoLayoutConfigNode (still) exists, because the user might have deleted it meanwhile...
+    // !!!!!!!!!!!!!!! CALL THIS FUNCTION EVERYWHERE THE globalAutoLayoutConfigNode IS BEING USED !!!!!!!!!!!!!!!
+    function ensureAutoLayoutConfigNode() {
+        // 如果我们之前找到了它，检查用户是否在我们不知情的情况下删除了它
+        if (globalAutoLayoutConfigNode !== null) {
+            var configNode = RED.nodes.node(globalAutoLayoutConfigNode.id);
+            if (configNode === null) { globalAutoLayoutConfigNode = null; }
+        }
+
+        // 如果之前没有找到，让我们去找它
+        if (globalAutoLayoutConfigNode === null) {
+            var configNodes = [];
+            RED.nodes.eachConfig(function(configNode) {
+                if (configNode.type === 'make-iot-smart') { 
+                    configNodes.push(configNode); 
+                }
+            });
+
+            // 确保我们只有1个配置节点
+            while (configNodes.length > 1) {
+                var configNode = configNodes.pop();
+                RED.nodes.remove(configNode.id);
+                RED.nodes.dirty(true);
+            }
+
+            // 当我们找到一个配置节点时，让我们使用它
+            if (configNodes.length === 1) { globalAutoLayoutConfigNode = configNodes[0]; }
+        }
+
+        // 当它还不存在时，如果需要则创建它
+        if (globalAutoLayoutConfigNode === null) {
+            try {
+                // 检查RED.nodes.getType是否返回有效值
+                var nodeType = RED.nodes.getType("make-iot-smart");
+                if (!nodeType) {
+                    console.error("无法找到make-iot-smart节点类型");
+                    RED.notify("无法找到make-iot-smart节点类型", "error");
+                    return;
+                }
+                
+                // 创建配置节点
+                globalAutoLayoutConfigNode = {
+                    id: RED.nodes.id(),
+                    _def: nodeType,
+                    type: "make-iot-smart",
+                    hasUsers: false, 
+                    users: [],
+                    name: "AutoLayout",
+                    label: function() { return this.name || "AutoLayout"},
+                    algorithm: "dagre_lr", // 默认算法
+                    settings: JSON.stringify(getDefaultSettings()) // 从默认设置开始
+                };
+
+                // 将新的配置节点添加到Node-RED节点集合中
+                RED.nodes.add(globalAutoLayoutConfigNode);
+
+                // 确保"部署"按钮变为活动状态
+                RED.nodes.dirty(true);
+            } catch (error) {
+                console.error("创建配置节点时出错:", error);
+                RED.notify("创建配置节点时出错: " + error.message, "error");
+                return;
+            }
+        }
+    }
+
+    function executeAutoLayout() {
+        console.log("Executing auto-layout");
+        ensureAutoLayoutConfigNode();
+
+        let currentAlgorithm = globalAutoLayoutConfigNode.algorithm;
+        let currentAlgorithmSettings = JSON.parse(globalAutoLayoutConfigNode.settings)[currentAlgorithm];
+
+        let selection = findSelectedNodes();
+
+        if (!selection) {
+            return;
+        }
+
+        switch(currentAlgorithm) {
+            case "dagre_lr":
+            case "dagre_longest_path":
+                // Code take from https://pastebin.com/TJRFD3mg
+                // Which came from https://discourse.nodered.org/t/read-flows-json-and-position-the-nodes-in-most-efficient-readable-way/78158/12
+                var g = new dagre.graphlib.Graph();
+                g.setGraph(currentAlgorithmSettings);
+                g.setDefaultEdgeLabel(function () { return {}; });                       
+
+                for (var idx = 0; idx < selection.allnodes.length; idx++) {
+                    var n = selection.allnodes[idx];
+                    g.setNode(n.id, {
+                        ...n,
+                    })
+                }
+                
+                // The above loop can be replaced by :
+                // for (var idx = 0; idx < selection.allnodes.length; idx++) {
+                //     var node = selection.allnodes[idx];
+                //     var clonedNode = Object.assign({}, node);
+                //     g.setNode(n.id, clonedNode);
+                // }
+
+
+                for (var idx = 0; idx < selection.alledges.length; idx++) {
+                    var e = selection.alledges[idx];
+                    g.setEdge(e.sources[0], e.targets[0])
+                }
+
+                dagre.layout(g);
+                
+                var nodes = g.nodes().map(function (v) {
+                     return {
+                          ...g.node(v)
+                        }
+                })   
+                
+                try {
+                    moveNodes(selection.fixedNodeId, nodes);
+                } catch ( ex ) {
+                    console.error( "Dagre exception moving nodes", ex)
+                    // ensure that dagre errors are also shown as notifications in Node-RED.
+                    RED.notify("Dagre autoroute error: " + ex);
+                }
+                break;
+            case "elkjs_mr_tree": 
+            case "elkjs_layered_upwards": 
+            case "elkjs_layered_downwards": 
+            case "elkjs_box": 
+                // see https://github.com/kieler/elkjs#api for more details
+                var graph = {
+                    id: "root",
+                    layoutOptions: currentAlgorithmSettings,
+                    children: selection.allnodes,
+                    edges: selection.alledges
+                };
+
+                const elk = new ELK();
+
+                elk.layout(graph)
+                    .then((g) => {
+                        moveNodes(selection.fixedNodeId, g.children);
+                    })
+                    .catch((ex) => {
+                        console.error( "ELKjs exception moving nodes", ex)
+                        RED.notify("ElkJs autoroute error: " + ex);
+                    });
+                break;
+            
+            case "pull_request_2267": 
+                // Code Taken from https://github.com/node-red/node-red/pull/2267/files
+                // I only replaced 'selection' by 'selection_', but it would be better to use the above 'selection' variable.
+                var selection_ = RED.view.selection();
+                
+                if (!selection_.nodes || selection_.nodes.length !== 1) {
+                    RED.notify("Select exactly one node");
+                    return;
+                }
+                
+                var ns = undefined;
+                if (selection_.nodes[0].type == "group") {
+                    ns = RED.group.getNodes(selection_.nodes[0])
+                } else {
+                    ns = RED.nodes.getAllFlowNodes(selection_.nodes[0]);
+                }
+
+                // Find Input node
+
+                var nodes = {};
+                var minRank = 0;
+                var stack = [];
+                var candidateInputs = {};
+                var candidateOutputs = {};
+                ns.forEach(function (n) {
+                    candidateInputs[n.id] = n;
+                    candidateOutputs[n.id] = n;
+                    nodes[n.id] = {
+                        n: n,
+                        i: [],
+                        o: [],
+                        d: -1, // depth from start
+                        r: -1, // rank order at that depth
+                        downstream: 0
+                    }
+                });
+                RED.nodes.eachLink(function (link) {
+                    if (nodes[link.source.id] || nodes[link.target.id]) {
+                        nodes[link.source.id].o.push(link.target.id);
+                        nodes[link.target.id].i.push(link.source.id);
+                        delete candidateInputs[link.target.id]
+                        delete candidateOutputs[link.source.id]
+                    }
+                })
+
+                var inputs = Object.keys(candidateInputs);
+                var outputs = Object.keys(candidateOutputs);
+
+                if (inputs.length > 1) {
+                    RED.notify("Multiple start points - bailing")
+                    return;
+                }
+
+                if (outputs.length === 0) {
+                    RED.notify("No outputs - is this a big loop? Bailing");
+                    return;
+                }
+
+                function applyDepth(id, d) {
+                    if (nodes[id].d < d) {
+                        nodes[id].d = d;
+                        nodes[id].o.forEach(function (nid) {
+                            applyDepth(nid, d + 1);
+                        })
+                    }
+                }
+                applyDepth(inputs[0], 0)
+
+                function calculateDownstream(id, downstream) {
+                    nodes[id].downstream += downstream;
+                    nodes[id].i.forEach(function (nid) {
+                        calculateDownstream(nid, nodes[id].downstream + 1);
+                    })
+                }
+                outputs.forEach(function (id) {
+                    calculateDownstream(id, 0)
+                })
+
+                var ranks = {};
+                function rankNodes(node) {
+                    if (node.r === -1) {
+                        ranks[node.d] = ranks[node.d] || [];
+                        node.r = ranks[node.d].length;
+                        ranks[node.d].push(node);
+                        node.o.sort(function (a, b) {
+                            return nodes[b].downstream - nodes[a].downstream
+                        })
+                        node.o.forEach(function (nid) {
+                            rankNodes(nodes[nid])
+                        })
+                    }
+                }
+                rankNodes(nodes[inputs[0]]);
+                function shuffleRanks(node) {
+                    var pushed = false;
+                    if (node.o.length > 1) {
+                        var outputs = node.o.slice(0);
+                        outputs.sort(function (a, b) {
+                            if (nodes[a].d === nodes[b].d) {
+                                return nodes[a].r - nodes[b].r;
+                            } else {
+                                return nodes[b].d - nodes[a].d;
+                            }
+                        })
+                        // outputs.forEach(function(o,i) { console.log(" ",i," + "+nodes[o].n.type," d:",nodes[o].d," r:",nodes[o].r)});
+                        var rank = nodes[outputs[0]].r;
+                        var depth = nodes[outputs[0]].d;
+                        for (var i = 1; i < outputs.length; i++) {
+                            // console.log(outputs[i]);
+                            var n = nodes[outputs[i]];
+                            if (n.d !== depth && n.r === rank) {
+                                // need to move n down one.
+                                var r = n.r;
+                                ns.forEach(function (_n) {
+                                    var nn = nodes[_n.id];
+                                    if (nn.d >= n.d && nn.d < depth && nn.r >= r) {
+                                        pushed = true;
+                                        nn.r++;
+                                    }
+                                })
+                            }
+                            depth = n.d;
+                            rank = n.r;
+                        }
+                    }
+                    node.o.forEach(function (n) {
+                        pushed = pushed || shuffleRanks(nodes[n])
+                    })
+                    return pushed;
+                }
+                var shuffle = function () {
+                    if (shuffleRanks(nodes[inputs[0]])) {
+                        shuffle();
+                    }
+                }
+                shuffle();
+
+
+                var x = nodes[inputs[0]].n.x;
+                var y = nodes[inputs[0]].n.y;
+                var changedNodes = [];
+                ns.forEach(function (n) {
+                    var d = nodes[n.id].d;
+                    var r = nodes[n.id].r;
+
+                    changedNodes.push({
+                        n: n,
+                        ox: n.x,
+                        oy: n.y,
+                        moved: n.moved
+                    });
+
+                    n.x = x + d * 200;
+                    n.y = y + r * 50;
+                    n.dirty = true;
+                    // n.dirtyStatus = true;
+                    // n.status = {
+                    //     text:"d"+d+" : r"+r+" : ds"+nodes[n.id].downstream
+                    // }
+                });
+
+                if (changedNodes.length > 0) {
+                    RED.history.push({ t: "move", nodes: changedNodes, dirty: RED.nodes.dirty() });
+                    RED.nodes.dirty(true);
+                    RED.view.redraw(true);
+                }
+                
+                break;
+
+        }
+    }
+
+    RED.plugins.registerPlugin("autolayout-sidebar-plugin", {});
+
+    // Make sure the editor is completely loaded, before filling the sidebar with content.
+    // Because only just before that, RED.nodes will be loaded.  Otherwise RED.nodes.getType("auto_layout_config") would 
+    // return undefined, and RED.nodes.add would throw an exception...
+    // The problem is that Node-RED does not offer an "editor-loaded" event.
+    // I did a feature request for that, but for some obscure reason it was not accepted...
+    // (see https://discourse.nodered.org/t/new-editor-event-when-all-nodes-have-been-loaded/60314)
+    // On Discourse there was a workaround shared, but the 'workspace:change' is emitted a bit too early.
+    // Because it is emitted just before the config nodes are loaded, so RED.nodes.eachConfig above would not find our config node.
+    // (see https://discourse.nodered.org/t/add-sidebar-tab-on-app-start-not-working/64726/4).
+    // I found that the 'runtime-state' event is triggered just after the config nodes are loaded, so it works fine. 
+    // But it is a non-official unpublished event, so it might be changed or removed in the future...
+    var dothisOneTimePlease = () => {
+        RED.events.off('runtime-state', dothisOneTimePlease )
+
+        // Register an action so the user could bind a keyboard shortcut to show the auto-layout sidebar
+        // but avoid an "Error: Cannot override existing action" error in the browser console:
+        if( RED.actions.list().filter( (d) => { return d.id == "core:auto-layout-flow"} ).length == 0 ) {
+            RED.actions.add("core:auto-layout-flow", executeAutoLayout);
+        }
+        
+        // The html content of the sidebar has been specified below as a data-template, from where it can be loaded:
+        var content = $($('script[type="text/x-red"][data-template-name="auto_layout_sidebar"]').i18n().html());
+       
+        // Add a "Auto Layout" tabsheet to the right sidebar panel, in which this sidebar panel can be displayed
+        RED.sidebar.addTab({
+            id: "ai-sidebar",
+            label: "MIS", // short name for the tab
+            name: "AI助手", // long name for the menu
+            content: content,
+            closeable: true,
+            disableOnEdit: true,
+            iconClass: "fa fa-comment"
+        });
+
+        // Show the algorithm settings as json in a typedinput element (in the sidebar)
+        $("#node-input-settings").typedInput({
+            default: 'json',
+            types:['json']
+        });
+
+        // When the algorithm properties are changed in the sidebar, then store them into the config node
+        $("#node-input-settings").on("change", function() {
+            ensureAutoLayoutConfigNode();
+
+            let currentAlgorithmSettings = $(this).typedInput('value');
+            let currentAlgorithm = globalAutoLayoutConfigNode.algorithm;
+
+            // When the property value has changed, save it in the config node and activate the 'deploy' button.
+            // Remark: don't check the input type (i.e. use != instead of  !==) because we will get the number values as strings...
+            //if (globalAutoLayoutConfigNode.settings[currentAlgorithm] != currentAlgorithmSettings) {
+                let settingsObj = JSON.parse(globalAutoLayoutConfigNode.settings);
+                settingsObj[currentAlgorithm] = JSON.parse(currentAlgorithmSettings);
+                globalAutoLayoutConfigNode.settings = JSON.stringify(settingsObj);
+                RED.nodes.dirty(true);
+            //}
+        })
+
+        // When the algorithm is changed in the sidebar, then store it into the config node
+        $("#node-input-algorithm").on("change", function() {
+            ensureAutoLayoutConfigNode();
+
+            let currentAlgorithm = $(this).val();
+            let currentAlgorithmSettings = JSON.parse(globalAutoLayoutConfigNode.settings)[currentAlgorithm];
+
+            // When the property value has changed, save it in the config node and activate the 'deploy' button.
+            // Remark: don't check the input type (i.e. use != instead of  !==) because we will get the number values as strings...
+            if (globalAutoLayoutConfigNode.algorithm != currentAlgorithm) {
+                globalAutoLayoutConfigNode.algorithm = currentAlgorithm;
+                RED.nodes.dirty(true);
+            }
+            
+            $("#node-input-settings").typedInput('value', JSON.stringify(currentAlgorithmSettings));
+        })
+        $("#node-input-algorithm").change();
+
+        $("#auto-layout-button").click( executeAutoLayout );
+
+        $("#auto-layout-revert-button").click(function() {
+            // revert the last change by calling undo but also maintain the 
+            // original selection, making it easier to try out different 
+            // algorithms.
+            var sle = RED.view.selection();
+
+            // this will clear the selection, hence make a copy beforehand
+            RED.actions.invoke("core:undo");
+
+            RED.view.select(sle);
+        })
+
+        $("#show-config-node-button").on("click", function() {
+            console.log("按钮被点击了");
+            
+            try {
+                // 检查RED.nodes是否已定义
+                if (!RED || !RED.nodes || typeof RED.nodes.getType !== 'function') {
+                    console.error("RED.nodes未定义或不完整");
+                    RED.notify("RED.nodes未定义或不完整", "error");
+                    return;
+                }
+                
+                // 检查api-config节点类型是否已注册
+                var apiConfigNodeType = RED.nodes.getType("api-config");
+                if (!apiConfigNodeType) {
+                    console.error("api-config节点类型未注册");
+                    RED.notify("api-config节点类型未注册，请确保节点已正确加载", "error");
+                    return;
+                }
+                console.log("api-config节点类型已注册");
+                
+                // 查找api-config类型的节点
+                var apiConfigNodes = [];
+                RED.nodes.eachConfig(function(configNode) {
+                    if (configNode.type === 'api-config') { 
+                        apiConfigNodes.push(configNode); 
+                        console.log("找到api-config节点:", configNode.id, configNode.name);
+                    }
+                });
+                
+                if (apiConfigNodes.length > 0) {
+                    console.log("找到api-config节点，打开编辑界面");
+                    // 使用第一个找到的api-config节点
+                    RED.editor.editConfig("", "api-config", apiConfigNodes[0].id);
+                } else {
+                    console.log("没有找到api-config节点，直接打开编辑对话框");
+                    
+                    // 不尝试创建节点，而是直接打开编辑对话框
+                    // 这将允许用户创建一个新的api-config节点
+                    RED.editor.editConfig("", "api-config");
+                }
+            } catch (error) {
+                console.error("处理过程中发生错误:", error);
+                RED.notify("显示配置节点时出错: " + error.message, "error");
+            }
+        });
+    };
+    RED.events.on('runtime-state', dothisOneTimePlease )
+})();
+</script>
+
+<script type="text/x-red" data-template-name="auto_layout_sidebar">
+    <div class="red-ui-sidebar-info">
+        <div class="red-ui-sidebar-header red-ui-info-toolbar">
+            <span class="button-group"><a id="show-config-node-button" class="red-ui-button red-ui-button-small selected" href="#">
+                <i class="fa fa-cog"></i></a></span><div class="red-ui-searchBox-container red-ui-searchBox-compact"><i class="fa fa-search"></i>
+                  <form class="red-ui-searchBox-form"><input type="text" data-i18n="[placeholder]sidebar.help.search" class="red-ui-searchBox-input" placeholder="搜索帮助"></form>
+                 <a class="red-ui-searchBox-clear" href="#"><i class="fa fa-times"></i></a>
+                <span class="red-ui-searchBox-resultCount hide"></span>
+            </div>
+        </div>
+
+        <div class="red-ui-debug-content red-ui-debug-content-list" id="augment-chat-messages" style="
+            position: absolute; 
+            top: 40px; 
+            bottom: 130px; 
+            left: 0; 
+            right: 0; 
+            overflow-y: auto; 
+            padding: 20px 16px;
+            background: #fafafa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+            <!-- 聊天消息将在这里显示 -->
+        </div>
+
+        <!-- Augment工具UI -->
+        <div id="augment-chat-container" class="augment-chat-container" style="
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: #ffffff; 
+            border-top: 1px solid #e5e7eb;
+            padding: 5px; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+            <!-- 上下文信息栏 -->
+            <div class="augment-chat-context" style="
+                font-size: 12px; 
+                color: #6b7280; 
+                padding: 12px 16px;
+                background: #f9fafb;
+                border-radius: 8px;
+                border: 1px solid #f3f4f6;
+            ">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <span style="display: flex; align-items: center;">
+                        <i class="fa fa-sitemap" style="margin-right: 6px; color: #374151;"></i> 
+                        <span id="current-flow-name" style="font-weight: 500; color: #1f2937;">未选择流程</span>
+                    </span>
+                    <span style="color: #d1d5db;">></span>
+                    <span style="display: flex; align-items: center;">
+                        <i class="fa fa-cube" style="margin-right: 6px; color: #374151;"></i>
+                        <span id="current-selected-node" style="font-weight: 500; color: #1f2937;">未选择节点</span>
+                    </span>
+                    <span id="selected-node-type-container" style="display: none;">
+                        <span style="color: #d1d5db;">|</span>
+                        <span style="color: #6b7280;">类型: <span id="current-selected-node-type" style="font-weight: 500; color: #1f2937;"></span></span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- 输入框区域 -->
+            <div class="augment-chat-input-container" style="
+                border: 1px solid #d1d5db;
+                border-radius: 12px;
+                background: #ffffff;
+                position: relative;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            " onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'">
+                <textarea id="augment-chat-input" placeholder="Ask or instruct Augment" 
+                          style="
+                              width: 100%; 
+                              min-height: 80px; 
+                              padding: 16px 60px 16px 16px; 
+                              border: none;
+                              border-radius: 12px; 
+                              resize: none; 
+                              outline: none; 
+                              font-family: inherit; 
+                              font-size: 14px; 
+                              background: transparent; 
+                              color: #374151; 
+                              overflow: hidden;
+                              line-height: 1.5;
+                          "
+                          rows="3"
+                          onfocus="this.parentElement.style.borderColor='#3b82f6'; this.parentElement.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                          onblur="this.parentElement.style.borderColor='#d1d5db'; this.parentElement.style.boxShadow='none'"></textarea>
+                
+                <!-- 工具栏 -->
+                <div style="
+                    position: absolute;
+                    bottom: 12px;
+                    right: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                ">
+                    <!-- 工具按钮 -->
+                    <div style="display: flex; gap: 4px;">
+                        <button id="augment-attach-file" style="
+                            background: none;
+                            border: none;
+                            color: #6b7280;
+                            cursor: pointer;
+                            padding: 6px;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            transition: all 0.2s;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                            <i class="fa fa-paperclip"></i>
+                        </button>
+                        <button id="augment-at-mention" style="
+                            background: none;
+                            border: none;
+                            color: #6b7280;
+                            cursor: pointer;
+                            padding: 6px;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            transition: all 0.2s;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                            <i class="fa fa-at"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 发送按钮 -->
+                    <button id="augment-send" style="
+                        background: #3b82f6;
+                        border: none;
+                        border-radius: 8px;
+                        color: white;
+                        padding: 8px 16px;
+                        font-size: 13px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: background-color 0.2s;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                        <i class="fa fa-paper-plane"></i>
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保留原有的配置部分 -->
+    <div style="position: relative; height: 100%; margin: 15px; display: none;" id="auto-layout-config-panel">
+        <label for="node-input-algorithm" style="margin-top: 25px"><i class="fa fa-terminal"></i> Algorithm</label>
+        <select id="node-input-algorithm">
+            <option value="dagre_lr">Dagre LR</option>
+            <option value="dagre_longest_path">Dagre Longest Path</option>
+            <option value="elkjs_mr_tree">ELKjs Mr. Tree</option>
+            <option value="elkjs_layered_upwards">ELKjs Layered Upwards</option>
+            <option value="elkjs_layered_downwards">ELKjs Layered Downwards</option>
+            <option value="elkjs_box">ELKjs Box</option>
+            <option value="pull_request_2267">Pull Request 2267</option></select>
+        </select>
+
+        <label for="node-input-settings" style="margin-top: 15px"><i class="fa fa-cog"></i> Settings</label>
+        <input type="text" id="node-input-settings" style="width: 100%; margin-top: 30px">
+        
+        <button type="button" id="auto-layout-button" style="font-size: larger;width:100%;background-color: yellowgreen;color:white;border: none;height: 32px;margin-top: 30px;">Execute auto-layout</button>
+
+        <button type="button" id="auto-layout-revert-button" style="font-size: smaller;width:50%;background-color: rgb(225, 119, 129); color: rgb(246, 246, 246); border: 1px solid rgb(173, 22, 37); height: 32px; margin-top: 30px;"><i class="fa fa-undo"></i> Undo</button>
+
+        <button id="show-config-node-button" class="red-ui-button">显示配置节点</button>
+    </div>
+</script>
+
+<script type="text/javascript">
+    // 在RED.events.on('runtime-state')中添加以下代码
+    RED.events.on('runtime-state', function() {
+        // 初始化AI助手UI
+        setupAIAssistant();
+        
+        // 初始化当前flow名称显示
+        updateCurrentFlowName();
+        
+        // 初始化当前选中节点信息
+        updateSelectedNodeInfo();
+        
+        // 监听workspace选择变化
+        RED.events.on('workspace:change', updateCurrentFlowName);
+        
+        // 监听节点选择变化
+        RED.events.on('view:selection-changed', updateSelectedNodeInfo);
+    });
+    
+    // 更新当前flow名称的函数
+    function updateCurrentFlowName() {
+        try {
+            // 获取当前活动的workspace
+            var activeWorkspace = RED.workspaces.active();
+            
+            if (activeWorkspace) {
+                // 获取workspace节点
+                var workspaceNode = RED.nodes.workspace(activeWorkspace);
+                
+                if (workspaceNode && workspaceNode.label) {
+                    // 更新显示的flow名称
+                    $("#current-flow-name").text(workspaceNode.label);
+                } else {
+                    $("#current-flow-name").text("Flow " + activeWorkspace);
+                }
+            } else {
+                $("#current-flow-name").text("未选择流程");
+            }
+            
+            // 更新当前文件名
+            var currentFileName = "ai-sidebar.html";
+            $("#current-file-name").text(currentFileName);
+        } catch (error) {
+            console.error("更新flow名称时出错:", error);
+            $("#current-flow-name").text("未知流程");
+        }
+    }
+    
+    // 更新当前选中节点信息的函数
+    function updateSelectedNodeInfo() {
+        try {
+            // 获取当前选中的节点
+            var selection = RED.view.selection();
+            
+            if (selection && selection.nodes && selection.nodes.length > 0) {
+                // 如果选中了多个节点
+                if (selection.nodes.length > 1) {
+                    $("#current-selected-node").text("已选择 " + selection.nodes.length + " 个节点");
+                    $("#selected-node-type-container").hide();
+                } 
+                // 如果只选中了一个节点
+                else {
+                    var selectedNode = selection.nodes[0];
+                    
+                    // 获取节点名称（优先使用name属性，其次使用id）
+                    var nodeName = selectedNode.name || selectedNode.id;
+                    $("#current-selected-node").text(nodeName);
+                    
+                    // 显示节点类型
+                    $("#current-selected-node-type").text(selectedNode.type);
+                    $("#selected-node-type-container").show();
+                }
+            } else {
+                // 如果没有选中节点
+                $("#current-selected-node").text("未选择节点");
+                $("#selected-node-type-container").hide();
+            }
+        } catch (error) {
+            console.error("更新选中节点信息时出错:", error);
+            $("#current-selected-node").text("无法获取节点信息");
+            $("#selected-node-type-container").hide();
+        }
+    }
+    
+    function setupAIAssistant() {
+        // 自动调整文本区域高度
+        $("#augment-chat-input").on("input", function() {
+            this.style.height = "auto";
+            this.style.height = Math.min(this.scrollHeight, 120) + "px";
+        });
+        
+        // 发送按钮点击事件
+        $("#augment-send").on("click", function() {
+            sendMessage();
+        });
+        
+        // 按Enter键发送消息（Shift+Enter换行）
+        $("#augment-chat-input").on("keydown", function(e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // 工具按钮点击事件
+        $("#augment-attach-file, #augment-at-mention").on("click", function() {
+            RED.notify("此功能正在开发中", "info");
+        });
+    }
+    
+    function sendMessage() {
+        loadAISidebarConfig().then(function(config) {
+            var message = $("#augment-chat-input").val().trim();
+            if (message) {
+                console.log("发送消息:", message);
+                addMessageToChat("user", message);
+                
+                $("#augment-chat-input").val("");
+                $("#augment-chat-input").css("height", "72px");
+                
+                // 模拟AI回复（使用JSON数组格式）
+                setTimeout(function() {
+                    var aiResponse = [
+                        {
+                            showTime: '04:31 PM',
+                            showContent: [
+                                {
+                                    type: 'text',
+                                    content: '根据Augment的lightUI风格，我来重新改写聊天界面，首先创建一个配置文件来存储文本内容：'
+                                },
+                                {
+                                    type: 'code',
+                                    content: '{\n  "ui": {\n    "placeholder": "Ask or instruct Augment",\n    "currentFlow": "当前流程",\n    "currentNode": "当前节点",\n    "noFlowSelected": "未选择流程",\n    "noNodeSelected": "未选择节点",\n    "multipleNodesSelected": "已选择 {count} 个节点",\n    "nodeType": "类型",\n    "timestamp": "07:51 PM",\n    "userLabel": "You",\n    "assistantLabel": "Augment"\n  },\n  "messages": {\n    "developmentInProgress": "此功能正在开发中",\n    "simulatedResponse": "这是一个模拟的AI回复。"\n  }\n}'
+                                },
+                                {
+                                    type: 'text',
+                                    content: '这个重新设计的界面具有以下特点：\n\n1. Augment风格的消息气泡：用户消息和AI回复有不同的样式和对齐方式\n2. 时间戳显示：模仿Augment的时间戳显示方式\n3. 头像和标签：每条消息都有发送者标识\n4. 配置文件支持：所有文本内容都可以通过JSON配置文件进行国际化\n5. 现代化的输入框：带有发送按钮的输入区域\n6. 上下文信息栏：显示当前流程和节点信息，样式更加现代化\n\n配置文件使得界面文本可以轻松修改和国际化，符合现代前端开发的最佳实践。'
+                                }
+                            ]
+                        }
+                    ];
+                    addMessageToChat("assistant", aiResponse);
+                }, 1000);
+            }
+        });
+    }
+    
+    // 添加加载配置的函数
+    function loadAISidebarConfig() {
+        return new Promise(function(resolve) {
+            // 默认配置，如果无法加载外部配置文件则使用此配置
+            var defaultConfig = {
+                "ui": {
+                    "placeholder": "Ask or instruct Augment",
+                    "currentFlow": "当前流程",
+                    "currentNode": "当前节点",
+                    "noFlowSelected": "未选择流程",
+                    "noNodeSelected": "未选择节点",
+                    "multipleNodesSelected": "已选择 {count} 个节点",
+                    "nodeType": "类型",
+                    "timestamp": "07:51 PM",
+                    "userLabel": "You",
+                    "assistantLabel": "Augment"
+                },
+                "messages": {
+                    "developmentInProgress": "此功能正在开发中",
+                    "simulatedResponse": "这是一个模拟的AI回复。"
+                }
+            };
+            
+            // 尝试加载外部配置文件
+            $.getJSON('ai-sidebar-config.json')
+                .done(function(config) {
+                    resolve(config);
+                })
+                .fail(function() {
+                    console.log("无法加载配置文件，使用默认配置");
+                    resolve(defaultConfig);
+                });
+        });
+    }
+
+    function addMessageToChat(role, messageData) {
+        loadAISidebarConfig().then(function(config) {
+            var isUser = role === "user";
+            var userLabel = config.ui.userLabel;
+            var assistantLabel = config.ui.assistantLabel;
+            var label = isUser ? userLabel : assistantLabel;
+            
+            // 处理用户消息（简单文本）
+            if (isUser) {
+                var timestamp = new Date().toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+                
+                var messageHtml = '<div class="augment-message-container" style="margin: 0 0 24px 0;">' +
+                    '<div class="augment-chat-message user-message" style="' +
+                        'background: #f3f4f6;' +
+                        'border: 1px solid #d1d5db;' +
+                        'border-radius: 12px;' +
+                        'padding: 16px 20px;' +
+                        'font-size: 14px;' +
+                        'line-height: 1.6;' +
+                        'color: #374151;' +
+                        'box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);' +
+                        'position: relative;' +
+                        'font-weight: 500;' +
+                    '">' +
+                        '<div class="message-content" style="white-space: pre-wrap; word-wrap: break-word;">' + messageData + '</div>' +
+                        '<div style="text-align: right; margin-top: 8px; font-size: 11px; color: #9ca3af;">' + timestamp + '</div>' +
+                    '</div>' +
+                '</div>';
+            } 
+            // 处理AI消息（JSON数组格式）
+            else {
+                var messageHtml = '<div class="augment-message-container" style="margin: 0 0 24px 0;">';
+                
+                // 遍历消息数组
+                messageData.forEach(function(message, messageIndex) {
+                    messageHtml += '<div class="message-timestamp" style="font-size: 12px; color: #6b7280; margin-bottom: 8px; font-weight: 500;">' + message.showTime + '</div>';
+                    messageHtml += '<div class="augment-chat-message assistant-message" style="' +
+                        'background: #ffffff;' +
+                        'border: 1px solid #e5e7eb;' +
+                        'border-radius: 12px;' +
+                        'padding: 16px 20px;' +
+                        'font-size: 14px;' +
+                        'line-height: 1.6;' +
+                        'color: #374151;' +
+                        'box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);' +
+                        'position: relative;' +
+                        'margin-bottom: 16px;' +
+                    '">';
+                    messageHtml += '<div class="message-header" style="font-weight: 600; color: #1f2937; margin-bottom: 12px; font-size: 14px;">' + label + '</div>';
+                    messageHtml += '<div class="message-content">';
+                    
+                    // 遍历消息内容
+                    message.showContent.forEach(function(content, contentIndex) {
+                        if (content.type === 'text') {
+                            messageHtml += '<div style="white-space: pre-wrap; word-wrap: break-word; margin-bottom: 12px;">' + content.content + '</div>';
+                        } else if (content.type === 'code') {
+                            var codeId = 'code-editor-' + messageIndex + '-' + contentIndex;
+                            messageHtml += '<div style="margin: 12px 0;">' +
+                                '<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-bottom: none; border-radius: 6px 6px 0 0; font-size: 12px; color: #6c757d;">' +
+                                    '<i class="fa fa-file-code-o"></i>' +
+                                    '<span style="font-weight: 500;">ai-sidebar-config.json</span>' +
+                                    '<div style="margin-left: auto; display: flex; gap: 4px;">' +
+                                        '<button onclick="copyEditorContent(\'' + codeId + '\')" style="background: none; border: none; color: #6c757d; cursor: pointer; padding: 2px 6px; border-radius: 3px; font-size: 11px; transition: all 0.2s;" onmouseover="this.style.background=\'#e9ecef\'" onmouseout="this.style.background=\'none\'">' +
+                                            '<i class="fa fa-copy"></i> Copy' +
+                                        '</button>' +
+                                        '<button onclick="applyEditorContent(\'' + codeId + '\')" style="background: none; border: none; color: #6c757d; cursor: pointer; padding: 2px 6px; border-radius: 3px; font-size: 11px; transition: all 0.2s;" onmouseover="this.style.background=\'#e9ecef\'" onmouseout="this.style.background=\'none\'">' +
+                                            '<i class="fa fa-check"></i> Apply' +
+                                        '</button>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div id="' + codeId + '" style="border: 1px solid #e9ecef; border-radius: 0 0 6px 6px; height: 300px; font-family: \'Monaco\', \'Menlo\', \'Ubuntu Mono\', monospace;"></div>' +
+                            '</div>';
+                            
+                            // 存储JSON内容以便后续初始化编辑器
+                            window.pendingEditors = window.pendingEditors || [];
+                            window.pendingEditors.push({
+                                id: codeId,
+                                content: content.content
+                            });
+                        }
+                    });
+                    
+                    messageHtml += '</div></div>';
+                });
+                
+                // 添加操作按钮
+                messageHtml += '<div class="message-actions" style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">' +
+                    '<button class="action-btn" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" onmouseover="this.style.background=\'#f3f4f6\'" onmouseout="this.style.background=\'none\'">' +
+                        '<i class="fa fa-thumbs-up"></i>' +
+                    '</button>' +
+                    '<button class="action-btn" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" onmouseover="this.style.background=\'#f3f4f6\'" onmouseout="this.style.background=\'none\'">' +
+                        '<i class="fa fa-thumbs-down"></i>' +
+                    '</button>' +
+                    '<button class="action-btn" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" onmouseover="this.style.background=\'#f3f4f6\'" onmouseout="this.style.background=\'none\'">' +
+                        '<i class="fa fa-copy"></i>' +
+                    '</button>' +
+                '</div></div>';
+            }
+            
+            $("#augment-chat-messages").append(messageHtml);
+
+            // 在消息添加完成后初始化所有待处理的编辑器
+            if (window.pendingEditors && window.pendingEditors.length > 0) {
+                setTimeout(function() {
+                    window.pendingEditors.forEach(function(editorInfo) {
+                        initializeJSONEditor(editorInfo.id, editorInfo.content);
+                    });
+                    window.pendingEditors = []; // 清空待处理列表
+                }, 100);
+            }
+
+            forceScrollToBottom();
+        });
+    }
+    
+    function forceScrollToBottom() {
+        // 方法1：使用jQuery的scrollTop
+        var chatContainer = $("#augment-chat-messages");
+        chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        
+        // 方法2：使用原生JavaScript的scrollTo
+        var container = document.getElementById("augment-chat-messages");
+        if (container) {
+            container.scrollTo(0, container.scrollHeight);
+        }
+        
+        // 方法3：使用setTimeout确保DOM已更新
+        setTimeout(function() {
+            chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        }, 50);
+    }
+</script>

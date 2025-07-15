@@ -1,0 +1,18 @@
+{
+  "ui": {
+    "placeholder": "Ask or instruct Augment",
+    "currentFlow": "当前流程",
+    "currentNode": "当前节点",
+    "noFlowSelected": "未选择流程",
+    "noNodeSelected": "未选择节点",
+    "multipleNodesSelected": "已选择 {count} 个节点",
+    "nodeType": "类型",
+    "timestamp": "07:51 PM",
+    "userLabel": "You",
+    "assistantLabel": "Augment"
+  },
+  "messages": {
+    "developmentInProgress": "此功能正在开发中",
+    "simulatedResponse": "这是一个模拟的AI回复。在实际实现中，您需要将消息发送到后端API并获取响应。"
+  }
+}

@@ -1,0 +1,33 @@
+{
+    "name": "@jimmyfreecoding/node-red-make-iot-smart",
+    "version": "0.0.4",
+    "description": "A AI tools for Node-RED",
+    "author": {
+        "name": "Zheng He"
+    },
+    "license": "Apache-2.0",
+    "keywords": ["node-red", "ai", "assistant", "iot", "smart"],
+    "bugs": {
+        "url": "https://github.com/jimmyfreecoding/node-red-make-iot-smart/issues"
+    },
+    "homepage": "https://github.com/jimmyfreecoding/node-red-make-iot-smart#readme",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jimmyfreecoding/node-red-make-iot-smart.git"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "node-red": {
+        "version": ">=2.0.0",
+        "nodes": {
+            "api-config": "make-iot-smart.js"
+        },
+        "plugins": {
+            "ai-sidebar": "ai-sidebar.html"
+        }
+    }
+}
