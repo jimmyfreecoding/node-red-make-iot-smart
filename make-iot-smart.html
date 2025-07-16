@@ -85,6 +85,33 @@
     <div class="form-row">
         <div class="form-tips">在Plan和Act模式之间切换将保留上一模式中使用的API和模型。这在使用强大的推理模型来制定计划，然后使用更便宜的编码模型来执行时可能会有所帮助。</div>
     </div>
+    <div class="form-row">
+        <label for="node-config-input-maxTokens"><i class="fa fa-sort-numeric-asc"></i> 最大令牌数</label>
+        <input type="number" id="node-config-input-maxTokens" min="100" max="8000" step="100">
+    </div>
+    
+    <!-- MCP配置部分 -->
+    <div class="form-row">
+        <label for="node-config-input-enableMcp"><i class="fa fa-plug"></i> 启用MCP</label>
+        <input type="checkbox" id="node-config-input-enableMcp" style="display: inline-block; width: auto; vertical-align: top;">
+        <div class="form-tips">启用Model Context Protocol支持</div>
+    </div>
+    
+    <div class="mcp-config" style="display: none;">
+        <div class="form-row">
+            <label for="node-config-input-mcpCommand"><i class="fa fa-terminal"></i> MCP命令</label>
+            <input type="text" id="node-config-input-mcpCommand" placeholder="npx @supcon-international/node-red-mcp-server">
+        </div>
+        <div class="form-row">
+            <label for="node-config-input-mcpArgs"><i class="fa fa-list"></i> 命令参数</label>
+            <input type="text" id="node-config-input-mcpArgs" placeholder="--port 3000">
+        </div>
+        <div class="form-row">
+            <label for="node-config-input-mcpEnv"><i class="fa fa-cog"></i> 环境变量</label>
+            <input type="text" id="node-config-input-mcpEnv" placeholder="NODE_ENV=development,DEBUG=true">
+            <div class="form-tips">格式: KEY=value,KEY2=value2</div>
+        </div>
+    </div>
 </script>
 
 <!-- API配置节点的JavaScript注册 -->
@@ -99,7 +126,11 @@
             planningModel: { value: "" },
             executionModel: { value: "" },
             temperature: { value: 0.1, validate: RED.validators.number() },
-            maxTokens: { value: 2000, validate: RED.validators.number() }
+            maxTokens: { value: 2000, validate: RED.validators.number() },
+            enableMcp: { value: false },
+            mcpCommand: { value: "npx @supcon-international/node-red-mcp-server" },
+            mcpArgs: { value: "" },
+            mcpEnv: { value: "" }
         },
         credentials: {
             apiKey: { type: "password", required: true }
@@ -107,8 +138,44 @@
         label: function() {
             return this.name || `${this.provider} (${this.model})`;
         },
+        oneditsave: function() {
+            // 确保MCP配置被正确保存
+            this.enableMcp = $("#node-config-input-enableMcp").prop('checked');
+            this.mcpCommand = $("#node-config-input-mcpCommand").val();
+            this.mcpArgs = $("#node-config-input-mcpArgs").val();
+            this.mcpEnv = $("#node-config-input-mcpEnv").val();
+            
+            console.log('保存配置:', {
+                enableMcp: this.enableMcp,
+                mcpCommand: this.mcpCommand,
+                mcpArgs: this.mcpArgs,
+                mcpEnv: this.mcpEnv
+            });
+        },
         oneditprepare: function() {
-            const node = this;
+            var node = this;
+            
+            // 初始化MCP配置
+            $("#node-config-input-enableMcp").prop('checked', node.enableMcp || false);
+            $("#node-config-input-mcpCommand").val(node.mcpCommand || 'npx @supcon-international/node-red-mcp-server');
+            $("#node-config-input-mcpArgs").val(node.mcpArgs || '');
+            $("#node-config-input-mcpEnv").val(node.mcpEnv || '');
+            
+            // MCP启用/禁用切换
+            $("#node-config-input-enableMcp").change(function() {
+                if ($(this).prop('checked')) {
+                    $(".mcp-config").show();
+                } else {
+                    $(".mcp-config").hide();
+                }
+            });
+            
+            // 初始显示状态
+            if ($("#node-config-input-enableMcp").prop('checked')) {
+                $(".mcp-config").show();
+            } else {
+                $(".mcp-config").hide();
+            }
             
             // 提供商模型映射
             const providerModels = {
@@ -126,7 +193,6 @@
                     selectElement.append($('<option></option>').attr('value', model).text(model));
                 });
                 
-                // 设置默认选择
                 if (models.length > 0) {
                     selectElement.val(models[0]);
                 }
@@ -154,11 +220,22 @@
                 }
             });
             
+            // 切换MCP配置
+            $('#node-config-input-enableMcp').change(function() {
+                if ($(this).is(':checked')) {
+                    $('.mcp-config').show();
+                } else {
+                    $('.mcp-config').hide();
+                }
+            });
+            
             // 初始化显示状态
             if (node.useDifferentModels) {
                 $('.different-models-config').show();
-            } else {
-                $('.different-models-config').hide();
+            }
+            
+            if (node.enableMcp) {
+                $('.mcp-config').show();
             }
         }
     });

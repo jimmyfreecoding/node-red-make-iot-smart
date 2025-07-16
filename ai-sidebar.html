@@ -1222,8 +1222,96 @@ function addConfigNodeToList(node) {
             return;
         }
 
-        // 添加用户消息到界面
-        addMessageToChat("user", message);
+        // 获取当前选中的流程和节点信息
+        var selectedFlow = null;
+        var selectedNodes = [];
+        var flowData = null;
+        
+        try {
+            // 获取当前活动的工作区
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                var workspace = RED.nodes.workspace(activeWorkspace);
+                
+                // 获取流程中的所有节点
+                var flowNodes = [];
+                RED.nodes.eachNode(function(node) {
+                    if (node.z === activeWorkspace) {
+                        flowNodes.push({
+                            id: node.id,
+                            type: node.type,
+                            name: node.name || '',
+                            x: node.x,
+                            y: node.y,
+                            wires: node.wires || [],
+                            // 添加节点的配置信息（但排除敏感信息）
+                            config: Object.keys(node).reduce((config, key) => {
+                                if (!['credentials', 'apiKey', 'password', 'token'].includes(key) && 
+                                    !key.startsWith('_') && 
+                                    typeof node[key] !== 'function') {
+                                    config[key] = node[key];
+                                }
+                                return config;
+                            }, {})
+                        });
+                    }
+                });
+                
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: workspace.label || 'Unnamed Flow',
+                    type: 'tab',
+                    nodes: flowNodes,
+                    nodeCount: flowNodes.length
+                };
+                
+                // 创建流程的JSON表示
+                flowData = {
+                    id: activeWorkspace,
+                    label: workspace.label || 'Unnamed Flow',
+                    type: 'tab',
+                    nodes: flowNodes,
+                    connections: flowNodes.map(node => ({
+                        id: node.id,
+                        type: node.type,
+                        name: node.name,
+                        outputs: node.wires
+                    }))
+                };
+            }
+            
+            // 获取选中的节点
+            var selection = RED.view.selection();
+            if (selection && selection.nodes) {
+                selectedNodes = selection.nodes.map(node => ({
+                    id: node.id,
+                    type: node.type,
+                    name: node.name || '',
+                    x: node.x,
+                    y: node.y,
+                    wires: node.wires || [],
+                    config: Object.keys(node).reduce((config, key) => {
+                        if (!['credentials', 'apiKey', 'password', 'token'].includes(key) && 
+                            !key.startsWith('_') && 
+                            typeof node[key] !== 'function') {
+                            config[key] = node[key];
+                        }
+                        return config;
+                    }, {})
+                }));
+            }
+        } catch (error) {
+            console.warn("获取选中信息失败:", error);
+        }
+
+        console.log("发送AI请求:", {
+            message: message,
+            nodeId: nodeId,
+            selectedFlow: selectedFlow,
+            selectedNodes: selectedNodes,
+            flowData: flowData,
+            history: getChatHistory()
+        });
         
         // 创建加载消息
         var loadingMessageId = "loading-" + Date.now();
@@ -1238,10 +1326,15 @@ function addConfigNodeToList(node) {
             body: JSON.stringify({
                 message: message,
                 nodeId: nodeId,
+                selectedFlow: selectedFlow,
+                selectedNodes: selectedNodes,
+                flowData: flowData,
                 history: getChatHistory()
             })
         })
         .then(response => {
+            console.log("收到响应:", response.status, response.statusText);
+            
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -1259,28 +1352,36 @@ function addConfigNodeToList(node) {
             function readStream() {
                 return reader.read().then(({ done, value }) => {
                     if (done) {
+                        console.log("流式响应完成");
                         return;
                     }
                     
                     const chunk = decoder.decode(value);
+                    // console.log("收到数据块:", chunk);
+                    
                     const lines = chunk.split('\n');
                     
                     lines.forEach(line => {
                         if (line.startsWith('data: ')) {
                             try {
                                 const data = JSON.parse(line.slice(6));
+                                // console.log("解析的数据:", data);
                                 
-                                if (data.type === 'text') {
+                                if (data.type === 'content') {
                                     // 追加文本到AI消息
                                     var aiMessage = $("#" + aiMessageId + " .message-content");
                                     aiMessage.text(aiMessage.text() + data.content);
                                     forceScrollToBottom();
+                                } else if (data.type === 'start') {
+                                    console.log("AI开始响应, MCP可用:", data.mcpAvailable);
+                                } else if (data.type === 'end') {
+                                    console.log("AI响应结束");
                                 } else if (data.type === 'error') {
                                     $("#" + aiMessageId).remove();
                                     addMessageToChat("error", "❌ " + data.content);
                                 }
                             } catch (e) {
-                                console.warn("解析SSE数据失败:", line);
+                                console.warn("解析SSE数据失败:", line, e);
                             }
                         }
                     });
