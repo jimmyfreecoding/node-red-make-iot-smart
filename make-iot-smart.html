@@ -46,9 +46,10 @@
     <div class="form-row">
         <label for="node-config-input-provider"><i class="fa fa-server"></i> API提供商</label>
         <select id="node-config-input-provider">
-            <option value="DeepSeek">DeepSeek</option>
-            <option value="OpenAI">OpenAI</option>
-            <option value="Anthropic">Anthropic</option>
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="google">Google</option>
         </select>
     </div>
     <div class="form-row">
@@ -61,8 +62,7 @@
     <div class="form-row">
         <label for="node-config-input-model"><i class="fa fa-brain"></i> 模型</label>
         <select id="node-config-input-model">
-            <option value="deepseek-chat">deepseek-chat</option>
-            <option value="deepseek-coder">deepseek-coder</option>
+            <!-- 动态填充 -->
         </select>
     </div>
     <div class="form-row" id="model-capabilities">
@@ -92,55 +92,74 @@
     RED.nodes.registerType('api-config', {
         category: 'config',
         defaults: {
-            name: { value: "API配置" },
-            provider: { value: "DeepSeek" },
-            model: { value: "deepseek-chat" },
-            useDifferentModels: { value: false }
+            name: { value: "" },
+            provider: { value: "openai", required: true },
+            model: { value: "gpt-4o-mini", required: true },
+            useDifferentModels: { value: false },
+            planningModel: { value: "" },
+            executionModel: { value: "" },
+            temperature: { value: 0.1, validate: RED.validators.number() },
+            maxTokens: { value: 2000, validate: RED.validators.number() }
         },
         credentials: {
-            apiKey: { type: "password" }
+            apiKey: { type: "password", required: true }
         },
         label: function() {
-            return this.name || "API配置";
+            return this.name || `${this.provider} (${this.model})`;
         },
         oneditprepare: function() {
-            // 当提供商或模型改变时更新模型能力信息
-            $("#node-config-input-provider, #node-config-input-model").on("change", function() {
-                updateModelCapabilities();
-            });
+            const node = this;
             
-            function updateModelCapabilities() {
-                var provider = $("#node-config-input-provider").val();
-                var model = $("#node-config-input-model").val();
+            // 提供商模型映射
+            const providerModels = {
+                openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+                deepseek: ['deepseek-chat', 'deepseek-coder'],
+                anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
+                google: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro']
+            };
+            
+            // 更新模型选项
+            function updateModelOptions(selectElement, provider) {
+                const models = providerModels[provider] || [];
+                selectElement.empty();
+                models.forEach(model => {
+                    selectElement.append($('<option></option>').attr('value', model).text(model));
+                });
                 
-                // 这里可以根据不同的提供商和模型显示不同的能力信息
-                // 简单示例：
-                var capabilities = $("#model-capabilities");
-                capabilities.empty();
-                
-                if (provider === "DeepSeek" && model === "deepseek-chat") {
-                    capabilities.html(`
-                        <div class="form-tips">
-                            <div><i class="fa fa-times" style="color:red;"></i> 不支持图像</div>
-                            <div><i class="fa fa-times" style="color:red;"></i> 不支持浏览器使用</div>
-                            <div><i class="fa fa-check" style="color:green;"></i> 支持提示缓存</div>
-                            <div>最大输入：8,000 tokens</div>
-                            <div>缓存写入价格：$0.27/百万tokens</div>
-                            <div>缓存读取价格：$0.07/百万tokens</div>
-                            <div>输出价格：$1.10/百万tokens</div>
-                        </div>
-                    `);
-                } else {
-                    capabilities.html(`
-                        <div class="form-tips">
-                            <div>选择模型以查看其能力</div>
-                        </div>
-                    `);
+                // 设置默认选择
+                if (models.length > 0) {
+                    selectElement.val(models[0]);
                 }
             }
             
-            // 初始化显示
-            updateModelCapabilities();
+            // 初始化模型选项
+            updateModelOptions($('#node-config-input-model'), node.provider);
+            updateModelOptions($('#node-config-input-planningModel'), node.provider);
+            updateModelOptions($('#node-config-input-executionModel'), node.provider);
+            
+            // 提供商变化时更新模型选项
+            $('#node-config-input-provider').change(function() {
+                const provider = $(this).val();
+                updateModelOptions($('#node-config-input-model'), provider);
+                updateModelOptions($('#node-config-input-planningModel'), provider);
+                updateModelOptions($('#node-config-input-executionModel'), provider);
+            });
+            
+            // 切换不同模型配置
+            $('#node-config-input-useDifferentModels').change(function() {
+                if ($(this).is(':checked')) {
+                    $('.different-models-config').show();
+                } else {
+                    $('.different-models-config').hide();
+                }
+            });
+            
+            // 初始化显示状态
+            if (node.useDifferentModels) {
+                $('.different-models-config').show();
+            } else {
+                $('.different-models-config').hide();
+            }
         }
     });
 </script>

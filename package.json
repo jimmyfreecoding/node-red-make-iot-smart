@@ -21,6 +21,13 @@
     "engines": {
         "node": ">=18.0.0"
     },
+    "dependencies": {
+        "ai": "^3.4.32",
+        "@ai-sdk/openai": "^0.0.66",
+        "@ai-sdk/anthropic": "^0.0.54",
+        "@ai-sdk/google": "^0.0.52",
+        "@modelcontextprotocol/sdk": "^1.0.4"
+    },
     "node-red": {
         "version": ">=2.0.0",
         "nodes": {
