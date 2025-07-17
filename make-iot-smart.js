@@ -203,104 +203,35 @@ module.exports = function (RED) {
             
             let systemPrompt = `You are an AI assistant specialized in Node-RED development and IoT applications.
 
-Environment Information:
+CRITICAL WORKFLOW FOR FLOW/NODE CREATION:
+When user asks to create flows or nodes, you MUST follow this exact sequence:
+1. First provide a detailed text explanation of what you will create
+2. Then IMMEDIATELY call the appropriate MCP tool (create-flow, update-flows, etc.)
+3. The tool call will generate an "Apply" button for the user to execute
+4. Do NOT execute the tool yourself - just call it to generate the button
+
+Available MCP Tools: ${mcpTools.length} tools
+${mcpTools.map(tool => `- ${tool.function?.name}: ${tool.function?.description}`).join('\n')}
+
+For flow creation, use the create-flow tool with this format:
+{
+  "flowJson": "{\"id\":\"unique-id\",\"label\":\"Flow Name\",\"nodes\":[...]}"
+}
+
+Current Context:
 - Node-RED Version: ${nodeRedVersion}
 - Node.js Version: ${nodeVersion}
-- Platform: ${process.platform}
-- Architecture: ${process.arch}
+- Current Time: ${new Date().toISOString()}
 
-`;
+${selectedFlow ? `Current Flow: ${selectedFlow.label} (ID: ${selectedFlow.id})` : 'No flow selected'}
+${selectedNodes && selectedNodes.length > 0 ? `Selected Nodes: ${selectedNodes.length} node(s)` : 'No nodes selected'}
 
-            // 添加MCP工具信息
-            if (mcpTools && mcpTools.length > 0) {
-                systemPrompt += `Available MCP Tools:
-You have access to the following MCP tools for Node-RED operations:
-`;
-                mcpTools.forEach((tool, index) => {
-                    systemPrompt += `${index + 1}. ${tool.function.name}: ${tool.function.description}\n`;
-                });
-                systemPrompt += `
-IMPORTANT: When users ask you to create flows, nodes, or perform Node-RED operations, you MUST use these MCP tools. Do not just provide instructions - actually execute the operations using the available tools.
+Example for "create a simple flow":
+1. Explain: "I'll create a simple flow with inject and debug nodes..."
+2. Call: create-flow tool with proper JSON
+3. User sees explanation + Apply button to execute
 
-`;
-            }
-
-            systemPrompt += `You help users with:
-- Flow creation and optimization (USE MCP TOOLS when available)
-- Node configuration and debugging
-- IoT device integration
-- Data processing and transformation
-- API integration and automation
-- Best practices and troubleshooting
-
-`;
-
-            // 添加当前选中的流程信息
-            if (selectedFlow) {
-                systemPrompt += `Current Flow Context:
-- Flow ID: ${selectedFlow.id}
-- Flow Name: ${selectedFlow.label || 'Unnamed Flow'}
-- Flow Type: ${selectedFlow.type || 'tab'}
-- Node Count: ${selectedFlow.nodeCount || 0}
-
-`;
-
-                // 如果有详细的流程数据，添加节点列表
-                if (flowData && flowData.nodes && flowData.nodes.length > 0) {
-                    systemPrompt += `Flow Nodes:\n`;
-                    flowData.nodes.forEach((node, index) => {
-                        systemPrompt += `${index + 1}. ${node.type}`;
-                        if (node.name) systemPrompt += ` ("${node.name}")`;
-                        systemPrompt += ` [${node.id}]`;
-                        if (node.wires && node.wires.length > 0) {
-                            systemPrompt += ` -> connects to ${node.wires.flat().length} outputs`;
-                        }
-                        systemPrompt += '\n';
-                    });
-                    systemPrompt += '\n';
-                    
-                    // 添加流程的JSON结构（简化版）
-                    systemPrompt += `Flow Structure (JSON):\n`;
-                    systemPrompt += JSON.stringify({
-                        id: flowData.id,
-                        label: flowData.label,
-                        nodes: flowData.nodes.map(n => ({
-                            id: n.id,
-                            type: n.type,
-                            name: n.name,
-                            wires: n.wires
-                        }))
-                    }, null, 2);
-                    systemPrompt += '\n\n';
-                }
-            }
-
-            // 添加选中的节点信息
-            if (selectedNodes && selectedNodes.length > 0) {
-                systemPrompt += `Selected Nodes (Detailed):\n`;
-                selectedNodes.forEach((node, index) => {
-                    systemPrompt += `${index + 1}. ${node.type} (${node.id})`;
-                    if (node.name) systemPrompt += ` - "${node.name}"`;
-                    systemPrompt += '\n';
-                    
-                    // 添加节点配置信息
-                    if (node.config && Object.keys(node.config).length > 0) {
-                        systemPrompt += `   Configuration: ${JSON.stringify(node.config, null, 4)}\n`;
-                    }
-                    
-                    // 添加连接信息
-                    if (node.wires && node.wires.length > 0) {
-                        systemPrompt += `   Connections: ${JSON.stringify(node.wires)}\n`;
-                    }
-                });
-                systemPrompt += '\n';
-            }
-
-            if (mcpTools && mcpTools.length > 0) {
-                systemPrompt += `REMEMBER: You have MCP tools available. When users request Node-RED operations like creating flows or nodes, USE THE TOOLS to actually perform the operations, don't just provide instructions.`;
-            } else {
-                systemPrompt += `Please provide specific, actionable guidance for Node-RED development. When suggesting code or configurations, use Node-RED's standard patterns and best practices.`;
-            }
+REMEMBER: Always call the tool after explanation to generate the Apply button!`;
 
             return systemPrompt;
         };
@@ -752,11 +683,15 @@ IMPORTANT: When users ask you to create flows, nodes, or perform Node-RED operat
                 try {
                     console.log('尝试获取MCP工具...');
                     mcpTools = await configNode.getMCPTools();
+                    console.log('原始MCP工具:', mcpTools.length, '个');
                     
                     if (mcpTools.length > 0) {
+                        console.log('MCP工具详情:', JSON.stringify(mcpTools, null, 2));
+                        
                         console.log('转换MCP工具为AI SDK格式...');
                         aiCompatibleTools = configNode.convertMCPToolsForAI(mcpTools);
                         console.log(`成功转换 ${aiCompatibleTools.length} 个工具`);
+                        console.log('转换后的工具:', JSON.stringify(aiCompatibleTools, null, 2));
                     }
                     
                     mcpAvailable = true;
@@ -765,6 +700,12 @@ IMPORTANT: When users ask you to create flows, nodes, or perform Node-RED operat
                     console.error('获取MCP工具失败:', error);
                     mcpAvailable = false;
                 }
+            } else {
+                console.log('MCP未启用或未连接:', {
+                    enableMcp: configNode.enableMcp,
+                    hasClient: !!configNode.mcpClient,
+                    connected: configNode.mcpClient ? configNode.mcpClient.isClientConnected() : false
+                });
             }
             
             // 生成增强的系统提示（传入MCP工具信息）
@@ -810,7 +751,12 @@ IMPORTANT: When users ask you to create flows, nodes, or perform Node-RED operat
                     maxTokens: configNode.maxTokens,
                     temperature: configNode.temperature,
                     onStepFinish: async (step) => {
-                        console.log('步骤完成:', step.stepType);
+                        console.log('步骤完成:', step.stepType, step);
+                        
+                        // 处理文本内容
+                        if (step.text) {
+                            console.log('步骤文本内容:', step.text);
+                        }
                         
                         if (step.toolCalls && step.toolCalls.length > 0) {
                             console.log('检测到工具调用:', step.toolCalls.length, '个');
@@ -818,27 +764,63 @@ IMPORTANT: When users ask you to create flows, nodes, or perform Node-RED operat
                             for (const toolCall of step.toolCalls) {
                                 console.log('工具调用:', toolCall.toolName, toolCall.args);
                                 
-                                sendSSE({
-                                    type: 'tool',
-                                    content: `🔧 调用工具: ${toolCall.toolName}`
-                                });
+                                // 检查是否是创建流程相关的工具
+                                const isFlowCreationTool = ['create-flow', 'update-flows', 'update-flow'].includes(toolCall.toolName);
                                 
-                                try {
-                                    // 执行MCP工具调用
-                                    const toolResult = await configNode.executeMCPTool(
-                                        toolCall.toolName, 
-                                        toolCall.args
-                                    );
+                                if (isFlowCreationTool) {
+                                    // 对于流程创建工具，发送JSON编辑器而不是直接执行
+                                    console.log('发送JSON编辑器:', toolCall.toolName);
                                     
-                                    const formattedResult = configNode.formatToolResult(toolResult);
-                                    console.log('工具调用结果:', formattedResult.substring(0, 200) + '...');
+                                    // 格式化JSON数据
+                                    let jsonData = '';
+                                    if (toolCall.args.flowJson) {
+                                        try {
+                                            // 美化JSON格式
+                                            const parsedJson = JSON.parse(toolCall.args.flowJson);
+                                            jsonData = JSON.stringify(parsedJson, null, 2);
+                                        } catch (e) {
+                                            jsonData = toolCall.args.flowJson;
+                                        }
+                                    } else {
+                                        jsonData = JSON.stringify(toolCall.args, null, 2);
+                                    }
                                     
-                                } catch (error) {
-                                    console.error('工具调用失败:', error);
+                                    const editorData = {
+                                        type: 'json_editor',
+                                        toolName: toolCall.toolName,
+                                        toolArgs: toolCall.args,
+                                        jsonContent: jsonData,
+                                        editorTitle: `${toolCall.args.label || '新流程'} - 流程配置`,
+                                        description: `以下是将要创建的流程配置，您可以编辑后点击Apply按钮执行创建。`
+                                    };
+                                    
+                                    console.log('编辑器数据:', editorData);
+                                    sendSSE(editorData);
+                                    
+                                    // 重要：不要在这里执行工具，只发送编辑器
+                                } else {
+                                    // 其他工具直接执行
                                     sendSSE({
-                                        type: 'error',
-                                        content: `❌ 工具调用失败: ${error.message}`
+                                        type: 'tool',
+                                        content: `🔧 调用工具: ${toolCall.toolName}`
                                     });
+                                    
+                                    try {
+                                        const toolResult = await configNode.executeMCPTool(
+                                            toolCall.toolName, 
+                                            toolCall.args
+                                        );
+                                        
+                                        const formattedResult = configNode.formatToolResult(toolResult);
+                                        console.log('工具调用结果:', formattedResult.substring(0, 200) + '...');
+                                        
+                                    } catch (error) {
+                                        console.error('工具调用失败:', error);
+                                        sendSSE({
+                                            type: 'error',
+                                            content: `❌ 工具调用失败: ${error.message}`
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -860,18 +842,17 @@ IMPORTANT: When users ask you to create flows, nodes, or perform Node-RED operat
 
                 console.log('文本流读取完成，总长度:', fullText.length);
                 
-                // 如果没有文本内容但有工具调用，发送提示信息
-                if (fullText.length === 0) {
-                    console.log('检查是否有工具调用结果...');
-                    const finalResult = await result.response;
-                    console.log('最终结果:', finalResult);
-                    
-                    if (finalResult.toolCalls && finalResult.toolCalls.length > 0) {
-                        sendSSE({
-                            type: 'content',
-                            content: '\n\n✅ 工具调用完成'
-                        });
-                    }
+                // 获取最终结果以检查工具调用
+                const finalResult = await result.response;
+                console.log('最终结果:', finalResult);
+                
+                // 如果有工具调用但没有文本，说明LLM直接调用了工具
+                if (fullText.length === 0 && finalResult.toolCalls && finalResult.toolCalls.length > 0) {
+                    console.log('检测到直接工具调用，添加默认说明');
+                    sendSSE({
+                        type: 'content',
+                        content: '我将为您创建这个流程。'
+                    });
                 }
                 
             } else {
@@ -980,6 +961,56 @@ IMPORTANT: When users ask you to create flows, nodes, or perform Node-RED operat
             
         } catch (error) {
             res.status(500).json({ error: error.message });
+        }
+    });
+
+    // 执行工具调用端点（用于按钮点击）
+    RED.httpAdmin.post('/make-iot-smart/execute-tool', async function(req, res) {
+        try {
+            const { toolName, toolArgs, nodeId, selectedFlow } = req.body;
+            
+            if (!nodeId) {
+                return res.status(400).json({ error: 'Node ID is required' });
+            }
+            
+            const configNode = RED.nodes.getNode(nodeId);
+            if (!configNode) {
+                return res.status(404).json({ error: 'Configuration node not found' });
+            }
+            
+            console.log('执行工具调用:', toolName, toolArgs);
+            
+            // 如果是创建流程工具，且有选中的流程，添加到当前流程
+            if (toolName === 'create-flow' && selectedFlow && selectedFlow.id) {
+                // 修改工具参数，指定在当前流程中创建
+                toolArgs.flowId = selectedFlow.id;
+                console.log('在当前流程中创建:', selectedFlow.id);
+            }
+            
+            try {
+                const toolResult = await configNode.executeMCPTool(toolName, toolArgs);
+                const formattedResult = configNode.formatToolResult(toolResult);
+                
+                res.json({
+                    success: true,
+                    result: formattedResult,
+                    toolName: toolName
+                });
+                
+            } catch (error) {
+                console.error('工具执行失败:', error);
+                res.status(500).json({
+                    success: false,
+                    error: error.message
+                });
+            }
+            
+        } catch (error) {
+            console.error('Execute tool error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
         }
     });
 }

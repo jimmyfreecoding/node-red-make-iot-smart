@@ -1121,44 +1121,28 @@ function addConfigNodeToList(node) {
             var currentFileName = "ai-sidebar.html";
             $("#current-file-name").text(currentFileName);
         } catch (error) {
-            console.error("更新flow名称时出错:", error);
+            console.warn("更新流程名称失败:", error);
             $("#current-flow-name").text("未知流程");
         }
     }
-    
+
     // 更新当前选中节点信息的函数
     function updateSelectedNodeInfo() {
         try {
-            // 获取当前选中的节点
             var selection = RED.view.selection();
             
-            if (selection && selection.nodes && selection.nodes.length > 0) {
-                // 如果选中了多个节点
-                if (selection.nodes.length > 1) {
-                    $("#current-selected-node").text("已选择 " + selection.nodes.length + " 个节点");
-                    $("#selected-node-type-container").hide();
-                } 
-                // 如果只选中了一个节点
-                else {
-                    var selectedNode = selection.nodes[0];
-                    
-                    // 获取节点名称（优先使用name属性，其次使用id）
-                    var nodeName = selectedNode.name || selectedNode.id;
-                    $("#current-selected-node").text(nodeName);
-                    
-                    // 显示节点类型
-                    $("#current-selected-node-type").text(selectedNode.type);
-                    $("#selected-node-type-container").show();
-                }
+            if (!selection || !selection.nodes || selection.nodes.length === 0) {
+                $("#current-node-info").text("未选择节点");
+            } else if (selection.nodes.length === 1) {
+                var node = selection.nodes[0];
+                var nodeInfo = (node.name || node.type || "未知节点");
+                $("#current-node-info").text(nodeInfo);
             } else {
-                // 如果没有选中节点
-                $("#current-selected-node").text("未选择节点");
-                $("#selected-node-type-container").hide();
+                $("#current-node-info").text("已选择 " + selection.nodes.length + " 个节点");
             }
         } catch (error) {
-            console.error("更新选中节点信息时出错:", error);
-            $("#current-selected-node").text("无法获取节点信息");
-            $("#selected-node-type-container").hide();
+            console.warn("更新节点信息失败:", error);
+            $("#current-node-info").text("未知节点");
         }
     }
     
@@ -1226,58 +1210,18 @@ function addConfigNodeToList(node) {
         var selectedFlow = null;
         var selectedNodes = [];
         var flowData = null;
-        
+
         try {
             // 获取当前活动的工作区
             var activeWorkspace = RED.workspaces.active();
             if (activeWorkspace) {
-                var workspace = RED.nodes.workspace(activeWorkspace);
-                
-                // 获取流程中的所有节点
-                var flowNodes = [];
-                RED.nodes.eachNode(function(node) {
-                    if (node.z === activeWorkspace) {
-                        flowNodes.push({
-                            id: node.id,
-                            type: node.type,
-                            name: node.name || '',
-                            x: node.x,
-                            y: node.y,
-                            wires: node.wires || [],
-                            // 添加节点的配置信息（但排除敏感信息）
-                            config: Object.keys(node).reduce((config, key) => {
-                                if (!['credentials', 'apiKey', 'password', 'token'].includes(key) && 
-                                    !key.startsWith('_') && 
-                                    typeof node[key] !== 'function') {
-                                    config[key] = node[key];
-                                }
-                                return config;
-                            }, {})
-                        });
-                    }
-                });
-                
                 selectedFlow = {
-                    id: activeWorkspace,
-                    label: workspace.label || 'Unnamed Flow',
-                    type: 'tab',
-                    nodes: flowNodes,
-                    nodeCount: flowNodes.length
+                    id: activeWorkspace.id,
+                    label: activeWorkspace.label || 'Untitled Flow'
                 };
                 
-                // 创建流程的JSON表示
-                flowData = {
-                    id: activeWorkspace,
-                    label: workspace.label || 'Unnamed Flow',
-                    type: 'tab',
-                    nodes: flowNodes,
-                    connections: flowNodes.map(node => ({
-                        id: node.id,
-                        type: node.type,
-                        name: node.name,
-                        outputs: node.wires
-                    }))
-                };
+                // 获取流程数据
+                flowData = RED.nodes.createExportableNodeSet([activeWorkspace.id]);
             }
             
             // 获取选中的节点
@@ -1315,6 +1259,7 @@ function addConfigNodeToList(node) {
         
         // 创建加载消息
         var loadingMessageId = "loading-" + Date.now();
+        var aiMessageId = "ai-" + Date.now(); // 定义aiMessageId
         addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
         
         // 使用fetch进行流式请求
@@ -1339,46 +1284,94 @@ function addConfigNodeToList(node) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            // 移除加载消息
-            $("#" + loadingMessageId).remove();
-            
-            // 创建AI回复消息容器
-            var aiMessageId = "ai-" + Date.now();
-            addMessageToChat("assistant", "", aiMessageId);
-            
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             
             function readStream() {
                 return reader.read().then(({ done, value }) => {
                     if (done) {
-                        console.log("流式响应完成");
+                        console.log("流读取完成");
+                        // 移除加载消息
+                        $("#" + loadingMessageId).remove();
                         return;
                     }
                     
-                    const chunk = decoder.decode(value);
-                    // console.log("收到数据块:", chunk);
+                    const chunk = decoder.decode(value, { stream: true });
+                    console.log("收到数据块:", chunk);
                     
                     const lines = chunk.split('\n');
-                    
                     lines.forEach(line => {
                         if (line.startsWith('data: ')) {
                             try {
                                 const data = JSON.parse(line.slice(6));
-                                // console.log("解析的数据:", data);
+                                console.log("=== 解析的SSE数据 ===");
+                                console.log("数据类型:", data.type);
+                                console.log("完整数据:", JSON.stringify(data, null, 2));
                                 
                                 if (data.type === 'content') {
+                                    // 移除加载消息（如果还存在）
+                                    $("#" + loadingMessageId).remove();
+                                    
                                     // 追加文本到AI消息
                                     var aiMessage = $("#" + aiMessageId + " .message-content");
-                                    aiMessage.text(aiMessage.text() + data.content);
+                                    if (aiMessage.length === 0) {
+                                        // 如果AI消息不存在，创建它
+                                        addMessageToChat("assistant", data.content, aiMessageId);
+                                    } else {
+                                        aiMessage.text(aiMessage.text() + data.content);
+                                    }
                                     forceScrollToBottom();
+                                } else if (data.type === 'json_editor') {
+                                    console.log("=== 处理json_editor ===");
+                                    console.log("编辑器数据:", data);
+                                    
+                                    // 确保AI消息存在
+                                    var aiMessage = $("#" + aiMessageId);
+                                    if (aiMessage.length === 0) {
+                                        addMessageToChat("assistant", "", aiMessageId);
+                                    }
+                                    
+                                    // 移除加载消息
+                                    $("#" + loadingMessageId).remove();
+                                    
+                                    // 添加JSON编辑器
+                                    addJSONEditor(aiMessageId, data);
+                                } else if (data.type === 'action_button') {
+                                    console.log("=== 处理action_button ===");
+                                    console.log("按钮数据:", data);
+                                    
+                                    // 确保AI消息存在
+                                    var aiMessage = $("#" + aiMessageId);
+                                    if (aiMessage.length === 0) {
+                                        addMessageToChat("assistant", "", aiMessageId);
+                                    }
+                                    
+                                    // 移除加载消息
+                                    $("#" + loadingMessageId).remove();
+                                    
+                                    // 添加按钮
+                                    addActionButton(aiMessageId, data);
                                 } else if (data.type === 'start') {
                                     console.log("AI开始响应, MCP可用:", data.mcpAvailable);
+                                    console.log("MCP工具数量:", data.mcpToolsCount);
+                                    
+                                    // 移除加载消息，创建AI消息
+                                    $("#" + loadingMessageId).remove();
+                                    addMessageToChat("assistant", "", aiMessageId);
                                 } else if (data.type === 'end') {
                                     console.log("AI响应结束");
+                                    // 移除加载消息（如果还存在）
+                                    $("#" + loadingMessageId).remove();
                                 } else if (data.type === 'error') {
-                                    $("#" + aiMessageId).remove();
+                                    $("#" + loadingMessageId).remove();
                                     addMessageToChat("error", "❌ " + data.content);
+                                } else if (data.type === 'tool') {
+                                    console.log("收到tool信息:", data);
+                                    var aiMessage = $("#" + aiMessageId + " .message-content");
+                                    if (aiMessage.length > 0) {
+                                        aiMessage.text(aiMessage.text() + "\n\n" + data.content);
+                                        forceScrollToBottom();
+                                    }
                                 }
                             } catch (e) {
                                 console.warn("解析SSE数据失败:", line, e);
@@ -1409,9 +1402,17 @@ function addConfigNodeToList(node) {
                 break;
                 
             case 'text':
+            case 'content':
                 // 追加文本内容
                 if (currentStreamMessageId) {
                     appendToMessage(currentStreamMessageId, data.content);
+                }
+                break;
+                
+            case 'action_button':
+                // 处理动作按钮
+                if (currentStreamMessageId) {
+                    addActionButton(currentStreamMessageId, data);
                 }
                 break;
                 
@@ -1438,6 +1439,7 @@ function addConfigNodeToList(node) {
                 break;
                 
             case 'done':
+            case 'end':
                 // 流式响应完成
                 currentStreamMessageId = null;
                 saveChatMessage("assistant", data.final_content || "");
@@ -1648,4 +1650,1020 @@ function loadAISidebarConfig() {
         }
     });
 }
+    // 添加动作按钮到消息
+    function addActionButton(messageId, buttonData) {
+        var messageElement = $("#" + messageId);
+        if (messageElement.length > 0) {
+            console.log("添加按钮到消息:", messageId, buttonData);
+            
+            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
+            var buttonHtml = `
+                <div class="action-button-container" style="
+                    margin-top: 16px; 
+                    padding: 0;
+                    display: flex;
+                    justify-content: flex-end;
+                ">
+                    <button class="execute-tool-btn" 
+                            data-tool-name="${buttonData.toolName}" 
+                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
+                            style="
+                                background: #10b981;
+                                border: 1px solid #10b981;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: white;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                                min-width: 60px;
+                                justify-content: center;
+                            "
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="fa fa-check" style="font-size: 12px;"></i>
+                        Apply
+                    </button>
+                </div>
+            `;
+            
+            messageElement.find('.message-content').append(buttonHtml);
+            forceScrollToBottom();
+        } else {
+            console.warn("找不到消息元素:", messageId);
+        }
+    }
+
+    // 按钮点击事件处理
+    $(document).on('click', '.execute-tool-btn', function() {
+        var toolName = $(this).data('tool-name');
+        var toolArgs = $(this).data('tool-args');
+        var button = $(this);
+        var originalText = button.html();
+        
+        // 获取当前选中的流程信息
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.prop('disabled', true)
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+              .css({
+                  'background': '#f3f4f6',
+                  'color': '#6b7280',
+                  'cursor': 'not-allowed'
+              });
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            button.prop('disabled', false).html(originalText);
+            return;
+        }
+        
+        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
+        
+        // 发送工具执行请求
+        $.ajax({
+            url: '/make-iot-smart/execute-tool',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // 显示执行成功
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
+                          .css({
+                              'background': '#dcfce7',
+                              'color': '#166534',
+                              'border-color': '#bbf7d0'
+                          });
+                    
+                    // 添加成功消息
+                    addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
+                } else {
+                    // 显示执行失败
+                    button.prop('disabled', false)
+                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                          .css({
+                              'background': '#fef2f2',
+                              'color': '#dc2626',
+                              'border-color': '#fecaca'
+                          });
+                    
+                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
+                }
+            },
+            error: function(xhr) {
+                var error = xhr.responseJSON ? xhr.responseJSON.error : '网络错误';
+                
+                // 恢复按钮状态
+                button.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+                
+                addMessageToChat("error", `❌ 执行失败: ${error}`);
+            }
+        });
+    });
+    // 添加JSON编辑器到消息
+    function addJSONEditor(messageId, editorData) {
+        console.log("=== addJSONEditor 被调用 ===");
+        console.log("messageId:", messageId);
+        console.log("editorData:", editorData);
+        
+        var messageElement = $("#" + messageId);
+        console.log("找到消息元素:", messageElement.length > 0);
+        
+        if (messageElement.length > 0) {
+            var editorId = "json-editor-" + Date.now();
+            
+            // 创建编辑器HTML
+            var editorHtml = `
+                <div class="json-editor-container" style="margin-top: 16px;">
+                    <div style="margin-bottom: 8px;">
+                        <strong>${editorData.editorTitle || '流程配置'}</strong>
+                    </div>
+                    <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px;">
+                        ${editorData.description || ''}
+                    </div>
+                    <div id="${editorId}" style="
+                        height: 300px;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 6px;
+                        margin-bottom: 12px;
+                    "></div>
+                    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                        <button class="json-editor-apply-btn" 
+                                data-editor-id="${editorId}"
+                                data-tool-name="${editorData.toolName}" 
+                                data-tool-args='${JSON.stringify(editorData.toolArgs)}'
+                                style="
+                                    background: #10b981;
+                                    border: 1px solid #10b981;
+                                    border-radius: 6px;
+                                    padding: 8px 16px;
+                                    font-size: 14px;
+                                    color: white;
+                                    cursor: pointer;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    transition: all 0.2s;
+                                    font-weight: 500;
+                                "
+                                onmouseover="this.style.background='#059669'"
+                                onmouseout="this.style.background='#10b981'">
+                            <i class="fa fa-check" style="font-size: 12px;"></i>
+                            Apply
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            console.log("添加编辑器HTML");
+            messageElement.find('.message-content').append(editorHtml);
+            
+            // 初始化JSON编辑器
+            ensureAceEditorLoaded(function() {
+                initializeJSONEditor(editorId, editorData.jsonContent);
+            });
+            
+            // 添加Apply按钮点击事件
+            messageElement.find('.json-editor-apply-btn').off('click').on('click', function() {
+                console.log("JSON编辑器Apply按钮被点击");
+                var editorId = $(this).data('editor-id');
+                var toolName = $(this).data('tool-name');
+                var originalToolArgs = $(this).data('tool-args');
+                
+                // 获取编辑器内容
+                var editor = window.jsonEditors && window.jsonEditors[editorId];
+                if (!editor) {
+                    RED.notify("编辑器未找到", "error");
+                    return;
+                }
+                
+                var editedContent = editor.getValue();
+                
+                // 验证JSON格式
+                try {
+                    var parsedJson = JSON.parse(editedContent);
+                    
+                    // 更新工具参数
+                    var updatedToolArgs = Object.assign({}, originalToolArgs);
+                    if (toolName === 'create-flow') {
+                        updatedToolArgs.flowJson = editedContent;
+                    }
+                    
+                    console.log("执行工具:", toolName, updatedToolArgs);
+                    
+                    // 禁用按钮
+                    $(this).prop('disabled', true)
+                           .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+                           .css({
+                               'background': '#f3f4f6',
+                               'color': '#6b7280',
+                               'cursor': 'not-allowed'
+                           });
+                    
+                    // 调用执行工具的API
+                    executeJSONEditorTool(toolName, updatedToolArgs, $(this));
+                    
+                } catch (e) {
+                    RED.notify("JSON格式错误: " + e.message, "error");
+                    // 高亮错误行
+                    document.getElementById(editorId).style.borderColor = '#dc3545';
+                }
+            });
+            
+            forceScrollToBottom();
+            console.log("JSON编辑器添加完成");
+        } else {
+            console.error("找不到消息元素:", messageId);
+        }
+    }
+    
+    // 执行JSON编辑器的工具调用
+    function executeJSONEditorTool(toolName, toolArgs, buttonElement) {
+        console.log("执行JSON编辑器工具调用:", toolName, toolArgs);
+        
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            buttonElement.prop('disabled', false).html('<i class="fa fa-check"></i> Apply');
+            return;
+        }
+        
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        fetch('/make-iot-smart/execute-tool', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("工具执行结果:", data);
+            
+            if (data.success) {
+                // 成功执行
+                buttonElement.removeClass('execute-tool-btn')
+                    .css({
+                        'background': '#059669',
+                        'cursor': 'default'
+                    })
+                    .html('<i class="fa fa-check"></i> 已应用')
+                    .prop('disabled', true);
+                
+                // 显示成功消息
+                addMessageToChat("system", "✅ 流程创建成功！");
+                
+                // 可选：刷新页面或更新流程列表
+                if (typeof RED !== 'undefined' && RED.view) {
+                    RED.view.redraw();
+                }
+            } else {
+                // 执行失败
+                buttonElement.prop('disabled', false)
+                    .css('background', '#ef4444')
+                    .text('执行失败');
+                
+                addMessageToChat("error", "❌ 工具执行失败: " + data.error);
+                
+                // 3秒后恢复按钮
+                setTimeout(() => {
+                    buttonElement.css('background', '#10b981').text('Apply');
+                }, 3000);
+            }
+        })
+        .catch(error => {
+            console.error("工具执行错误:", error);
+            buttonElement.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+            
+            addMessageToChat("error", "❌ 网络错误: " + error.message);
+        });
+    }
 </script>
+    // 添加动作按钮到消息
+    function addActionButton(messageId, buttonData) {
+        var messageElement = $("#" + messageId);
+        if (messageElement.length > 0) {
+            console.log("添加按钮到消息:", messageId, buttonData);
+            
+            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
+            var buttonHtml = `
+                <div class="action-button-container" style="
+                    margin-top: 16px; 
+                    padding: 0;
+                    display: flex;
+                    justify-content: flex-end;
+                ">
+                    <button class="execute-tool-btn" 
+                            data-tool-name="${buttonData.toolName}" 
+                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
+                            style="
+                                background: #10b981;
+                                border: 1px solid #10b981;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: white;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                                min-width: 60px;
+                                justify-content: center;
+                            "
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="fa fa-check" style="font-size: 12px;"></i>
+                        Apply
+                    </button>
+                </div>
+            `;
+            
+            messageElement.find('.message-content').append(buttonHtml);
+            forceScrollToBottom();
+        } else {
+            console.warn("找不到消息元素:", messageId);
+        }
+    }
+
+    // 按钮点击事件处理
+    $(document).on('click', '.execute-tool-btn', function() {
+        var toolName = $(this).data('tool-name');
+        var toolArgs = $(this).data('tool-args');
+        var button = $(this);
+        var originalText = button.html();
+        
+        // 获取当前选中的流程信息
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.prop('disabled', true)
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+              .css({
+                  'background': '#f3f4f6',
+                  'color': '#6b7280',
+                  'cursor': 'not-allowed'
+              });
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            button.prop('disabled', false).html(originalText);
+            return;
+        }
+        
+        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
+        
+        // 发送工具执行请求
+        $.ajax({
+            url: '/make-iot-smart/execute-tool',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // 显示执行成功
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
+                          .css({
+                              'background': '#dcfce7',
+                              'color': '#166534',
+                              'border-color': '#bbf7d0'
+                          });
+                    
+                    // 添加成功消息
+                    addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
+                } else {
+                    // 显示执行失败
+                    button.prop('disabled', false)
+                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                          .css({
+                              'background': '#fef2f2',
+                              'color': '#dc2626',
+                              'border-color': '#fecaca'
+                          });
+                    
+                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
+                }
+            },
+            error: function(xhr) {
+                var error = xhr.responseJSON ? xhr.responseJSON.error : '网络错误';
+                
+                // 恢复按钮状态
+                button.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+                
+                addMessageToChat("error", `❌ 执行失败: ${error}`);
+            }
+        });
+    });
+</script>
+    // 添加动作按钮到消息
+    function addActionButton(messageId, buttonData) {
+        var messageElement = $("#" + messageId);
+        if (messageElement.length > 0) {
+            console.log("添加按钮到消息:", messageId, buttonData);
+            
+            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
+            var buttonHtml = `
+                <div class="action-button-container" style="
+                    margin-top: 16px; 
+                    padding: 0;
+                    display: flex;
+                    justify-content: flex-end;
+                ">
+                    <button class="execute-tool-btn" 
+                            data-tool-name="${buttonData.toolName}" 
+                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
+                            style="
+                                background: #10b981;
+                                border: 1px solid #10b981;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: white;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                                min-width: 60px;
+                                justify-content: center;
+                            "
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="fa fa-check" style="font-size: 12px;"></i>
+                        Apply
+                    </button>
+                </div>
+            `;
+            
+            messageElement.find('.message-content').append(buttonHtml);
+            forceScrollToBottom();
+        } else {
+            console.warn("找不到消息元素:", messageId);
+        }
+    }
+
+    // 按钮点击事件处理
+    $(document).on('click', '.execute-tool-btn', function() {
+        var toolName = $(this).data('tool-name');
+        var toolArgs = $(this).data('tool-args');
+        var button = $(this);
+        var originalText = button.html();
+        
+        // 获取当前选中的流程信息
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.prop('disabled', true)
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+              .css({
+                  'background': '#f3f4f6',
+                  'color': '#6b7280',
+                  'cursor': 'not-allowed'
+              });
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            button.prop('disabled', false).html(originalText);
+            return;
+        }
+        
+        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
+        
+        // 发送工具执行请求
+        $.ajax({
+            url: '/make-iot-smart/execute-tool',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // 显示执行成功
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
+                          .css({
+                              'background': '#dcfce7',
+                              'color': '#166534',
+                              'border-color': '#bbf7d0'
+                          });
+                    
+                    // 添加成功消息
+                    addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
+                } else {
+                    // 显示执行失败
+                    button.prop('disabled', false)
+                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                          .css({
+                              'background': '#fef2f2',
+                              'color': '#dc2626',
+                              'border-color': '#fecaca'
+                          });
+                    
+                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
+                }
+            },
+            error: function(xhr) {
+                var error = xhr.responseJSON ? xhr.responseJSON.error : '网络错误';
+                
+                // 恢复按钮状态
+                button.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+                
+                addMessageToChat("error", `❌ 执行失败: ${error}`);
+            }
+        });
+    });
+</script>
+    // 添加动作按钮到消息
+    function addActionButton(messageId, buttonData) {
+        var messageElement = $("#" + messageId);
+        if (messageElement.length > 0) {
+            console.log("添加按钮到消息:", messageId, buttonData);
+            
+            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
+            var buttonHtml = `
+                <div class="action-button-container" style="
+                    margin-top: 16px; 
+                    padding: 0;
+                    display: flex;
+                    justify-content: flex-end;
+                ">
+                    <button class="execute-tool-btn" 
+                            data-tool-name="${buttonData.toolName}" 
+                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
+                            style="
+                                background: #10b981;
+                                border: 1px solid #10b981;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: white;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                                min-width: 60px;
+                                justify-content: center;
+                            "
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="fa fa-check" style="font-size: 12px;"></i>
+                        Apply
+                    </button>
+                </div>
+            `;
+            
+            messageElement.find('.message-content').append(buttonHtml);
+            forceScrollToBottom();
+        } else {
+            console.warn("找不到消息元素:", messageId);
+        }
+    }
+
+    // 按钮点击事件处理
+    $(document).on('click', '.execute-tool-btn', function() {
+        var toolName = $(this).data('tool-name');
+        var toolArgs = $(this).data('tool-args');
+        var button = $(this);
+        var originalText = button.html();
+        
+        // 获取当前选中的流程信息
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.prop('disabled', true)
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+              .css({
+                  'background': '#f3f4f6',
+                  'color': '#6b7280',
+                  'cursor': 'not-allowed'
+              });
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            button.prop('disabled', false).html(originalText);
+            return;
+        }
+        
+        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
+        
+        // 发送工具执行请求
+        $.ajax({
+            url: '/make-iot-smart/execute-tool',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // 显示执行成功
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
+                          .css({
+                              'background': '#dcfce7',
+                              'color': '#166534',
+                              'border-color': '#bbf7d0'
+                          });
+                    
+                    // 添加成功消息
+                    addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
+                } else {
+                    // 显示执行失败
+                    button.prop('disabled', false)
+                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                          .css({
+                              'background': '#fef2f2',
+                              'color': '#dc2626',
+                              'border-color': '#fecaca'
+                          });
+                    
+                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
+                }
+            },
+            error: function(xhr) {
+                var error = xhr.responseJSON ? xhr.responseJSON.error : '网络错误';
+                
+                // 恢复按钮状态
+                button.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+                
+                addMessageToChat("error", `❌ 执行失败: ${error}`);
+            }
+        });
+    });
+</script>
+    // 添加动作按钮到消息
+    function addActionButton(messageId, buttonData) {
+        var messageElement = $("#" + messageId);
+        if (messageElement.length > 0) {
+            console.log("添加按钮到消息:", messageId, buttonData);
+            
+            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
+            var buttonHtml = `
+                <div class="action-button-container" style="
+                    margin-top: 16px; 
+                    padding: 0;
+                    display: flex;
+                    justify-content: flex-end;
+                ">
+                    <button class="execute-tool-btn" 
+                            data-tool-name="${buttonData.toolName}" 
+                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
+                            style="
+                                background: #10b981;
+                                border: 1px solid #10b981;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: white;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                                min-width: 60px;
+                                justify-content: center;
+                            "
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="fa fa-check" style="font-size: 12px;"></i>
+                        Apply
+                    </button>
+                </div>
+            `;
+            
+            messageElement.find('.message-content').append(buttonHtml);
+            forceScrollToBottom();
+        } else {
+            console.warn("找不到消息元素:", messageId);
+        }
+    }
+
+    // 按钮点击事件处理
+    $(document).on('click', '.execute-tool-btn', function() {
+        var toolName = $(this).data('tool-name');
+        var toolArgs = $(this).data('tool-args');
+        var button = $(this);
+        var originalText = button.html();
+        
+        // 获取当前选中的流程信息
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.prop('disabled', true)
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+              .css({
+                  'background': '#f3f4f6',
+                  'color': '#6b7280',
+                  'cursor': 'not-allowed'
+              });
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            button.prop('disabled', false).html(originalText);
+            return;
+        }
+        
+        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
+        
+        // 发送工具执行请求
+        $.ajax({
+            url: '/make-iot-smart/execute-tool',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // 显示执行成功
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
+                          .css({
+                              'background': '#dcfce7',
+                              'color': '#166534',
+                              'border-color': '#bbf7d0'
+                          });
+                    
+                    // 添加成功消息
+                    addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
+                } else {
+                    // 显示执行失败
+                    button.prop('disabled', false)
+                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                          .css({
+                              'background': '#fef2f2',
+                              'color': '#dc2626',
+                              'border-color': '#fecaca'
+                          });
+                    
+                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
+                }
+            },
+            error: function(xhr) {
+                var error = xhr.responseJSON ? xhr.responseJSON.error : '网络错误';
+                
+                // 恢复按钮状态
+                button.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+                
+                addMessageToChat("error", `❌ 执行失败: ${error}`);
+            }
+        });
+    });
+</script>
+    // 添加动作按钮到消息
+    function addActionButton(messageId, buttonData) {
+        var messageElement = $("#" + messageId);
+        if (messageElement.length > 0) {
+            console.log("添加按钮到消息:", messageId, buttonData);
+            
+            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
+            var buttonHtml = `
+                <div class="action-button-container" style="
+                    margin-top: 16px; 
+                    padding: 0;
+                    display: flex;
+                    justify-content: flex-end;
+                ">
+                    <button class="execute-tool-btn" 
+                            data-tool-name="${buttonData.toolName}" 
+                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
+                            style="
+                                background: #10b981;
+                                border: 1px solid #10b981;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: white;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                                min-width: 60px;
+                                justify-content: center;
+                            "
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="fa fa-check" style="font-size: 12px;"></i>
+                        Apply
+                    </button>
+                </div>
+            `;
+            
+            messageElement.find('.message-content').append(buttonHtml);
+            forceScrollToBottom();
+        } else {
+            console.warn("找不到消息元素:", messageId);
+        }
+    }
+
+    // 按钮点击事件处理
+    $(document).on('click', '.execute-tool-btn', function() {
+        var toolName = $(this).data('tool-name');
+        var toolArgs = $(this).data('tool-args');
+        var button = $(this);
+        var originalText = button.html();
+        
+        // 获取当前选中的流程信息
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.prop('disabled', true)
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+              .css({
+                  'background': '#f3f4f6',
+                  'color': '#6b7280',
+                  'cursor': 'not-allowed'
+              });
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            button.prop('disabled', false).html(originalText);
+            return;
+        }
+        
+        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
+        
+        // 发送工具执行请求
+        $.ajax({
+            url: '/make-iot-smart/execute-tool',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // 显示执行成功
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
+                          .css({
+                              'background': '#dcfce7',
+                              'color': '#166534',
+                              'border-color': '#bbf7d0'
+                          });
+                    
+                    // 添加成功消息
+                    addMessageToChat("assistant", `✅ ${toolName} �
