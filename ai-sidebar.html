@@ -415,8 +415,29 @@
     function appendToMessage(messageId, content) {
         var messageElement = $("#" + messageId + " .message-content");
         if (messageElement.length > 0) {
-            var currentContent = messageElement.text();
-            messageElement.text(currentContent + content);
+            // Get current text content (not HTML to avoid double-rendering)
+            var currentText = messageElement.attr('data-raw-text') || '';
+            var newText = currentText + content;
+            
+            // Store raw text for future appends
+            messageElement.attr('data-raw-text', newText);
+            
+            // Render combined content as markdown
+            var renderedContent = renderMarkdown(newText);
+            
+            messageElement.html(renderedContent);
+            
+            // Apply syntax highlighting if highlight.js is available
+            if (typeof hljs !== 'undefined') {
+                messageElement.find('pre code').each(function(i, block) {
+                    try {
+                        hljs.highlightElement(block);
+                    } catch (e) {
+                        console.warn('语法高亮失败:', e);
+                    }
+                });
+            }
+            
             forceScrollToBottom();
         }
     }
@@ -565,33 +586,7 @@
             messageHtml += '</div>';
             
             // Message content with markdown rendering
-            var renderedContent = '';
-            if (typeof content === 'string' && content.trim()) {
-                // Check if showdown is available (markdown library)
-                if (typeof showdown !== 'undefined') {
-                    var converter = new showdown.Converter({
-                        tables: true,
-                        strikethrough: true,
-                        tasklists: true,
-                        ghCodeBlocks: true,
-                        smoothLivePreview: true,
-                        simplifiedAutoLink: true,
-                        excludeTrailingPunctuationFromURLs: true,
-                        literalMidWordUnderscores: true,
-                        simpleLineBreaks: true
-                    });
-                    renderedContent = converter.makeHtml(content);
-                } else {
-                    // Fallback: simple text formatting
-                    renderedContent = content
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/`(.*?)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>')
-                        .replace(/\n/g, '<br>');
-                }
-            } else {
-                renderedContent = content || '';
-            }
+            var renderedContent = renderMarkdown(content);
             
             messageHtml += '<div class="message-content" style="background: ' + (isUser ? '#f3f4f6' : '#ffffff') + 
                           '; padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e7eb; word-wrap: break-word; line-height: 1.5;">';
@@ -604,7 +599,11 @@
             // Apply syntax highlighting if highlight.js is available
             if (typeof hljs !== 'undefined') {
                 $("#augment-chat-messages pre code").each(function(i, block) {
-                    hljs.highlightBlock(block);
+                    try {
+                        hljs.highlightElement(block);
+                    } catch (e) {
+                        console.warn('语法高亮失败:', e);
+                    }
                 });
             }
             
@@ -617,121 +616,175 @@
 
     // Add markdown styles to the page
     function addMarkdownStyles() {
-        if ($("#markdown-styles").length === 0) {
-            var styles = `
-                <style id="markdown-styles">
-                    .message-content h1, .message-content h2, .message-content h3, 
-                    .message-content h4, .message-content h5, .message-content h6 {
-                        margin: 16px 0 8px 0;
-                        font-weight: 600;
-                        line-height: 1.25;
-                    }
-                    .message-content h1 { font-size: 1.5em; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
-                    .message-content h2 { font-size: 1.3em; }
-                    .message-content h3 { font-size: 1.2em; }
-                    .message-content h4 { font-size: 1.1em; }
-                    .message-content h5 { font-size: 1em; }
-                    .message-content h6 { font-size: 0.9em; }
-                    
-                    .message-content p {
-                        margin: 8px 0;
-                        line-height: 1.6;
-                    }
-                    
-                    .message-content ul, .message-content ol {
-                        margin: 8px 0;
-                        padding-left: 20px;
-                    }
-                    
-                    .message-content li {
-                        margin: 4px 0;
-                        line-height: 1.5;
-                    }
-                    
-                    .message-content pre {
-                        background: #f8f9fa;
-                        border: 1px solid #e9ecef;
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin: 12px 0;
-                        overflow-x: auto;
-                        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-                        font-size: 0.9em;
-                        line-height: 1.4;
-                    }
-                    
-                    .message-content code {
-                        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-                        font-size: 0.9em;
-                    }
-                    
-                    .message-content pre code {
-                        background: none;
-                        padding: 0;
-                        border-radius: 0;
-                        color: #333;
-                    }
-                    
-                    .message-content strong {
-                        font-weight: 600;
-                    }
-                    
-                    .message-content em {
-                        font-style: italic;
-                    }
-                    
-                    .message-content blockquote {
-                        border-left: 4px solid #e5e7eb;
-                        margin: 12px 0;
-                        padding: 8px 16px;
-                        background: #f9fafb;
-                        color: #6b7280;
-                    }
-                </style>
-            `;
-            $("head").append(styles);
+        // Check if styles already added
+        if (document.getElementById('markdown-styles')) {
+            return;
         }
+        
+        var style = document.createElement('style');
+        style.id = 'markdown-styles';
+        style.textContent = `
+            /* 使用更高优先级的选择器覆盖Node-RED默认样式 */
+            .augment-message-container .message-content h1, 
+            .augment-message-container .message-content h2, 
+            .augment-message-container .message-content h3, 
+            .augment-message-container .message-content h4, 
+            .augment-message-container .message-content h5, 
+            .augment-message-container .message-content h6 {
+                margin: 16px 0 8px 0 !important;
+                font-weight: 600 !important;
+                line-height: 1.25 !important;
+                color: #1f2937 !important;
+            }
+            .augment-message-container .message-content h1 { 
+                font-size: 1.5em !important; 
+                border-bottom: 1px solid #e5e7eb !important; 
+                padding-bottom: 8px !important; 
+            }
+            .augment-message-container .message-content h2 { font-size: 1.3em !important; }
+            .augment-message-container .message-content h3 { font-size: 1.1em !important; }
+            .augment-message-container .message-content h4, 
+            .augment-message-container .message-content h5, 
+            .augment-message-container .message-content h6 { font-size: 1em !important; }
+            
+            .augment-message-container .message-content p {
+                margin: 8px 0 !important;
+                line-height: 1.6 !important;
+                color: #374151 !important;
+            }
+            
+            .augment-message-container .message-content ul, 
+            .augment-message-container .message-content ol {
+                margin: 8px 0 !important;
+                padding-left: 20px !important;
+            }
+            .augment-message-container .message-content li {
+                margin: 4px 0 !important;
+                line-height: 1.5 !important;
+                color: #374151 !important;
+            }
+            
+            .augment-message-container .message-content blockquote {
+                margin: 12px 0 !important;
+                padding: 8px 16px !important;
+                border-left: 4px solid #e5e7eb !important;
+                background: #f9fafb !important;
+                font-style: italic !important;
+                color: #6b7280 !important;
+            }
+            
+            .augment-message-container .message-content pre {
+                margin: 12px 0 !important;
+                padding: 12px !important;
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 6px !important;
+                overflow-x: auto !important;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace !important;
+                font-size: 13px !important;
+                line-height: 1.4 !important;
+                white-space: pre !important;
+            }
+            
+            .augment-message-container .message-content code {
+                background: #f1f5f9 !important;
+                padding: 2px 4px !important;
+                border-radius: 3px !important;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace !important;
+                font-size: 0.9em !important;
+                color: #dc2626 !important;
+            }
+            
+            .augment-message-container .message-content pre code {
+                background: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                color: #334155 !important;
+            }
+            
+            .augment-message-container .message-content table {
+                margin: 12px 0 !important;
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+            .augment-message-container .message-content th, 
+            .augment-message-container .message-content td {
+                border: 1px solid #e5e7eb !important;
+                padding: 8px 12px !important;
+                text-align: left !important;
+            }
+            .augment-message-container .message-content th {
+                background: #f9fafb !important;
+                font-weight: 600 !important;
+            }
+            
+            .augment-message-container .message-content a {
+                color: #3b82f6 !important;
+                text-decoration: none !important;
+            }
+            .augment-message-container .message-content a:hover {
+                text-decoration: underline !important;
+            }
+            
+            .augment-message-container .message-content hr {
+                margin: 16px 0 !important;
+                border: none !important;
+                border-top: 1px solid #e5e7eb !important;
+            }
+            
+            .augment-message-container .message-content strong {
+                font-weight: 600 !important;
+                color: #1f2937 !important;
+            }
+            
+            .augment-message-container .message-content em {
+                font-style: italic !important;
+                color: #6b7280 !important;
+            }
+            
+            .augment-message-container .message-content del {
+                text-decoration: line-through !important;
+                color: #9ca3af !important;
+            }
+            
+            /* Task list styles */
+            .augment-message-container .message-content input[type="checkbox"] {
+                margin-right: 8px !important;
+            }
+            
+            /* Highlight.js theme override for better integration */
+            .augment-message-container .message-content .hljs {
+                background: #f8fafc !important;
+                color: #334155 !important;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     // Append content to existing message with markdown rendering
     function appendToMessage(messageId, content) {
         var messageElement = $("#" + messageId + " .message-content");
         if (messageElement.length > 0) {
-            var currentContent = messageElement.html();
+            // Get current text content (not HTML to avoid double-rendering)
+            var currentText = messageElement.attr('data-raw-text') || '';
+            var newText = currentText + content;
             
-            // Render new content as markdown
-            var renderedContent = '';
-            if (typeof showdown !== 'undefined') {
-                var converter = new showdown.Converter({
-                    tables: true,
-                    strikethrough: true,
-                    tasklists: true,
-                    ghCodeBlocks: true,
-                    smoothLivePreview: true,
-                    simplifiedAutoLink: true,
-                    excludeTrailingPunctuationFromURLs: true,
-                    literalMidWordUnderscores: true,
-                    simpleLineBreaks: true
-                });
-                // Convert the combined content to avoid markdown conflicts
-                var combinedText = messageElement.text() + content;
-                renderedContent = converter.makeHtml(combinedText);
-            } else {
-                // Fallback: simple text formatting
-                var combinedText = messageElement.text() + content;
-                renderedContent = combinedText
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/`(.*?)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>')
-                    .replace(/\n/g, '<br>');
-            }
+            // Store raw text for future appends
+            messageElement.attr('data-raw-text', newText);
+            
+            // Render combined content as markdown
+            var renderedContent = renderMarkdown(newText);
             
             messageElement.html(renderedContent);
             
             // Apply syntax highlighting if highlight.js is available
             if (typeof hljs !== 'undefined') {
                 messageElement.find('pre code').each(function(i, block) {
-                    hljs.highlightBlock(block);
+                    try {
+                        hljs.highlightElement(block);
+                    } catch (e) {
+                        console.warn('语法高亮失败:', e);
+                    }
                 });
             }
             
@@ -1335,7 +1388,141 @@
         
         document.body.removeChild(textArea);
     }
-
+    // Render markdown content
+    function renderMarkdown(content) {
+        if (!content || typeof content !== 'string') {
+            return content || '';
+        }
+        
+        console.log('渲染Markdown内容长度:', content.length);
+        console.log('内容预览:', content.substring(0, 200) + (content.length > 200 ? '...' : ''));
+        
+        // Check if showdown is available
+        if (typeof showdown !== 'undefined') {
+            try {
+                var converter = new showdown.Converter({
+                    tables: true,
+                    strikethrough: true,
+                    tasklists: true,
+                    ghCodeBlocks: true,
+                    smoothLivePreview: true,
+                    simplifiedAutoLink: true,
+                    excludeTrailingPunctuationFromURLs: true,
+                    literalMidWordUnderscores: true,
+                    simpleLineBreaks: true,
+                    parseImgDimensions: true,
+                    headerLevelStart: 1,
+                    backslashEscapesHTMLTags: true
+                });
+                var result = converter.makeHtml(content);
+                console.log('Showdown渲染成功，结果长度:', result.length);
+                console.log('Showdown渲染结果预览:', result.substring(0, 300));
+                return result;
+            } catch (error) {
+                console.error('Showdown渲染失败:', error);
+            }
+        } else {
+            console.log('Showdown未加载，使用降级方案');
+        }
+        
+        // Enhanced fallback with better regex patterns
+        console.log('使用降级Markdown渲染');
+        
+        // 首先处理换行符，确保正确的段落分隔
+        var lines = content.split('\n');
+        var processedLines = [];
+        var inCodeBlock = false;
+        var codeBlockContent = [];
+        var codeBlockLang = '';
+        
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            
+            // 检查代码块开始/结束
+            if (line.match(/^```(\w+)?/)) {
+                if (!inCodeBlock) {
+                    // 开始代码块
+                    inCodeBlock = true;
+                    codeBlockLang = line.match(/^```(\w+)?/)[1] || '';
+                    codeBlockContent = [];
+                } else {
+                    // 结束代码块
+                    inCodeBlock = false;
+                    var escapedCode = codeBlockContent.join('\n')
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                    processedLines.push('<pre><code class="' + codeBlockLang + '">' + escapedCode + '</code></pre>');
+                    codeBlockContent = [];
+                    codeBlockLang = '';
+                }
+                continue;
+            }
+            
+            if (inCodeBlock) {
+                codeBlockContent.push(line);
+                continue;
+            }
+            
+            // 处理标题
+            if (line.match(/^#{1,6}\s/)) {
+                var headerLevel = line.match(/^(#{1,6})/)[1].length;
+                var headerText = line.replace(/^#{1,6}\s/, '');
+                processedLines.push('<h' + headerLevel + '>' + headerText + '</h' + headerLevel + '>');
+                continue;
+            }
+            
+            // 处理列表项
+            if (line.match(/^\s*[\*\-\+]\s/)) {
+                var listItem = line.replace(/^\s*[\*\-\+]\s/, '');
+                processedLines.push('<li>' + listItem + '</li>');
+                continue;
+            }
+            
+            // 处理空行
+            if (line.trim() === '') {
+                processedLines.push('</p><p>');
+                continue;
+            }
+            
+            // 普通文本行
+            processedLines.push(line);
+        }
+        
+        // 合并处理后的行
+        var result = processedLines.join('\n');
+        
+        // 处理行内格式
+        result = result
+            // 行内代码
+            .replace(/`([^`\n]+)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
+            // 粗体
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // 斜体
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            // 处理换行
+            .replace(/\n/g, '<br>');
+        
+        // 包装列表项
+        result = result.replace(/(<li>.*?<\/li>(?:<br><li>.*?<\/li>)*)/g, '<ul>$1</ul>');
+        result = result.replace(/<br>(<li>)/g, '$1');
+        result = result.replace(/(<\/li>)<br>/g, '$1');
+        
+        // 包装段落
+        if (result && !result.startsWith('<')) {
+            result = '<p>' + result + '</p>';
+        }
+        
+        // 清理多余的段落标签
+        result = result.replace(/<\/p><p><\/p><p>/g, '</p><p>');
+        result = result.replace(/<p><\/p>/g, '');
+        
+        console.log('降级渲染完成，结果长度:', result.length);
+        console.log('降级渲染结果预览:', result.substring(0, 300));
+        return result;
+    }
 // 主要的代码逻辑
 (function() {
     var globalAutoLayoutConfigNode = null;
@@ -1343,10 +1530,18 @@
     var dothisOneTimePlease = () => {
         RED.events.off('runtime-state', dothisOneTimePlease )
 
-        
-        // The html content of the sidebar has been specified below as a data-template, from where it can be loaded:
+        // Load markdown libraries for rendering and wait for completion
+        loadMarkdownLibraries().then(() => {
+            console.log('Markdown库加载完成，可以开始渲染');
+            // Add markdown styles after libraries are loaded
+            addMarkdownStyles();
+        });
+
+
+        // Load sidebar content template
         var content = $($('script[type="text/x-red"][data-template-name="make_iot_smart_sidebar"]').i18n().html());
        
+        // Add AI assistant tab to right sidebar panel
         RED.sidebar.addTab({
             id: "ai-sidebar",
             label: "MIS", // short name for the tab
