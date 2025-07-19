@@ -206,17 +206,49 @@ module.exports = function (RED) {
 CRITICAL WORKFLOW FOR FLOW/NODE CREATION:
 When user asks to create flows or nodes, you MUST follow this exact sequence:
 1. First provide a detailed text explanation of what you will create
-2. Then IMMEDIATELY call the appropriate MCP tool (create-flow, update-flows, etc.)
-3. The tool call will generate an "Apply" button for the user to execute
-4. Do NOT execute the tool yourself - just call it to generate the button
+2. Then provide the complete flow JSON configuration
+3. The UI will automatically detect JSON blocks and create an interactive editor
+4. Do NOT call MCP tools directly - just provide the JSON for user review
+
+For flow creation, provide JSON in this format:
+\`\`\`json
+{
+  "id": "unique-flow-id",
+  "label": "Flow Name",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject",
+      "name": "Start",
+      "props": [{"p":"payload","v":"Hello","vt":"str"}],
+      "repeat": "",
+      "crontab": "",
+      "once": false,
+      "x": 100,
+      "y": 100,
+      "z": "flow-id",
+      "wires": [["node2"]]
+    },
+    {
+      "id": "node2", 
+      "type": "debug",
+      "name": "Output",
+      "active": true,
+      "tosidebar": true,
+      "console": false,
+      "tostatus": false,
+      "complete": "payload",
+      "x": 300,
+      "y": 100,
+      "z": "flow-id",
+      "wires": []
+    }
+  ]
+}
+\`\`\`
 
 Available MCP Tools: ${mcpTools.length} tools
 ${mcpTools.map(tool => `- ${tool.function?.name}: ${tool.function?.description}`).join('\n')}
-
-For flow creation, use the create-flow tool with this format:
-{
-  "flowJson": "{\"id\":\"unique-id\",\"label\":\"Flow Name\",\"nodes\":[...]}"
-}
 
 Current Context:
 - Node-RED Version: ${nodeRedVersion}
@@ -226,12 +258,7 @@ Current Context:
 ${selectedFlow ? `Current Flow: ${selectedFlow.label} (ID: ${selectedFlow.id})` : 'No flow selected'}
 ${selectedNodes && selectedNodes.length > 0 ? `Selected Nodes: ${selectedNodes.length} node(s)` : 'No nodes selected'}
 
-Example for "create a simple flow":
-1. Explain: "I'll create a simple flow with inject and debug nodes..."
-2. Call: create-flow tool with proper JSON
-3. User sees explanation + Apply button to execute
-
-REMEMBER: Always call the tool after explanation to generate the Apply button!`;
+Always provide clear explanations followed by properly formatted JSON code blocks.`;
 
             return systemPrompt;
         };
