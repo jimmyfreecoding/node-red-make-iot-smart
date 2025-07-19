@@ -1787,22 +1787,24 @@
                 RED.notify("显示配置节点时出错: " + error.message, "error");
             }
             
-            // 初始化AI助手UI
-            setupAIAssistant();
-            
-            // 初始化当前flow名称显示
-            updateCurrentFlowName();
-            
-            // 初始化当前选中节点信息
-            updateSelectedNodeInfo();
-            
-            // 监听workspace选择变化
-            RED.events.on('workspace:change', updateCurrentFlowName);
-            
-            // 监听节点选择变化
-            RED.events.on('view:selection-changed', updateSelectedNodeInfo);
+          
         });
+        // 初始化AI助手UI
+        setupAIAssistant();
+        
+        // 初始化当前flow名称显示
+        updateCurrentFlowName();
+        
+        // 初始化当前选中节点信息
+        updateSelectedNodeInfo();
+        
+        // 监听workspace选择变化
+        RED.events.on('workspace:change', updateCurrentFlowName);
+        
+        // 监听节点选择变化
+        RED.events.on('view:selection-changed', updateSelectedNodeInfo);
     };
+
     RED.events.on('runtime-state', dothisOneTimePlease )
 })();
 //    // 在RED.events.on('runtime-state')中添加以下代码
