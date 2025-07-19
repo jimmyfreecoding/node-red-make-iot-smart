@@ -891,190 +891,7 @@ function fallbackCopyTextToClipboard(text) {
     };
     RED.events.on('runtime-state', dothisOneTimePlease )
 })();
-</script>
-
-<script type="text/x-red" data-template-name="auto_layout_sidebar">
-    <div class="red-ui-sidebar-info">
-        <div class="red-ui-sidebar-header red-ui-info-toolbar">
-            <span class="button-group"><a id="show-config-node-button" class="red-ui-button red-ui-button-small selected" href="#">
-                <i class="fa fa-cog"></i></a></span><div class="red-ui-searchBox-container red-ui-searchBox-compact"><i class="fa fa-search"></i>
-                  <form class="red-ui-searchBox-form"><input type="text" data-i18n="[placeholder]sidebar.help.search" class="red-ui-searchBox-input" placeholder="搜索帮助"></form>
-                 <a class="red-ui-searchBox-clear" href="#"><i class="fa fa-times"></i></a>
-                <span class="red-ui-searchBox-resultCount hide"></span>
-            </div>
-        </div>
-
-        <div class="red-ui-debug-content red-ui-debug-content-list" id="augment-chat-messages" style="
-            position: absolute; 
-            top: 40px; 
-            bottom: 130px; 
-            left: 0; 
-            right: 0; 
-            overflow-y: auto; 
-            padding: 20px 16px;
-            background: #fafafa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        ">
-            <!-- 聊天消息将在这里显示 -->
-        </div>
-
-        <!-- Augment工具UI -->
-        <div id="augment-chat-container" class="augment-chat-container" style="
-            position: absolute; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            background: #ffffff; 
-            border-top: 1px solid #e5e7eb;
-            padding: 5px; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        ">
-            <!-- 上下文信息栏 -->
-            <div class="augment-chat-context" style="
-                font-size: 12px; 
-                color: #6b7280; 
-                padding: 12px 16px;
-                background: #f9fafb;
-                border-radius: 8px;
-                border: 1px solid #f3f4f6;
-            ">
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <span style="display: flex; align-items: center;">
-                        <i class="fa fa-sitemap" style="margin-right: 6px; color: #374151;"></i> 
-                        <span id="current-flow-name" style="font-weight: 500; color: #1f2937;">未选择流程</span>
-                    </span>
-                    <span style="color: #d1d5db;">></span>
-                    <span style="display: flex; align-items: center;">
-                        <i class="fa fa-cube" style="margin-right: 6px; color: #374151;"></i>
-                        <span id="current-selected-node" style="font-weight: 500; color: #1f2937;">未选择节点</span>
-                    </span>
-                    <span id="selected-node-type-container" style="display: none;">
-                        <span style="color: #d1d5db;">|</span>
-                        <span style="color: #6b7280;">类型: <span id="current-selected-node-type" style="font-weight: 500; color: #1f2937;"></span></span>
-                    </span>
-                </div>
-            </div>
-            
-            <!-- 输入框区域 -->
-            <div class="augment-chat-input-container" style="
-                border: 1px solid #d1d5db;
-                border-radius: 12px;
-                background: #ffffff;
-                position: relative;
-                transition: border-color 0.2s, box-shadow 0.2s;
-            " onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'">
-                <textarea id="augment-chat-input" placeholder="Ask or instruct Augment" 
-                          style="
-                              width: 100%; 
-                              min-height: 80px; 
-                              padding: 16px 60px 16px 16px; 
-                              border: none;
-                              border-radius: 12px; 
-                              resize: none; 
-                              outline: none; 
-                              font-family: inherit; 
-                              font-size: 14px; 
-                              background: transparent; 
-                              color: #374151; 
-                              overflow: hidden;
-                              line-height: 1.5;
-                          "
-                          rows="3"
-                          onfocus="this.parentElement.style.borderColor='#3b82f6'; this.parentElement.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
-                          onblur="this.parentElement.style.borderColor='#d1d5db'; this.parentElement.style.boxShadow='none'"></textarea>
-                
-                <!-- 工具栏 -->
-                <div style="
-                    position: absolute;
-                    bottom: 12px;
-                    right: 12px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                ">
-                    <!-- 工具按钮 -->
-                    <div style="display: flex; gap: 4px;">
-                        <button id="augment-attach-file" style="
-                            background: none;
-                            border: none;
-                            color: #6b7280;
-                            cursor: pointer;
-                            padding: 6px;
-                            border-radius: 6px;
-                            font-size: 14px;
-                            transition: all 0.2s;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
-                            <i class="fa fa-paperclip"></i>
-                        </button>
-                        <button id="augment-at-mention" style="
-                            background: none;
-                            border: none;
-                            color: #6b7280;
-                            cursor: pointer;
-                            padding: 6px;
-                            border-radius: 6px;
-                            font-size: 14px;
-                            transition: all 0.2s;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
-                            <i class="fa fa-at"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- 发送按钮 -->
-                    <button id="augment-send" style="
-                        background: #3b82f6;
-                        border: none;
-                        border-radius: 8px;
-                        color: white;
-                        padding: 8px 16px;
-                        font-size: 13px;
-                        font-weight: 500;
-                        cursor: pointer;
-                        transition: background-color 0.2s;
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                    " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
-                        <i class="fa fa-paper-plane"></i>
-                        Send
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 保留原有的配置部分 -->
-    <div style="position: relative; height: 100%; margin: 15px; display: none;" id="auto-layout-config-panel">
-        <label for="node-input-algorithm" style="margin-top: 25px"><i class="fa fa-terminal"></i> Algorithm</label>
-        <select id="node-input-algorithm">
-            <option value="dagre_lr">Dagre LR</option>
-            <option value="dagre_longest_path">Dagre Longest Path</option>
-            <option value="elkjs_mr_tree">ELKjs Mr. Tree</option>
-            <option value="elkjs_layered_upwards">ELKjs Layered Upwards</option>
-            <option value="elkjs_layered_downwards">ELKjs Layered Downwards</option>
-            <option value="elkjs_box">ELKjs Box</option>
-            <option value="pull_request_2267">Pull Request 2267</option></select>
-        </select>
-
-        <label for="node-input-settings" style="margin-top: 15px"><i class="fa fa-cog"></i> Settings</label>
-        <input type="text" id="node-input-settings" style="width: 100%; margin-top: 30px">
-        
-        <button type="button" id="auto-layout-button" style="font-size: larger;width:100%;background-color: yellowgreen;color:white;border: none;height: 32px;margin-top: 30px;">Execute auto-layout</button>
-
-        <button type="button" id="auto-layout-revert-button" style="font-size: smaller;width:50%;background-color: rgb(225, 119, 129); color: rgb(246, 246, 246); border: 1px solid rgb(173, 22, 37); height: 32px; margin-top: 30px;"><i class="fa fa-undo"></i> Undo</button>
-
-        <button id="show-config-node-button" class="red-ui-button">显示配置节点</button>
-    </div>
-</script>
-
-<script type="text/javascript">
-    // 在RED.events.on('runtime-state')中添加以下代码
+   // 在RED.events.on('runtime-state')中添加以下代码
     RED.events.on('runtime-state', function() {
         // 初始化AI助手UI
         setupAIAssistant();
@@ -1993,4 +1810,188 @@ function fallbackCopyTextToClipboard(text) {
             addMessageToChat("error", "❌ 网络错误: " + error.message);
         });
     }
+</script>
+
+<script type="text/x-red" data-template-name="auto_layout_sidebar">
+    <div class="red-ui-sidebar-info">
+        <div class="red-ui-sidebar-header red-ui-info-toolbar">
+            <span class="button-group"><a id="show-config-node-button" class="red-ui-button red-ui-button-small selected" href="#">
+                <i class="fa fa-cog"></i></a></span><div class="red-ui-searchBox-container red-ui-searchBox-compact"><i class="fa fa-search"></i>
+                  <form class="red-ui-searchBox-form"><input type="text" data-i18n="[placeholder]sidebar.help.search" class="red-ui-searchBox-input" placeholder="搜索帮助"></form>
+                 <a class="red-ui-searchBox-clear" href="#"><i class="fa fa-times"></i></a>
+                <span class="red-ui-searchBox-resultCount hide"></span>
+            </div>
+        </div>
+
+        <div class="red-ui-debug-content red-ui-debug-content-list" id="augment-chat-messages" style="
+            position: absolute; 
+            top: 40px; 
+            bottom: 130px; 
+            left: 0; 
+            right: 0; 
+            overflow-y: auto; 
+            padding: 20px 16px;
+            background: #fafafa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+            <!-- 聊天消息将在这里显示 -->
+        </div>
+
+        <!-- Augment工具UI -->
+        <div id="augment-chat-container" class="augment-chat-container" style="
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: #ffffff; 
+            border-top: 1px solid #e5e7eb;
+            padding: 5px; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+            <!-- 上下文信息栏 -->
+            <div class="augment-chat-context" style="
+                font-size: 12px; 
+                color: #6b7280; 
+                padding: 12px 16px;
+                background: #f9fafb;
+                border-radius: 8px;
+                border: 1px solid #f3f4f6;
+            ">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <span style="display: flex; align-items: center;">
+                        <i class="fa fa-sitemap" style="margin-right: 6px; color: #374151;"></i> 
+                        <span id="current-flow-name" style="font-weight: 500; color: #1f2937;">未选择流程</span>
+                    </span>
+                    <span style="color: #d1d5db;">></span>
+                    <span style="display: flex; align-items: center;">
+                        <i class="fa fa-cube" style="margin-right: 6px; color: #374151;"></i>
+                        <span id="current-selected-node" style="font-weight: 500; color: #1f2937;">未选择节点</span>
+                    </span>
+                    <span id="selected-node-type-container" style="display: none;">
+                        <span style="color: #d1d5db;">|</span>
+                        <span style="color: #6b7280;">类型: <span id="current-selected-node-type" style="font-weight: 500; color: #1f2937;"></span></span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- 输入框区域 -->
+            <div class="augment-chat-input-container" style="
+                border: 1px solid #d1d5db;
+                border-radius: 12px;
+                background: #ffffff;
+                position: relative;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            " onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'">
+                <textarea id="augment-chat-input" placeholder="Ask or instruct Augment" 
+                          style="
+                              width: 100%; 
+                              min-height: 80px; 
+                              padding: 16px 60px 16px 16px; 
+                              border: none;
+                              border-radius: 12px; 
+                              resize: none; 
+                              outline: none; 
+                              font-family: inherit; 
+                              font-size: 14px; 
+                              background: transparent; 
+                              color: #374151; 
+                              overflow: hidden;
+                              line-height: 1.5;
+                          "
+                          rows="3"
+                          onfocus="this.parentElement.style.borderColor='#3b82f6'; this.parentElement.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                          onblur="this.parentElement.style.borderColor='#d1d5db'; this.parentElement.style.boxShadow='none'"></textarea>
+                
+                <!-- 工具栏 -->
+                <div style="
+                    position: absolute;
+                    bottom: 12px;
+                    right: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                ">
+                    <!-- 工具按钮 -->
+                    <div style="display: flex; gap: 4px;">
+                        <button id="augment-attach-file" style="
+                            background: none;
+                            border: none;
+                            color: #6b7280;
+                            cursor: pointer;
+                            padding: 6px;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            transition: all 0.2s;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                            <i class="fa fa-paperclip"></i>
+                        </button>
+                        <button id="augment-at-mention" style="
+                            background: none;
+                            border: none;
+                            color: #6b7280;
+                            cursor: pointer;
+                            padding: 6px;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            transition: all 0.2s;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
+                            <i class="fa fa-at"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 发送按钮 -->
+                    <button id="augment-send" style="
+                        background: #3b82f6;
+                        border: none;
+                        border-radius: 8px;
+                        color: white;
+                        padding: 8px 16px;
+                        font-size: 13px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: background-color 0.2s;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                        <i class="fa fa-paper-plane"></i>
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保留原有的配置部分 -->
+    <div style="position: relative; height: 100%; margin: 15px; display: none;" id="auto-layout-config-panel">
+        <label for="node-input-algorithm" style="margin-top: 25px"><i class="fa fa-terminal"></i> Algorithm</label>
+        <select id="node-input-algorithm">
+            <option value="dagre_lr">Dagre LR</option>
+            <option value="dagre_longest_path">Dagre Longest Path</option>
+            <option value="elkjs_mr_tree">ELKjs Mr. Tree</option>
+            <option value="elkjs_layered_upwards">ELKjs Layered Upwards</option>
+            <option value="elkjs_layered_downwards">ELKjs Layered Downwards</option>
+            <option value="elkjs_box">ELKjs Box</option>
+            <option value="pull_request_2267">Pull Request 2267</option></select>
+        </select>
+
+        <label for="node-input-settings" style="margin-top: 15px"><i class="fa fa-cog"></i> Settings</label>
+        <input type="text" id="node-input-settings" style="width: 100%; margin-top: 30px">
+        
+        <button type="button" id="auto-layout-button" style="font-size: larger;width:100%;background-color: yellowgreen;color:white;border: none;height: 32px;margin-top: 30px;">Execute auto-layout</button>
+
+        <button type="button" id="auto-layout-revert-button" style="font-size: smaller;width:50%;background-color: rgb(225, 119, 129); color: rgb(246, 246, 246); border: 1px solid rgb(173, 22, 37); height: 32px; margin-top: 30px;"><i class="fa fa-undo"></i> Undo</button>
+
+        <button id="show-config-node-button" class="red-ui-button">显示配置节点</button>
+    </div>
+</script>
+
+<script type="text/javascript">
+ 
 </script>
