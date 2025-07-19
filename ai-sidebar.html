@@ -139,13 +139,44 @@
             // 获取当前活动的工作区
             var activeWorkspace = RED.workspaces.active();
             if (activeWorkspace) {
-                selectedFlow = {
-                    id: activeWorkspace.id,
-                    label: activeWorkspace.label || 'Untitled Flow'
-                };
-                
-                // 获取流程数据
-                flowData = RED.nodes.createExportableNodeSet([activeWorkspace.id]);
+                // 修复：activeWorkspace 可能是字符串ID，需要获取完整的workspace对象
+                var workspaceObj = RED.nodes.workspace(activeWorkspace);
+                if (workspaceObj) {
+                    selectedFlow = {
+                        id: workspaceObj.id,
+                        label: workspaceObj.label || 'Untitled Flow'
+                    };
+                    
+                    console.log("当前工作区:", selectedFlow);
+                    
+                    // 获取流程数据 - 修复参数格式
+                    try {
+                        // 获取当前工作区的所有节点
+                        var workspaceNodes = RED.nodes.filterNodes({z: workspaceObj.id});
+                        console.log("工作区节点数量:", workspaceNodes.length);
+                        
+                        // 创建导出数据
+                        if (workspaceNodes.length > 0) {
+                            flowData = RED.nodes.createExportableNodeSet(workspaceNodes.concat([workspaceObj]));
+                        } else {
+                            // 如果没有节点，只导出工作区本身
+                            flowData = RED.nodes.createExportableNodeSet([workspaceObj]);
+                        }
+                        console.log("流程数据获取成功");
+                    } catch (exportError) {
+                        console.warn("获取流程数据失败:", exportError);
+                        // 创建基本的流程信息
+                        flowData = [{
+                            id: workspaceObj.id,
+                            label: workspaceObj.label || 'Untitled Flow',
+                            type: 'tab',
+                            disabled: false,
+                            info: ''
+                        }];
+                    }
+                } else {
+                    console.warn("无法获取工作区对象:", activeWorkspace);
+                }
             }
             
             // 获取选中的节点
@@ -167,9 +198,18 @@
                         return config;
                     }, {})
                 }));
+                console.log("选中节点数量:", selectedNodes.length);
             }
         } catch (error) {
             console.warn("获取选中信息失败:", error);
+            // 提供降级方案
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: 'Current Flow'
+                };
+            }
         }
 
         console.log("发送AI请求:", {
@@ -177,13 +217,13 @@
             nodeId: nodeId,
             selectedFlow: selectedFlow,
             selectedNodes: selectedNodes,
-            flowData: flowData,
-            history: getChatHistory()
+            flowDataLength: flowData ? flowData.length : 0,
+            historyLength: getChatHistory().length
         });
         
         // 创建加载消息
         var loadingMessageId = "loading-" + Date.now();
-        var aiMessageId = "ai-" + Date.now(); // 定义aiMessageId
+        var aiMessageId = "ai-" + Date.now();
         addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
         
         // 使用fetch进行流式请求
@@ -242,7 +282,8 @@
                                         // 如果AI消息不存在，创建它
                                         addMessageToChat("assistant", data.content, aiMessageId);
                                     } else {
-                                        aiMessage.text(aiMessage.text() + data.content);
+                                        // 使用appendToMessage函数来正确处理Markdown渲染
+                                        appendToMessage(aiMessageId, data.content);
                                     }
                                     forceScrollToBottom();
                                 } else if (data.type === 'json_editor') {
@@ -495,8 +536,8 @@
         }
     }
 
-    // 修改addMessageToChat函数以支持流式更新
-    function addMessageToChat(role, messageData, messageId) {
+    // Add message to chat UI with markdown rendering
+    function addMessageToChat(role, content, messageId) {
         loadAISidebarConfig().then(function(config) {
             var isUser = role === "user";
             var userLabel = config.ui.userLabel;
@@ -512,7 +553,7 @@
             var messageHtml = '<div class="augment-message-container ' + (isUser ? 'user-message' : 'assistant-message') + '" ' + 
                              (messageId ? 'id="' + messageId + '"' : '') + ' style="margin: 0 0 24px 0;">';
             
-            // 消息头部
+            // Message header
             messageHtml += '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">';
             messageHtml += '<div style="width: 24px; height: 24px; border-radius: 50%; background: ' + 
                           (isUser ? '#3b82f6' : '#10b981') + '; display: flex; align-items: center; justify-content: center;">';
@@ -523,15 +564,235 @@
             messageHtml += '<span style="color: #9ca3af; font-size: 12px; margin-left: auto;">' + timestamp + '</span>';
             messageHtml += '</div>';
             
-            // 消息内容
+            // Message content with markdown rendering
+            var renderedContent = '';
+            if (typeof content === 'string' && content.trim()) {
+                // Check if showdown is available (markdown library)
+                if (typeof showdown !== 'undefined') {
+                    var converter = new showdown.Converter({
+                        tables: true,
+                        strikethrough: true,
+                        tasklists: true,
+                        ghCodeBlocks: true,
+                        smoothLivePreview: true,
+                        simplifiedAutoLink: true,
+                        excludeTrailingPunctuationFromURLs: true,
+                        literalMidWordUnderscores: true,
+                        simpleLineBreaks: true
+                    });
+                    renderedContent = converter.makeHtml(content);
+                } else {
+                    // Fallback: simple text formatting
+                    renderedContent = content
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/`(.*?)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>')
+                        .replace(/\n/g, '<br>');
+                }
+            } else {
+                renderedContent = content || '';
+            }
+            
             messageHtml += '<div class="message-content" style="background: ' + (isUser ? '#f3f4f6' : '#ffffff') + 
-                          '; padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e7eb; white-space: pre-wrap; word-wrap: break-word;">';
-            messageHtml += typeof messageData === 'string' ? messageData : '';
+                          '; padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e7eb; word-wrap: break-word; line-height: 1.5;">';
+            messageHtml += renderedContent;
             messageHtml += '</div>';
             messageHtml += '</div>';
             
             $("#augment-chat-messages").append(messageHtml);
+            
+            // Apply syntax highlighting if highlight.js is available
+            if (typeof hljs !== 'undefined') {
+                $("#augment-chat-messages pre code").each(function(i, block) {
+                    hljs.highlightBlock(block);
+                });
+            }
+            
+            // Add markdown styles
+            addMarkdownStyles();
+            
             forceScrollToBottom();
+        });
+    }
+
+    // Add markdown styles to the page
+    function addMarkdownStyles() {
+        if ($("#markdown-styles").length === 0) {
+            var styles = `
+                <style id="markdown-styles">
+                    .message-content h1, .message-content h2, .message-content h3, 
+                    .message-content h4, .message-content h5, .message-content h6 {
+                        margin: 16px 0 8px 0;
+                        font-weight: 600;
+                        line-height: 1.25;
+                    }
+                    .message-content h1 { font-size: 1.5em; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+                    .message-content h2 { font-size: 1.3em; }
+                    .message-content h3 { font-size: 1.2em; }
+                    .message-content h4 { font-size: 1.1em; }
+                    .message-content h5 { font-size: 1em; }
+                    .message-content h6 { font-size: 0.9em; }
+                    
+                    .message-content p {
+                        margin: 8px 0;
+                        line-height: 1.6;
+                    }
+                    
+                    .message-content ul, .message-content ol {
+                        margin: 8px 0;
+                        padding-left: 20px;
+                    }
+                    
+                    .message-content li {
+                        margin: 4px 0;
+                        line-height: 1.5;
+                    }
+                    
+                    .message-content pre {
+                        background: #f8f9fa;
+                        border: 1px solid #e9ecef;
+                        border-radius: 6px;
+                        padding: 12px;
+                        margin: 12px 0;
+                        overflow-x: auto;
+                        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                        font-size: 0.9em;
+                        line-height: 1.4;
+                    }
+                    
+                    .message-content code {
+                        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                        font-size: 0.9em;
+                    }
+                    
+                    .message-content pre code {
+                        background: none;
+                        padding: 0;
+                        border-radius: 0;
+                        color: #333;
+                    }
+                    
+                    .message-content strong {
+                        font-weight: 600;
+                    }
+                    
+                    .message-content em {
+                        font-style: italic;
+                    }
+                    
+                    .message-content blockquote {
+                        border-left: 4px solid #e5e7eb;
+                        margin: 12px 0;
+                        padding: 8px 16px;
+                        background: #f9fafb;
+                        color: #6b7280;
+                    }
+                </style>
+            `;
+            $("head").append(styles);
+        }
+    }
+
+    // Append content to existing message with markdown rendering
+    function appendToMessage(messageId, content) {
+        var messageElement = $("#" + messageId + " .message-content");
+        if (messageElement.length > 0) {
+            var currentContent = messageElement.html();
+            
+            // Render new content as markdown
+            var renderedContent = '';
+            if (typeof showdown !== 'undefined') {
+                var converter = new showdown.Converter({
+                    tables: true,
+                    strikethrough: true,
+                    tasklists: true,
+                    ghCodeBlocks: true,
+                    smoothLivePreview: true,
+                    simplifiedAutoLink: true,
+                    excludeTrailingPunctuationFromURLs: true,
+                    literalMidWordUnderscores: true,
+                    simpleLineBreaks: true
+                });
+                // Convert the combined content to avoid markdown conflicts
+                var combinedText = messageElement.text() + content;
+                renderedContent = converter.makeHtml(combinedText);
+            } else {
+                // Fallback: simple text formatting
+                var combinedText = messageElement.text() + content;
+                renderedContent = combinedText
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>')
+                    .replace(/\n/g, '<br>');
+            }
+            
+            messageElement.html(renderedContent);
+            
+            // Apply syntax highlighting if highlight.js is available
+            if (typeof hljs !== 'undefined') {
+                messageElement.find('pre code').each(function(i, block) {
+                    hljs.highlightBlock(block);
+                });
+            }
+            
+            forceScrollToBottom();
+        }
+    }
+
+    // Load external libraries for markdown rendering
+    function loadMarkdownLibraries() {
+        return new Promise((resolve) => {
+            let loadedCount = 0;
+            const totalLibraries = 2;
+            
+            function checkComplete() {
+                loadedCount++;
+                if (loadedCount === totalLibraries) {
+                    console.log('所有Markdown库加载完成');
+                    resolve();
+                }
+            }
+            
+            // Load showdown.js for markdown rendering
+            if (typeof showdown === 'undefined') {
+                var showdownScript = document.createElement('script');
+                showdownScript.src = 'https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js';
+                showdownScript.onload = function() {
+                    console.log('Showdown markdown library loaded');
+                    checkComplete();
+                };
+                showdownScript.onerror = function() {
+                    console.warn('Showdown加载失败，使用降级方案');
+                    checkComplete();
+                };
+                document.head.appendChild(showdownScript);
+            } else {
+                checkComplete();
+            }
+            
+            // Load highlight.js for syntax highlighting
+            if (typeof hljs === 'undefined') {
+                var hlScript = document.createElement('script');
+                hlScript.src = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js';
+                hlScript.onload = function() {
+                    console.log('Highlight.js library loaded');
+                    
+                    // Load CSS for highlight.js
+                    var hlCss = document.createElement('link');
+                    hlCss.rel = 'stylesheet';
+                    hlCss.href = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css';
+                    document.head.appendChild(hlCss);
+                    
+                    checkComplete();
+                };
+                hlScript.onerror = function() {
+                    console.warn('Highlight.js加载失败');
+                    checkComplete();
+                };
+                document.head.appendChild(hlScript);
+            } else {
+                checkComplete();
+            }
         });
     }
     
