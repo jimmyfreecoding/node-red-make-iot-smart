@@ -13,167 +13,1067 @@
 
 
 <script type="text/javascript">
-// 全局函数定义 - 必须在最开始
-function ensureAceEditorLoaded(callback) {
-    if (typeof ace !== 'undefined') {
-        callback();
-        return;
-    }
-    
-    // 如果ACE未加载，尝试从Node-RED加载
-    if (RED && RED.editor && RED.editor.ace) {
-        window.ace = RED.editor.ace;
-        callback();
-        return;
-    }
-    
-    // 最后的降级方案
-    console.warn("ACE编辑器未找到，将使用普通文本显示");
-    callback();
-}
-
-function initializeJSONEditor(editorId, jsonContent) {
-    try {
-        // 验证JSON格式
-        var parsedJSON;
+    var currentStreamMessageId = null;
+    // 更新当前flow名称的函数
+    function updateCurrentFlowName() {
         try {
-            parsedJSON = JSON.parse(jsonContent);
-        } catch (e) {
-            console.error("JSON格式错误:", e);
-            // 如果不是有效JSON，显示为普通文本
-            document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
-            return;
+            // 获取当前活动的workspace
+            var activeWorkspace = RED.workspaces.active();
+            
+            if (activeWorkspace) {
+                // 获取workspace节点
+                var workspaceNode = RED.nodes.workspace(activeWorkspace);
+                
+                if (workspaceNode && workspaceNode.label) {
+                    // 更新显示的flow名称
+                    $("#current-flow-name").text(workspaceNode.label);
+                } else {
+                    $("#current-flow-name").text("Flow " + activeWorkspace);
+                }
+            } else {
+                $("#current-flow-name").text("未选择流程");
+            }
+        } catch (error) {
+            console.warn("更新流程名称失败:", error);
+            $("#current-flow-name").text("未知流程");
         }
-        
-        // 创建ACE编辑器
-        var editor = ace.edit(editorId);
-        editor.setTheme("ace/theme/textmate");
-        editor.session.setMode("ace/mode/json");
-        editor.setValue(JSON.stringify(parsedJSON, null, 2), -1);
-        
-        // 设置编辑器选项
-        editor.setOptions({
-            fontSize: 13,
-            showPrintMargin: false,
-            highlightActiveLine: true,
-            showGutter: true,
-            readOnly: false,
-            maxLines: 20,
-            minLines: 10,
-            wrap: true,
-            autoScrollEditorIntoView: true
+    }
+
+    // 更新当前选中节点信息的函数
+    function updateSelectedNodeInfo() {
+        try {
+            var selection = RED.view.selection();
+            
+            if (!selection || !selection.nodes || selection.nodes.length === 0) {
+                $("#current-selected-node").text("未选择节点");
+                $("#selected-node-type-container").hide();
+            } else if (selection.nodes.length === 1) {
+                var node = selection.nodes[0];
+                var nodeInfo = node.name || node.type || "未知节点";
+                $("#current-selected-node").text(nodeInfo);
+                
+                // 显示节点类型
+                if (node.type) {
+                    $("#current-selected-node-type").text(node.type);
+                    $("#selected-node-type-container").show();
+                } else {
+                    $("#selected-node-type-container").hide();
+                }
+            } else {
+                $("#current-selected-node").text("已选择 " + selection.nodes.length + " 个节点");
+                $("#selected-node-type-container").hide();
+            }
+        } catch (error) {
+            console.warn("更新节点信息失败:", error);
+            $("#current-selected-node").text("未知节点");
+            $("#selected-node-type-container").hide();
+        }
+    }
+    
+    function setupAIAssistant() {
+        // 自动调整文本区域高度
+        $("#augment-chat-input").on("input", function() {
+            this.style.height = "auto";
+            this.style.height = Math.min(this.scrollHeight, 120) + "px";
         });
         
-        // 存储编辑器实例以便后续操作
-        window.jsonEditors = window.jsonEditors || {};
-        window.jsonEditors[editorId] = editor;
+        // 发送按钮点击事件
+        $("#augment-send").on("click", function() {
+            sendMessage();
+        });
         
-        // 监听内容变化
-        editor.session.on('change', function() {
-            try {
-                var content = editor.getValue();
-                JSON.parse(content); // 验证JSON格式
-                // 如果JSON有效，移除错误样式
-                document.getElementById(editorId).style.borderColor = '#e9ecef';
-            } catch (e) {
-                // 如果JSON无效，添加错误样式
-                document.getElementById(editorId).style.borderColor = '#dc3545';
+        // 按Enter键发送消息（Shift+Enter换行）
+        $("#augment-chat-input").on("keydown", function(e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
             }
         });
         
-    } catch (error) {
-        console.error("初始化JSON编辑器失败:", error);
-        // 降级显示为普通代码块
-        document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
+        // 工具按钮点击事件
+        $("#augment-attach-file, #augment-at-mention").on("click", function() {
+            RED.notify("此功能正在开发中", "info");
+        });
     }
-}
-
-function copyEditorContent(editorId) {
-    try {
-        var editor = window.jsonEditors && window.jsonEditors[editorId];
-        var content;
-        
-        if (editor) {
-            content = editor.getValue();
-        } else {
-            // 降级方案：从DOM获取内容
-            var element = document.getElementById(editorId);
-            content = element.textContent || element.innerText;
+    
+    function sendMessage() {
+        var message = $("#augment-chat-input").val().trim();
+        if (message) {
+            console.log("发送消息:", message);
+            addMessageToChat("user", message);
+            
+            $("#augment-chat-input").val("");
+            $("#augment-chat-input").css("height", "72px");
+            
+            // 发送到AI后台
+            sendToAI(message);
         }
+    }
+
+    function sendToAI(message) {
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            return;
+        }
+
+        // 检查节点是否已部署
+        var configNode = RED.nodes.node(nodeId);
+        if (!configNode) {
+            addMessageToChat("error", "❌ 配置节点未部署，请点击部署按钮后重试");
+            return;
+        }
+
+        // 检查是否有未部署的更改
+        if (RED.nodes.dirty()) {
+            addMessageToChat("warning", "⚠️ 检测到未部署的更改，请先点击部署按钮");
+            return;
+        }
+
+        // 获取当前选中的流程和节点信息
+        var selectedFlow = null;
+        var selectedNodes = [];
+        var flowData = null;
+
+        try {
+            // 获取当前活动的工作区
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace.id,
+                    label: activeWorkspace.label || 'Untitled Flow'
+                };
+                
+                // 获取流程数据
+                flowData = RED.nodes.createExportableNodeSet([activeWorkspace.id]);
+            }
+            
+            // 获取选中的节点
+            var selection = RED.view.selection();
+            if (selection && selection.nodes) {
+                selectedNodes = selection.nodes.map(node => ({
+                    id: node.id,
+                    type: node.type,
+                    name: node.name || '',
+                    x: node.x,
+                    y: node.y,
+                    wires: node.wires || [],
+                    config: Object.keys(node).reduce((config, key) => {
+                        if (!['credentials', 'apiKey', 'password', 'token'].includes(key) && 
+                            !key.startsWith('_') && 
+                            typeof node[key] !== 'function') {
+                            config[key] = node[key];
+                        }
+                        return config;
+                    }, {})
+                }));
+            }
+        } catch (error) {
+            console.warn("获取选中信息失败:", error);
+        }
+
+        console.log("发送AI请求:", {
+            message: message,
+            nodeId: nodeId,
+            selectedFlow: selectedFlow,
+            selectedNodes: selectedNodes,
+            flowData: flowData,
+            history: getChatHistory()
+        });
         
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(content).then(function() {
-                RED.notify("内容已复制到剪贴板", "success");
-            }).catch(function(err) {
-                console.error('复制失败:', err);
-                fallbackCopyTextToClipboard(content);
+        // 创建加载消息
+        var loadingMessageId = "loading-" + Date.now();
+        var aiMessageId = "ai-" + Date.now(); // 定义aiMessageId
+        addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
+        
+        // 使用fetch进行流式请求
+        fetch('/make-iot-smart/chat-stream', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow,
+                selectedNodes: selectedNodes,
+                flowData: flowData,
+                history: getChatHistory()
+            })
+        })
+        .then(response => {
+            console.log("收到响应:", response.status, response.statusText);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            
+            function readStream() {
+                return reader.read().then(({ done, value }) => {
+                    if (done) {
+                        console.log("流读取完成");
+                        // 移除加载消息
+                        $("#" + loadingMessageId).remove();
+                        return;
+                    }
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    console.log("收到数据块:", chunk);
+                    
+                    const lines = chunk.split('\n');
+                    lines.forEach(line => {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                console.log("=== 解析的SSE数据 ===");
+                                console.log("数据类型:", data.type);
+                                console.log("完整数据:", JSON.stringify(data, null, 2));
+                                
+                                if (data.type === 'content') {
+                                    // 移除加载消息（如果还存在）
+                                    $("#" + loadingMessageId).remove();
+                                    
+                                    // 追加文本到AI消息
+                                    var aiMessage = $("#" + aiMessageId + " .message-content");
+                                    if (aiMessage.length === 0) {
+                                        // 如果AI消息不存在，创建它
+                                        addMessageToChat("assistant", data.content, aiMessageId);
+                                    } else {
+                                        aiMessage.text(aiMessage.text() + data.content);
+                                    }
+                                    forceScrollToBottom();
+                                } else if (data.type === 'json_editor') {
+                                    console.log("=== 处理json_editor ===");
+                                    console.log("编辑器数据:", data);
+                                    
+                                    // 确保AI消息存在
+                                    var aiMessage = $("#" + aiMessageId);
+                                    if (aiMessage.length === 0) {
+                                        addMessageToChat("assistant", "", aiMessageId);
+                                    }
+                                    
+                                    // 移除加载消息
+                                    $("#" + loadingMessageId).remove();
+                                    
+                                    // 添加JSON编辑器
+                                    addJSONEditor(aiMessageId, data);
+                                } else if (data.type === 'action_button') {
+                                    console.log("=== 处理action_button ===");
+                                    console.log("按钮数据:", data);
+                                    
+                                    // 确保AI消息存在
+                                    var aiMessage = $("#" + aiMessageId);
+                                    if (aiMessage.length === 0) {
+                                        addMessageToChat("assistant", "", aiMessageId);
+                                    }
+                                    
+                                    // 移除加载消息
+                                    $("#" + loadingMessageId).remove();
+                                    
+                                    // 添加按钮
+                                    addActionButton(aiMessageId, data);
+                                } else if (data.type === 'start') {
+                                    console.log("AI开始响应, MCP可用:", data.mcpAvailable);
+                                    console.log("MCP工具数量:", data.mcpToolsCount);
+                                    
+                                    // 移除加载消息，创建AI消息
+                                    $("#" + loadingMessageId).remove();
+                                    addMessageToChat("assistant", "", aiMessageId);
+                                } else if (data.type === 'end') {
+                                    console.log("AI响应结束");
+                                    // 移除加载消息（如果还存在）
+                                    $("#" + loadingMessageId).remove();
+                                } else if (data.type === 'error') {
+                                    $("#" + loadingMessageId).remove();
+                                    addMessageToChat("error", "❌ " + data.content);
+                                } else if (data.type === 'tool') {
+                                    console.log("收到tool信息:", data);
+                                    var aiMessage = $("#" + aiMessageId + " .message-content");
+                                    if (aiMessage.length > 0) {
+                                        aiMessage.text(aiMessage.text() + "\n\n" + data.content);
+                                        forceScrollToBottom();
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn("解析SSE数据失败:", line, e);
+                            }
+                        }
+                    });
+                    
+                    return readStream();
+                });
+            }
+            
+            return readStream();
+        })
+        .catch(error => {
+            console.error("AI请求失败:", error);
+            $("#" + loadingMessageId).remove();
+            addMessageToChat("error", "❌ AI请求失败: " + error.message);
+        });
+    }
+
+    function handleStreamData(data, loadingMessageId) {
+        switch (data.type) {
+            case 'start':
+                // 移除加载消息，开始显示实际响应
+                $("#" + loadingMessageId).remove();
+                currentStreamMessageId = 'stream-' + Date.now();
+                addMessageToChat("assistant", "", currentStreamMessageId);
+                break;
+                
+            case 'text':
+            case 'content':
+                // 追加文本内容
+                if (currentStreamMessageId) {
+                    appendToMessage(currentStreamMessageId, data.content);
+                }
+                break;
+                
+            case 'action_button':
+                // 处理动作按钮
+                if (currentStreamMessageId) {
+                    addActionButton(currentStreamMessageId, data);
+                }
+                break;
+                
+            case 'tool_call':
+                // 显示工具调用信息
+                if (currentStreamMessageId) {
+                    var toolInfo = `🔧 调用工具: ${data.tool_name}\n参数: ${JSON.stringify(data.arguments, null, 2)}\n`;
+                    appendToMessage(currentStreamMessageId, toolInfo);
+                }
+                break;
+                
+            case 'tool_result':
+                // 显示工具执行结果
+                if (currentStreamMessageId) {
+                    var resultInfo = `✅ 工具执行结果:\n${data.result}\n\n`;
+                    appendToMessage(currentStreamMessageId, resultInfo);
+                }
+                break;
+                
+            case 'error':
+                if (currentStreamMessageId) {
+                    appendToMessage(currentStreamMessageId, `❌ 错误: ${data.error}`);
+                }
+                break;
+                
+            case 'done':
+            case 'end':
+                // 流式响应完成
+                currentStreamMessageId = null;
+                saveChatMessage("assistant", data.final_content || "");
+                break;
+        }
+    }
+
+    function appendToMessage(messageId, content) {
+        var messageElement = $("#" + messageId + " .message-content");
+        if (messageElement.length > 0) {
+            var currentContent = messageElement.text();
+            messageElement.text(currentContent + content);
+            forceScrollToBottom();
+        }
+    }
+
+    function getSelectedConfigNodeId() {
+        // 查找api-config类型的配置节点
+        var configNodeId = null;
+        try {
+            RED.nodes.eachConfig(function(configNode) {
+                if (configNode.type === 'api-config') {
+                    configNodeId = configNode.id;
+                    console.log("找到api-config节点:", configNodeId, configNode);
+                    return false; // 找到第一个就停止
+                }
             });
-        } else {
-            fallbackCopyTextToClipboard(content);
+            
+            // 如果没有找到，尝试创建一个默认的配置节点
+            if (!configNodeId) {
+                console.log("未找到api-config节点，尝试创建默认节点");
+                configNodeId = createDefaultApiConfigNode();
+            }
+            
+            // 验证节点是否真的存在
+            if (configNodeId) {
+                var node = RED.nodes.node(configNodeId);
+                if (!node) {
+                    console.warn("节点ID存在但无法获取节点实例:", configNodeId);
+                    return null;
+                }
+            }
+            
+        } catch (error) {
+            console.warn("获取配置节点失败:", error);
         }
-    } catch (error) {
-        console.error("复制编辑器内容时出错:", error);
-        RED.notify("复制失败: " + error.message, "error");
+        return configNodeId;
     }
-}
 
-function applyEditorContent(editorId) {
-    try {
-        var editor = window.jsonEditors && window.jsonEditors[editorId];
-        if (!editor) {
-            RED.notify("编辑器未找到", "error");
+    function createDefaultApiConfigNode() {
+        try {
+            // 检查api-config节点类型是否已注册
+            var apiConfigNodeType = RED.nodes.getType("api-config");
+            if (!apiConfigNodeType) {
+                console.error("api-config节点类型未注册");
+                return null;
+            }
+            
+            // 创建默认的api-config节点
+            var defaultConfigNode = {
+                id: RED.nodes.id(),
+                _def: apiConfigNodeType,
+                type: "api-config",
+                hasUsers: false,
+                users: [],
+                name: "Default AI Config",
+                label: function() { return this.name || "Default AI Config"; },
+                provider: "openai",
+                model: "gpt-4o-mini",
+                temperature: 0.1,
+                maxTokens: 2000,
+                useDifferentModels: false,
+                planningModel: "",
+                executionModel: "",
+                credentials: {
+                    apiKey: "请配置API密钥" // 临时占位符
+                }
+            };
+            
+            // 添加到Node-RED节点集合
+            RED.nodes.add(defaultConfigNode);
+            RED.nodes.dirty(true);
+            
+            console.log("创建默认api-config节点:", defaultConfigNode.id);
+            
+            // 立即部署以确保节点保存到后端
+            RED.deploy.setDeployInflight(false);
+            RED.nodes.dirty(true);
+            
+            // 提示用户配置并部署
+            setTimeout(function() {
+                RED.notify("已创建默认AI配置节点，请配置API密钥并点击部署按钮", "info");
+                RED.editor.editConfig("", "api-config", defaultConfigNode.id);
+            }, 1000);
+            
+            return defaultConfigNode.id;
+        } catch (error) {
+            console.error("创建默认配置节点失败:", error);
+            return null;
+        }
+    }
+
+    function getChatHistory() {
+        // 从聊天记录中提取历史消息
+        var history = [];
+        $("#augment-chat-messages .augment-message-container").each(function() {
+            var role = $(this).hasClass("user-message") ? "user" : "assistant";
+            var content = $(this).find(".message-content").text().trim();
+            if (content && content !== "🤖 正在思考...") {
+                history.push({
+                    role: role,
+                    content: content
+                });
+            }
+        });
+        return history.slice(-10); // 只保留最近10条消息
+    }
+
+    function saveChatMessage(role, content) {
+        // 保存消息到Node-RED的全局上下文（可选）
+        try {
+            var context = RED.settings.get('contextStorage') || {};
+            if (context.default && context.default.module === 'localfilesystem') {
+                // 如果配置了文件存储，可以保存聊天记录
+                console.log("保存聊天记录:", role, content);
+            }
+        } catch (error) {
+            console.warn("保存聊天记录失败:", error);
+        }
+    }
+
+    // 修改addMessageToChat函数以支持流式更新
+    function addMessageToChat(role, messageData, messageId) {
+        loadAISidebarConfig().then(function(config) {
+            var isUser = role === "user";
+            var userLabel = config.ui.userLabel;
+            var assistantLabel = config.ui.assistantLabel;
+            var label = isUser ? userLabel : assistantLabel;
+            
+            var timestamp = new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            var messageHtml = '<div class="augment-message-container ' + (isUser ? 'user-message' : 'assistant-message') + '" ' + 
+                             (messageId ? 'id="' + messageId + '"' : '') + ' style="margin: 0 0 24px 0;">';
+            
+            // 消息头部
+            messageHtml += '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">';
+            messageHtml += '<div style="width: 24px; height: 24px; border-radius: 50%; background: ' + 
+                          (isUser ? '#3b82f6' : '#10b981') + '; display: flex; align-items: center; justify-content: center;">';
+            messageHtml += '<span style="color: white; font-size: 12px; font-weight: 600;">' + 
+                          (isUser ? 'Y' : 'A') + '</span>';
+            messageHtml += '</div>';
+            messageHtml += '<span style="font-weight: 600; color: #374151;">' + label + '</span>';
+            messageHtml += '<span style="color: #9ca3af; font-size: 12px; margin-left: auto;">' + timestamp + '</span>';
+            messageHtml += '</div>';
+            
+            // 消息内容
+            messageHtml += '<div class="message-content" style="background: ' + (isUser ? '#f3f4f6' : '#ffffff') + 
+                          '; padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e7eb; white-space: pre-wrap; word-wrap: break-word;">';
+            messageHtml += typeof messageData === 'string' ? messageData : '';
+            messageHtml += '</div>';
+            messageHtml += '</div>';
+            
+            $("#augment-chat-messages").append(messageHtml);
+            forceScrollToBottom();
+        });
+    }
+    
+    function forceScrollToBottom() {
+        // 方法1：使用jQuery的scrollTop
+        var chatContainer = $("#augment-chat-messages");
+        chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        
+        // 方法2：使用原生JavaScript的scrollTo
+        var container = document.getElementById("augment-chat-messages");
+        if (container) {
+            container.scrollTo(0, container.scrollHeight);
+        }
+        
+        // 方法3：使用setTimeout确保DOM已更新
+        setTimeout(function() {
+            chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        }, 50);
+    }
+    // 添加配置加载函数
+    function loadAISidebarConfig() {
+        return Promise.resolve({
+            ui: {
+                placeholder: "Ask or instruct Augment",
+                currentFlow: "当前流程",
+                currentNode: "当前节点",
+                noFlowSelected: "未选择流程",
+                noNodeSelected: "未选择节点",
+                multipleNodesSelected: "已选择 {count} 个节点",
+                nodeType: "类型",
+                timestamp: "07:51 PM",
+                userLabel: "You",
+                assistantLabel: "Augment"
+            },
+            messages: {
+                developmentInProgress: "此功能正在开发中",
+                simulatedResponse: "这是一个模拟的AI回复。"
+            }
+        });
+    }
+    // 添加动作按钮到消息
+    function addActionButton(messageId, buttonData) {
+        var messageElement = $("#" + messageId);
+        if (messageElement.length > 0) {
+            console.log("添加按钮到消息:", messageId, buttonData);
+            
+            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
+            var buttonHtml = `
+                <div class="action-button-container" style="
+                    margin-top: 16px; 
+                    padding: 0;
+                    display: flex;
+                    justify-content: flex-end;
+                ">
+                    <button class="execute-tool-btn" 
+                            data-tool-name="${buttonData.toolName}" 
+                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
+                            style="
+                                background: #10b981;
+                                border: 1px solid #10b981;
+                                border-radius: 6px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: white;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.2s;
+                                font-weight: 500;
+                                min-width: 60px;
+                                justify-content: center;
+                            "
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="fa fa-check" style="font-size: 12px;"></i>
+                        Apply
+                    </button>
+                </div>
+            `;
+            
+            messageElement.find('.message-content').append(buttonHtml);
+            forceScrollToBottom();
+        } else {
+            console.warn("找不到消息元素:", messageId);
+        }
+    }
+
+    // 按钮点击事件处理
+    $(document).on('click', '.execute-tool-btn', function() {
+        var toolName = $(this).data('tool-name');
+        var toolArgs = $(this).data('tool-args');
+        var button = $(this);
+        var originalText = button.html();
+        
+        // 获取当前选中的流程信息
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.prop('disabled', true)
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+              .css({
+                  'background': '#f3f4f6',
+                  'color': '#6b7280',
+                  'cursor': 'not-allowed'
+              });
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            button.prop('disabled', false).html(originalText);
             return;
         }
         
-        var content = editor.getValue();
+        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
         
-        // 验证JSON格式
-        try {
-            JSON.parse(content);
-            RED.notify("JSON格式有效，内容已应用", "success");
+        // 发送工具执行请求
+        $.ajax({
+            url: '/make-iot-smart/execute-tool',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // 显示执行成功
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
+                          .css({
+                              'background': '#dcfce7',
+                              'color': '#166534',
+                              'border-color': '#bbf7d0'
+                          });
+                    
+                    // 添加成功消息
+                    addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
+                } else {
+                    // 显示执行失败
+                    button.prop('disabled', false)
+                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                          .css({
+                              'background': '#fef2f2',
+                              'color': '#dc2626',
+                              'border-color': '#fecaca'
+                          });
+                    
+                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
+                }
+            },
+            error: function(xhr) {
+                var error = xhr.responseJSON ? xhr.responseJSON.error : '网络错误';
+                
+                // 恢复按钮状态
+                button.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+                
+                addMessageToChat("error", `❌ 执行失败: ${error}`);
+            }
+        });
+    });
+    // 添加JSON编辑器到消息
+    function addJSONEditor(messageId, editorData) {
+        console.log("=== addJSONEditor 被调用 ===");
+        console.log("messageId:", messageId);
+        console.log("editorData:", editorData);
+        
+        var messageElement = $("#" + messageId);
+        console.log("找到消息元素:", messageElement.length > 0);
+        
+        if (messageElement.length > 0) {
+            var editorId = "json-editor-" + Date.now();
             
-            // 这里可以添加实际的应用逻辑，比如：
-            // - 保存到配置文件
-            // - 更新Node-RED配置
-            // - 发送到后端API等
+            // 创建编辑器HTML
+            var editorHtml = `
+                <div class="json-editor-container" style="margin-top: 16px;">
+                    <div style="margin-bottom: 8px;">
+                        <strong>${editorData.editorTitle || '流程配置'}</strong>
+                    </div>
+                    <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px;">
+                        ${editorData.description || ''}
+                    </div>
+                    <div id="${editorId}" style="
+                        height: 300px;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 6px;
+                        margin-bottom: 12px;
+                    "></div>
+                    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                        <button class="json-editor-apply-btn" 
+                                data-editor-id="${editorId}"
+                                data-tool-name="${editorData.toolName}" 
+                                data-tool-args='${JSON.stringify(editorData.toolArgs)}'
+                                style="
+                                    background: #10b981;
+                                    border: 1px solid #10b981;
+                                    border-radius: 6px;
+                                    padding: 8px 16px;
+                                    font-size: 14px;
+                                    color: white;
+                                    cursor: pointer;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    transition: all 0.2s;
+                                    font-weight: 500;
+                                "
+                                onmouseover="this.style.background='#059669'"
+                                onmouseout="this.style.background='#10b981'">
+                            <i class="fa fa-check" style="font-size: 12px;"></i>
+                            Apply
+                        </button>
+                    </div>
+                </div>
+            `;
             
-        } catch (e) {
-            RED.notify("JSON格式错误: " + e.message, "error");
+            console.log("添加编辑器HTML");
+            messageElement.find('.message-content').append(editorHtml);
+            
+            // 初始化JSON编辑器
+            ensureAceEditorLoaded(function() {
+                initializeJSONEditor(editorId, editorData.jsonContent);
+            });
+            
+            // 添加Apply按钮点击事件
+            messageElement.find('.json-editor-apply-btn').off('click').on('click', function() {
+                console.log("JSON编辑器Apply按钮被点击");
+                var editorId = $(this).data('editor-id');
+                var toolName = $(this).data('tool-name');
+                var originalToolArgs = $(this).data('tool-args');
+                
+                // 获取编辑器内容
+                var editor = window.jsonEditors && window.jsonEditors[editorId];
+                if (!editor) {
+                    RED.notify("编辑器未找到", "error");
+                    return;
+                }
+                
+                var editedContent = editor.getValue();
+                
+                // 验证JSON格式
+                try {
+                    var parsedJson = JSON.parse(editedContent);
+                    
+                    // 更新工具参数
+                    var updatedToolArgs = Object.assign({}, originalToolArgs);
+                    if (toolName === 'create-flow') {
+                        updatedToolArgs.flowJson = editedContent;
+                    }
+                    
+                    console.log("执行工具:", toolName, updatedToolArgs);
+                    
+                    // 禁用按钮
+                    $(this).prop('disabled', true)
+                           .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
+                           .css({
+                               'background': '#f3f4f6',
+                               'color': '#6b7280',
+                               'cursor': 'not-allowed'
+                           });
+                    
+                    // 调用执行工具的API
+                    executeJSONEditorTool(toolName, updatedToolArgs, $(this));
+                    
+                } catch (e) {
+                    RED.notify("JSON格式错误: " + e.message, "error");
+                    // 高亮错误行
+                    document.getElementById(editorId).style.borderColor = '#dc3545';
+                }
+            });
+            
+            forceScrollToBottom();
+            console.log("JSON编辑器添加完成");
+        } else {
+            console.error("找不到消息元素:", messageId);
+        }
+    }
+    
+    // 执行JSON编辑器的工具调用
+    function executeJSONEditorTool(toolName, toolArgs, buttonElement) {
+        console.log("执行JSON编辑器工具调用:", toolName, toolArgs);
+        
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            buttonElement.prop('disabled', false).html('<i class="fa fa-check"></i> Apply');
+            return;
         }
         
-    } catch (error) {
-        console.error("应用编辑器内容时出错:", error);
-        RED.notify("应用失败: " + error.message, "error");
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        fetch('/make-iot-smart/execute-tool', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                toolName: toolName,
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("工具执行结果:", data);
+            
+            if (data.success) {
+                // 成功执行
+                buttonElement.removeClass('execute-tool-btn')
+                    .css({
+                        'background': '#059669',
+                        'cursor': 'default'
+                    })
+                    .html('<i class="fa fa-check"></i> 已应用')
+                    .prop('disabled', true);
+                
+                // 显示成功消息
+                addMessageToChat("system", "✅ 流程创建成功！");
+                
+                // 可选：刷新页面或更新流程列表
+                if (typeof RED !== 'undefined' && RED.view) {
+                    RED.view.redraw();
+                }
+            } else {
+                // 执行失败
+                buttonElement.prop('disabled', false)
+                    .css('background', '#ef4444')
+                    .text('执行失败');
+                
+                addMessageToChat("error", "❌ 工具执行失败: " + data.error);
+                
+                // 3秒后恢复按钮
+                setTimeout(() => {
+                    buttonElement.css('background', '#10b981').text('Apply');
+                }, 3000);
+            }
+        })
+        .catch(error => {
+            console.error("工具执行错误:", error);
+            buttonElement.prop('disabled', false)
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
+                      .css({
+                          'background': '#fef2f2',
+                          'color': '#dc2626',
+                          'border-color': '#fecaca'
+                      });
+            
+            addMessageToChat("error", "❌ 网络错误: " + error.message);
+        });
     }
-}
+    // 全局函数定义 - 必须在最开始
+    function ensureAceEditorLoaded(callback) {
+        if (typeof ace !== 'undefined') {
+            callback();
+            return;
+        }
+        
+        // 如果ACE未加载，尝试从Node-RED加载
+        if (RED && RED.editor && RED.editor.ace) {
+            window.ace = RED.editor.ace;
+            callback();
+            return;
+        }
+        
+        // 最后的降级方案
+        console.warn("ACE编辑器未找到，将使用普通文本显示");
+        callback();
+    }
 
-function fallbackCopyTextToClipboard(text) {
-    var textArea = document.createElement("textarea");
-    textArea.value = text;
-    
-    // 避免滚动到底部
-    textArea.style.top = "0";
-    textArea.style.left = "0";
-    textArea.style.position = "fixed";
-    
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-        var successful = document.execCommand('copy');
-        if (successful) {
-            RED.notify("内容已复制到剪贴板", "success");
-        } else {
+    function initializeJSONEditor(editorId, jsonContent) {
+        try {
+            // 验证JSON格式
+            var parsedJSON;
+            try {
+                parsedJSON = JSON.parse(jsonContent);
+            } catch (e) {
+                console.error("JSON格式错误:", e);
+                // 如果不是有效JSON，显示为普通文本
+                document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
+                return;
+            }
+            
+            // 创建ACE编辑器
+            var editor = ace.edit(editorId);
+            editor.setTheme("ace/theme/textmate");
+            editor.session.setMode("ace/mode/json");
+            editor.setValue(JSON.stringify(parsedJSON, null, 2), -1);
+            
+            // 设置编辑器选项
+            editor.setOptions({
+                fontSize: 13,
+                showPrintMargin: false,
+                highlightActiveLine: true,
+                showGutter: true,
+                readOnly: false,
+                maxLines: 20,
+                minLines: 10,
+                wrap: true,
+                autoScrollEditorIntoView: true
+            });
+            
+            // 存储编辑器实例以便后续操作
+            window.jsonEditors = window.jsonEditors || {};
+            window.jsonEditors[editorId] = editor;
+            
+            // 监听内容变化
+            editor.session.on('change', function() {
+                try {
+                    var content = editor.getValue();
+                    JSON.parse(content); // 验证JSON格式
+                    // 如果JSON有效，移除错误样式
+                    document.getElementById(editorId).style.borderColor = '#e9ecef';
+                } catch (e) {
+                    // 如果JSON无效，添加错误样式
+                    document.getElementById(editorId).style.borderColor = '#dc3545';
+                }
+            });
+            
+        } catch (error) {
+            console.error("初始化JSON编辑器失败:", error);
+            // 降级显示为普通代码块
+            document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
+        }
+    }
+
+    function copyEditorContent(editorId) {
+        try {
+            var editor = window.jsonEditors && window.jsonEditors[editorId];
+            var content;
+            
+            if (editor) {
+                content = editor.getValue();
+            } else {
+                // 降级方案：从DOM获取内容
+                var element = document.getElementById(editorId);
+                content = element.textContent || element.innerText;
+            }
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(content).then(function() {
+                    RED.notify("内容已复制到剪贴板", "success");
+                }).catch(function(err) {
+                    console.error('复制失败:', err);
+                    fallbackCopyTextToClipboard(content);
+                });
+            } else {
+                fallbackCopyTextToClipboard(content);
+            }
+        } catch (error) {
+            console.error("复制编辑器内容时出错:", error);
+            RED.notify("复制失败: " + error.message, "error");
+        }
+    }
+
+    function applyEditorContent(editorId) {
+        try {
+            var editor = window.jsonEditors && window.jsonEditors[editorId];
+            if (!editor) {
+                RED.notify("编辑器未找到", "error");
+                return;
+            }
+            
+            var content = editor.getValue();
+            
+            // 验证JSON格式
+            try {
+                JSON.parse(content);
+                RED.notify("JSON格式有效，内容已应用", "success");
+                
+                // 这里可以添加实际的应用逻辑，比如：
+                // - 保存到配置文件
+                // - 更新Node-RED配置
+                // - 发送到后端API等
+                
+            } catch (e) {
+                RED.notify("JSON格式错误: " + e.message, "error");
+            }
+            
+        } catch (error) {
+            console.error("应用编辑器内容时出错:", error);
+            RED.notify("应用失败: " + error.message, "error");
+        }
+    }
+
+    function fallbackCopyTextToClipboard(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        
+        // 避免滚动到底部
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            var successful = document.execCommand('copy');
+            if (successful) {
+                RED.notify("内容已复制到剪贴板", "success");
+            } else {
+                RED.notify("复制失败", "error");
+            }
+        } catch (err) {
+            console.error('降级复制方案失败:', err);
             RED.notify("复制失败", "error");
         }
-    } catch (err) {
-        console.error('降级复制方案失败:', err);
-        RED.notify("复制失败", "error");
+        
+        document.body.removeChild(textArea);
     }
-    
-    document.body.removeChild(textArea);
-}
 
 // 主要的代码逻辑
 (function() {
@@ -752,7 +1652,6 @@ function fallbackCopyTextToClipboard(text) {
         }
     }
 
-    RED.plugins.registerPlugin("autolayout-sidebar-plugin", {});
 
     // Make sure the editor is completely loaded, before filling the sidebar with content.
     // Because only just before that, RED.nodes will be loaded.  Otherwise RED.nodes.getType("auto_layout_config") would 
@@ -887,929 +1786,29 @@ function fallbackCopyTextToClipboard(text) {
                 console.error("处理过程中发生错误:", error);
                 RED.notify("显示配置节点时出错: " + error.message, "error");
             }
+            
+            // 初始化AI助手UI
+            setupAIAssistant();
+            
+            // 初始化当前flow名称显示
+            updateCurrentFlowName();
+            
+            // 初始化当前选中节点信息
+            updateSelectedNodeInfo();
+            
+            // 监听workspace选择变化
+            RED.events.on('workspace:change', updateCurrentFlowName);
+            
+            // 监听节点选择变化
+            RED.events.on('view:selection-changed', updateSelectedNodeInfo);
         });
     };
     RED.events.on('runtime-state', dothisOneTimePlease )
 })();
-   // 在RED.events.on('runtime-state')中添加以下代码
-    RED.events.on('runtime-state', function() {
-        // 初始化AI助手UI
-        setupAIAssistant();
-        
-        // 初始化当前flow名称显示
-        updateCurrentFlowName();
-        
-        // 初始化当前选中节点信息
-        updateSelectedNodeInfo();
-        
-        // 监听workspace选择变化
-        RED.events.on('workspace:change', updateCurrentFlowName);
-        
-        // 监听节点选择变化
-        RED.events.on('view:selection-changed', updateSelectedNodeInfo);
-    });
-    
-    // 更新当前flow名称的函数
-    function updateCurrentFlowName() {
-        try {
-            // 获取当前活动的workspace
-            var activeWorkspace = RED.workspaces.active();
-            
-            if (activeWorkspace) {
-                // 获取workspace节点
-                var workspaceNode = RED.nodes.workspace(activeWorkspace);
-                
-                if (workspaceNode && workspaceNode.label) {
-                    // 更新显示的flow名称
-                    $("#current-flow-name").text(workspaceNode.label);
-                } else {
-                    $("#current-flow-name").text("Flow " + activeWorkspace);
-                }
-            } else {
-                $("#current-flow-name").text("未选择流程");
-            }
-        } catch (error) {
-            console.warn("更新流程名称失败:", error);
-            $("#current-flow-name").text("未知流程");
-        }
-    }
+//    // 在RED.events.on('runtime-state')中添加以下代码
+//     RED.events.on('runtime-state', function() {
+//     });
 
-    // 更新当前选中节点信息的函数
-    function updateSelectedNodeInfo() {
-        try {
-            var selection = RED.view.selection();
-            
-            if (!selection || !selection.nodes || selection.nodes.length === 0) {
-                $("#current-selected-node").text("未选择节点");
-                $("#selected-node-type-container").hide();
-            } else if (selection.nodes.length === 1) {
-                var node = selection.nodes[0];
-                var nodeInfo = node.name || node.type || "未知节点";
-                $("#current-selected-node").text(nodeInfo);
-                
-                // 显示节点类型
-                if (node.type) {
-                    $("#current-selected-node-type").text(node.type);
-                    $("#selected-node-type-container").show();
-                } else {
-                    $("#selected-node-type-container").hide();
-                }
-            } else {
-                $("#current-selected-node").text("已选择 " + selection.nodes.length + " 个节点");
-                $("#selected-node-type-container").hide();
-            }
-        } catch (error) {
-            console.warn("更新节点信息失败:", error);
-            $("#current-selected-node").text("未知节点");
-            $("#selected-node-type-container").hide();
-        }
-    }
-    
-    function setupAIAssistant() {
-        // 自动调整文本区域高度
-        $("#augment-chat-input").on("input", function() {
-            this.style.height = "auto";
-            this.style.height = Math.min(this.scrollHeight, 120) + "px";
-        });
-        
-        // 发送按钮点击事件
-        $("#augment-send").on("click", function() {
-            sendMessage();
-        });
-        
-        // 按Enter键发送消息（Shift+Enter换行）
-        $("#augment-chat-input").on("keydown", function(e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-        
-        // 工具按钮点击事件
-        $("#augment-attach-file, #augment-at-mention").on("click", function() {
-            RED.notify("此功能正在开发中", "info");
-        });
-    }
-    
-    function sendMessage() {
-        var message = $("#augment-chat-input").val().trim();
-        if (message) {
-            console.log("发送消息:", message);
-            addMessageToChat("user", message);
-            
-            $("#augment-chat-input").val("");
-            $("#augment-chat-input").css("height", "72px");
-            
-            // 发送到AI后台
-            sendToAI(message);
-        }
-    }
-
-    function sendToAI(message) {
-        var nodeId = getSelectedConfigNodeId();
-        if (!nodeId) {
-            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
-            return;
-        }
-
-        // 检查节点是否已部署
-        var configNode = RED.nodes.node(nodeId);
-        if (!configNode) {
-            addMessageToChat("error", "❌ 配置节点未部署，请点击部署按钮后重试");
-            return;
-        }
-
-        // 检查是否有未部署的更改
-        if (RED.nodes.dirty()) {
-            addMessageToChat("warning", "⚠️ 检测到未部署的更改，请先点击部署按钮");
-            return;
-        }
-
-        // 获取当前选中的流程和节点信息
-        var selectedFlow = null;
-        var selectedNodes = [];
-        var flowData = null;
-
-        try {
-            // 获取当前活动的工作区
-            var activeWorkspace = RED.workspaces.active();
-            if (activeWorkspace) {
-                selectedFlow = {
-                    id: activeWorkspace.id,
-                    label: activeWorkspace.label || 'Untitled Flow'
-                };
-                
-                // 获取流程数据
-                flowData = RED.nodes.createExportableNodeSet([activeWorkspace.id]);
-            }
-            
-            // 获取选中的节点
-            var selection = RED.view.selection();
-            if (selection && selection.nodes) {
-                selectedNodes = selection.nodes.map(node => ({
-                    id: node.id,
-                    type: node.type,
-                    name: node.name || '',
-                    x: node.x,
-                    y: node.y,
-                    wires: node.wires || [],
-                    config: Object.keys(node).reduce((config, key) => {
-                        if (!['credentials', 'apiKey', 'password', 'token'].includes(key) && 
-                            !key.startsWith('_') && 
-                            typeof node[key] !== 'function') {
-                            config[key] = node[key];
-                        }
-                        return config;
-                    }, {})
-                }));
-            }
-        } catch (error) {
-            console.warn("获取选中信息失败:", error);
-        }
-
-        console.log("发送AI请求:", {
-            message: message,
-            nodeId: nodeId,
-            selectedFlow: selectedFlow,
-            selectedNodes: selectedNodes,
-            flowData: flowData,
-            history: getChatHistory()
-        });
-        
-        // 创建加载消息
-        var loadingMessageId = "loading-" + Date.now();
-        var aiMessageId = "ai-" + Date.now(); // 定义aiMessageId
-        addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
-        
-        // 使用fetch进行流式请求
-        fetch('/make-iot-smart/chat-stream', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: message,
-                nodeId: nodeId,
-                selectedFlow: selectedFlow,
-                selectedNodes: selectedNodes,
-                flowData: flowData,
-                history: getChatHistory()
-            })
-        })
-        .then(response => {
-            console.log("收到响应:", response.status, response.statusText);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            
-            function readStream() {
-                return reader.read().then(({ done, value }) => {
-                    if (done) {
-                        console.log("流读取完成");
-                        // 移除加载消息
-                        $("#" + loadingMessageId).remove();
-                        return;
-                    }
-                    
-                    const chunk = decoder.decode(value, { stream: true });
-                    console.log("收到数据块:", chunk);
-                    
-                    const lines = chunk.split('\n');
-                    lines.forEach(line => {
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(line.slice(6));
-                                console.log("=== 解析的SSE数据 ===");
-                                console.log("数据类型:", data.type);
-                                console.log("完整数据:", JSON.stringify(data, null, 2));
-                                
-                                if (data.type === 'content') {
-                                    // 移除加载消息（如果还存在）
-                                    $("#" + loadingMessageId).remove();
-                                    
-                                    // 追加文本到AI消息
-                                    var aiMessage = $("#" + aiMessageId + " .message-content");
-                                    if (aiMessage.length === 0) {
-                                        // 如果AI消息不存在，创建它
-                                        addMessageToChat("assistant", data.content, aiMessageId);
-                                    } else {
-                                        aiMessage.text(aiMessage.text() + data.content);
-                                    }
-                                    forceScrollToBottom();
-                                } else if (data.type === 'json_editor') {
-                                    console.log("=== 处理json_editor ===");
-                                    console.log("编辑器数据:", data);
-                                    
-                                    // 确保AI消息存在
-                                    var aiMessage = $("#" + aiMessageId);
-                                    if (aiMessage.length === 0) {
-                                        addMessageToChat("assistant", "", aiMessageId);
-                                    }
-                                    
-                                    // 移除加载消息
-                                    $("#" + loadingMessageId).remove();
-                                    
-                                    // 添加JSON编辑器
-                                    addJSONEditor(aiMessageId, data);
-                                } else if (data.type === 'action_button') {
-                                    console.log("=== 处理action_button ===");
-                                    console.log("按钮数据:", data);
-                                    
-                                    // 确保AI消息存在
-                                    var aiMessage = $("#" + aiMessageId);
-                                    if (aiMessage.length === 0) {
-                                        addMessageToChat("assistant", "", aiMessageId);
-                                    }
-                                    
-                                    // 移除加载消息
-                                    $("#" + loadingMessageId).remove();
-                                    
-                                    // 添加按钮
-                                    addActionButton(aiMessageId, data);
-                                } else if (data.type === 'start') {
-                                    console.log("AI开始响应, MCP可用:", data.mcpAvailable);
-                                    console.log("MCP工具数量:", data.mcpToolsCount);
-                                    
-                                    // 移除加载消息，创建AI消息
-                                    $("#" + loadingMessageId).remove();
-                                    addMessageToChat("assistant", "", aiMessageId);
-                                } else if (data.type === 'end') {
-                                    console.log("AI响应结束");
-                                    // 移除加载消息（如果还存在）
-                                    $("#" + loadingMessageId).remove();
-                                } else if (data.type === 'error') {
-                                    $("#" + loadingMessageId).remove();
-                                    addMessageToChat("error", "❌ " + data.content);
-                                } else if (data.type === 'tool') {
-                                    console.log("收到tool信息:", data);
-                                    var aiMessage = $("#" + aiMessageId + " .message-content");
-                                    if (aiMessage.length > 0) {
-                                        aiMessage.text(aiMessage.text() + "\n\n" + data.content);
-                                        forceScrollToBottom();
-                                    }
-                                }
-                            } catch (e) {
-                                console.warn("解析SSE数据失败:", line, e);
-                            }
-                        }
-                    });
-                    
-                    return readStream();
-                });
-            }
-            
-            return readStream();
-        })
-        .catch(error => {
-            console.error("AI请求失败:", error);
-            $("#" + loadingMessageId).remove();
-            addMessageToChat("error", "❌ AI请求失败: " + error.message);
-        });
-    }
-
-    function handleStreamData(data, loadingMessageId) {
-        switch (data.type) {
-            case 'start':
-                // 移除加载消息，开始显示实际响应
-                $("#" + loadingMessageId).remove();
-                currentStreamMessageId = 'stream-' + Date.now();
-                addMessageToChat("assistant", "", currentStreamMessageId);
-                break;
-                
-            case 'text':
-            case 'content':
-                // 追加文本内容
-                if (currentStreamMessageId) {
-                    appendToMessage(currentStreamMessageId, data.content);
-                }
-                break;
-                
-            case 'action_button':
-                // 处理动作按钮
-                if (currentStreamMessageId) {
-                    addActionButton(currentStreamMessageId, data);
-                }
-                break;
-                
-            case 'tool_call':
-                // 显示工具调用信息
-                if (currentStreamMessageId) {
-                    var toolInfo = `🔧 调用工具: ${data.tool_name}\n参数: ${JSON.stringify(data.arguments, null, 2)}\n`;
-                    appendToMessage(currentStreamMessageId, toolInfo);
-                }
-                break;
-                
-            case 'tool_result':
-                // 显示工具执行结果
-                if (currentStreamMessageId) {
-                    var resultInfo = `✅ 工具执行结果:\n${data.result}\n\n`;
-                    appendToMessage(currentStreamMessageId, resultInfo);
-                }
-                break;
-                
-            case 'error':
-                if (currentStreamMessageId) {
-                    appendToMessage(currentStreamMessageId, `❌ 错误: ${data.error}`);
-                }
-                break;
-                
-            case 'done':
-            case 'end':
-                // 流式响应完成
-                currentStreamMessageId = null;
-                saveChatMessage("assistant", data.final_content || "");
-                break;
-        }
-    }
-
-    function appendToMessage(messageId, content) {
-        var messageElement = $("#" + messageId + " .message-content");
-        if (messageElement.length > 0) {
-            var currentContent = messageElement.text();
-            messageElement.text(currentContent + content);
-            forceScrollToBottom();
-        }
-    }
-
-    function getSelectedConfigNodeId() {
-        // 查找api-config类型的配置节点
-        var configNodeId = null;
-        try {
-            RED.nodes.eachConfig(function(configNode) {
-                if (configNode.type === 'api-config') {
-                    configNodeId = configNode.id;
-                    console.log("找到api-config节点:", configNodeId, configNode);
-                    return false; // 找到第一个就停止
-                }
-            });
-            
-            // 如果没有找到，尝试创建一个默认的配置节点
-            if (!configNodeId) {
-                console.log("未找到api-config节点，尝试创建默认节点");
-                configNodeId = createDefaultApiConfigNode();
-            }
-            
-            // 验证节点是否真的存在
-            if (configNodeId) {
-                var node = RED.nodes.node(configNodeId);
-                if (!node) {
-                    console.warn("节点ID存在但无法获取节点实例:", configNodeId);
-                    return null;
-                }
-            }
-            
-        } catch (error) {
-            console.warn("获取配置节点失败:", error);
-        }
-        return configNodeId;
-    }
-
-    function createDefaultApiConfigNode() {
-        try {
-            // 检查api-config节点类型是否已注册
-            var apiConfigNodeType = RED.nodes.getType("api-config");
-            if (!apiConfigNodeType) {
-                console.error("api-config节点类型未注册");
-                return null;
-            }
-            
-            // 创建默认的api-config节点
-            var defaultConfigNode = {
-                id: RED.nodes.id(),
-                _def: apiConfigNodeType,
-                type: "api-config",
-                hasUsers: false,
-                users: [],
-                name: "Default AI Config",
-                label: function() { return this.name || "Default AI Config"; },
-                provider: "openai",
-                model: "gpt-4o-mini",
-                temperature: 0.1,
-                maxTokens: 2000,
-                useDifferentModels: false,
-                planningModel: "",
-                executionModel: "",
-                credentials: {
-                    apiKey: "请配置API密钥" // 临时占位符
-                }
-            };
-            
-            // 添加到Node-RED节点集合
-            RED.nodes.add(defaultConfigNode);
-            RED.nodes.dirty(true);
-            
-            console.log("创建默认api-config节点:", defaultConfigNode.id);
-            
-            // 立即部署以确保节点保存到后端
-            RED.deploy.setDeployInflight(false);
-            RED.nodes.dirty(true);
-            
-            // 提示用户配置并部署
-            setTimeout(function() {
-                RED.notify("已创建默认AI配置节点，请配置API密钥并点击部署按钮", "info");
-                RED.editor.editConfig("", "api-config", defaultConfigNode.id);
-            }, 1000);
-            
-            return defaultConfigNode.id;
-        } catch (error) {
-            console.error("创建默认配置节点失败:", error);
-            return null;
-        }
-    }
-
-    function getChatHistory() {
-        // 从聊天记录中提取历史消息
-        var history = [];
-        $("#augment-chat-messages .augment-message-container").each(function() {
-            var role = $(this).hasClass("user-message") ? "user" : "assistant";
-            var content = $(this).find(".message-content").text().trim();
-            if (content && content !== "🤖 正在思考...") {
-                history.push({
-                    role: role,
-                    content: content
-                });
-            }
-        });
-        return history.slice(-10); // 只保留最近10条消息
-    }
-
-    function saveChatMessage(role, content) {
-        // 保存消息到Node-RED的全局上下文（可选）
-        try {
-            var context = RED.settings.get('contextStorage') || {};
-            if (context.default && context.default.module === 'localfilesystem') {
-                // 如果配置了文件存储，可以保存聊天记录
-                console.log("保存聊天记录:", role, content);
-            }
-        } catch (error) {
-            console.warn("保存聊天记录失败:", error);
-        }
-    }
-
-    var currentStreamMessageId = null;
-
-    // 修改addMessageToChat函数以支持流式更新
-    function addMessageToChat(role, messageData, messageId) {
-        loadAISidebarConfig().then(function(config) {
-            var isUser = role === "user";
-            var userLabel = config.ui.userLabel;
-            var assistantLabel = config.ui.assistantLabel;
-            var label = isUser ? userLabel : assistantLabel;
-            
-            var timestamp = new Date().toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            
-            var messageHtml = '<div class="augment-message-container ' + (isUser ? 'user-message' : 'assistant-message') + '" ' + 
-                             (messageId ? 'id="' + messageId + '"' : '') + ' style="margin: 0 0 24px 0;">';
-            
-            // 消息头部
-            messageHtml += '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">';
-            messageHtml += '<div style="width: 24px; height: 24px; border-radius: 50%; background: ' + 
-                          (isUser ? '#3b82f6' : '#10b981') + '; display: flex; align-items: center; justify-content: center;">';
-            messageHtml += '<span style="color: white; font-size: 12px; font-weight: 600;">' + 
-                          (isUser ? 'Y' : 'A') + '</span>';
-            messageHtml += '</div>';
-            messageHtml += '<span style="font-weight: 600; color: #374151;">' + label + '</span>';
-            messageHtml += '<span style="color: #9ca3af; font-size: 12px; margin-left: auto;">' + timestamp + '</span>';
-            messageHtml += '</div>';
-            
-            // 消息内容
-            messageHtml += '<div class="message-content" style="background: ' + (isUser ? '#f3f4f6' : '#ffffff') + 
-                          '; padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e7eb; white-space: pre-wrap; word-wrap: break-word;">';
-            messageHtml += typeof messageData === 'string' ? messageData : '';
-            messageHtml += '</div>';
-            messageHtml += '</div>';
-            
-            $("#augment-chat-messages").append(messageHtml);
-            forceScrollToBottom();
-        });
-    }
-    
-    function forceScrollToBottom() {
-        // 方法1：使用jQuery的scrollTop
-        var chatContainer = $("#augment-chat-messages");
-        chatContainer.scrollTop(chatContainer[0].scrollHeight);
-        
-        // 方法2：使用原生JavaScript的scrollTo
-        var container = document.getElementById("augment-chat-messages");
-        if (container) {
-            container.scrollTo(0, container.scrollHeight);
-        }
-        
-        // 方法3：使用setTimeout确保DOM已更新
-        setTimeout(function() {
-            chatContainer.scrollTop(chatContainer[0].scrollHeight);
-        }, 50);
-    }
-    // 添加配置加载函数
-    function loadAISidebarConfig() {
-        return Promise.resolve({
-            ui: {
-                placeholder: "Ask or instruct Augment",
-                currentFlow: "当前流程",
-                currentNode: "当前节点",
-                noFlowSelected: "未选择流程",
-                noNodeSelected: "未选择节点",
-                multipleNodesSelected: "已选择 {count} 个节点",
-                nodeType: "类型",
-                timestamp: "07:51 PM",
-                userLabel: "You",
-                assistantLabel: "Augment"
-            },
-            messages: {
-                developmentInProgress: "此功能正在开发中",
-                simulatedResponse: "这是一个模拟的AI回复。"
-            }
-        });
-    }
-    // 添加动作按钮到消息
-    function addActionButton(messageId, buttonData) {
-        var messageElement = $("#" + messageId);
-        if (messageElement.length > 0) {
-            console.log("添加按钮到消息:", messageId, buttonData);
-            
-            // 创建按钮HTML，模仿Augment UI风格的Apply按钮
-            var buttonHtml = `
-                <div class="action-button-container" style="
-                    margin-top: 16px; 
-                    padding: 0;
-                    display: flex;
-                    justify-content: flex-end;
-                ">
-                    <button class="execute-tool-btn" 
-                            data-tool-name="${buttonData.toolName}" 
-                            data-tool-args='${JSON.stringify(buttonData.toolArgs)}'
-                            style="
-                                background: #10b981;
-                                border: 1px solid #10b981;
-                                border-radius: 6px;
-                                padding: 6px 12px;
-                                font-size: 13px;
-                                color: white;
-                                cursor: pointer;
-                                display: inline-flex;
-                                align-items: center;
-                                gap: 6px;
-                                transition: all 0.2s;
-                                font-weight: 500;
-                                min-width: 60px;
-                                justify-content: center;
-                            "
-                            onmouseover="this.style.background='#059669'"
-                            onmouseout="this.style.background='#10b981'">
-                        <i class="fa fa-check" style="font-size: 12px;"></i>
-                        Apply
-                    </button>
-                </div>
-            `;
-            
-            messageElement.find('.message-content').append(buttonHtml);
-            forceScrollToBottom();
-        } else {
-            console.warn("找不到消息元素:", messageId);
-        }
-    }
-
-    // 按钮点击事件处理
-    $(document).on('click', '.execute-tool-btn', function() {
-        var toolName = $(this).data('tool-name');
-        var toolArgs = $(this).data('tool-args');
-        var button = $(this);
-        var originalText = button.html();
-        
-        // 获取当前选中的流程信息
-        var selectedFlow = null;
-        try {
-            var activeWorkspace = RED.workspaces.active();
-            if (activeWorkspace) {
-                selectedFlow = {
-                    id: activeWorkspace,
-                    label: RED.nodes.workspace(activeWorkspace).label
-                };
-            }
-        } catch (error) {
-            console.warn("获取当前流程失败:", error);
-        }
-        
-        // 禁用按钮并显示加载状态
-        button.prop('disabled', true)
-              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
-              .css({
-                  'background': '#f3f4f6',
-                  'color': '#6b7280',
-                  'cursor': 'not-allowed'
-              });
-        
-        // 获取配置节点ID
-        var nodeId = getSelectedConfigNodeId();
-        if (!nodeId) {
-            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
-            button.prop('disabled', false).html(originalText);
-            return;
-        }
-        
-        console.log('执行工具调用:', toolName, toolArgs, '当前流程:', selectedFlow);
-        
-        // 发送工具执行请求
-        $.ajax({
-            url: '/make-iot-smart/execute-tool',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                toolName: toolName,
-                toolArgs: toolArgs,
-                nodeId: nodeId,
-                selectedFlow: selectedFlow
-            }),
-            success: function(response) {
-                if (response.success) {
-                    // 显示执行成功
-                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> 已完成')
-                          .css({
-                              'background': '#dcfce7',
-                              'color': '#166534',
-                              'border-color': '#bbf7d0'
-                          });
-                    
-                    // 添加成功消息
-                    addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
-                } else {
-                    // 显示执行失败
-                    button.prop('disabled', false)
-                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
-                          .css({
-                              'background': '#fef2f2',
-                              'color': '#dc2626',
-                              'border-color': '#fecaca'
-                          });
-                    
-                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
-                }
-            },
-            error: function(xhr) {
-                var error = xhr.responseJSON ? xhr.responseJSON.error : '网络错误';
-                
-                // 恢复按钮状态
-                button.prop('disabled', false)
-                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
-                      .css({
-                          'background': '#fef2f2',
-                          'color': '#dc2626',
-                          'border-color': '#fecaca'
-                      });
-                
-                addMessageToChat("error", `❌ 执行失败: ${error}`);
-            }
-        });
-    });
-    // 添加JSON编辑器到消息
-    function addJSONEditor(messageId, editorData) {
-        console.log("=== addJSONEditor 被调用 ===");
-        console.log("messageId:", messageId);
-        console.log("editorData:", editorData);
-        
-        var messageElement = $("#" + messageId);
-        console.log("找到消息元素:", messageElement.length > 0);
-        
-        if (messageElement.length > 0) {
-            var editorId = "json-editor-" + Date.now();
-            
-            // 创建编辑器HTML
-            var editorHtml = `
-                <div class="json-editor-container" style="margin-top: 16px;">
-                    <div style="margin-bottom: 8px;">
-                        <strong>${editorData.editorTitle || '流程配置'}</strong>
-                    </div>
-                    <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px;">
-                        ${editorData.description || ''}
-                    </div>
-                    <div id="${editorId}" style="
-                        height: 300px;
-                        border: 1px solid #e5e7eb;
-                        border-radius: 6px;
-                        margin-bottom: 12px;
-                    "></div>
-                    <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                        <button class="json-editor-apply-btn" 
-                                data-editor-id="${editorId}"
-                                data-tool-name="${editorData.toolName}" 
-                                data-tool-args='${JSON.stringify(editorData.toolArgs)}'
-                                style="
-                                    background: #10b981;
-                                    border: 1px solid #10b981;
-                                    border-radius: 6px;
-                                    padding: 8px 16px;
-                                    font-size: 14px;
-                                    color: white;
-                                    cursor: pointer;
-                                    display: inline-flex;
-                                    align-items: center;
-                                    gap: 6px;
-                                    transition: all 0.2s;
-                                    font-weight: 500;
-                                "
-                                onmouseover="this.style.background='#059669'"
-                                onmouseout="this.style.background='#10b981'">
-                            <i class="fa fa-check" style="font-size: 12px;"></i>
-                            Apply
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            console.log("添加编辑器HTML");
-            messageElement.find('.message-content').append(editorHtml);
-            
-            // 初始化JSON编辑器
-            ensureAceEditorLoaded(function() {
-                initializeJSONEditor(editorId, editorData.jsonContent);
-            });
-            
-            // 添加Apply按钮点击事件
-            messageElement.find('.json-editor-apply-btn').off('click').on('click', function() {
-                console.log("JSON编辑器Apply按钮被点击");
-                var editorId = $(this).data('editor-id');
-                var toolName = $(this).data('tool-name');
-                var originalToolArgs = $(this).data('tool-args');
-                
-                // 获取编辑器内容
-                var editor = window.jsonEditors && window.jsonEditors[editorId];
-                if (!editor) {
-                    RED.notify("编辑器未找到", "error");
-                    return;
-                }
-                
-                var editedContent = editor.getValue();
-                
-                // 验证JSON格式
-                try {
-                    var parsedJson = JSON.parse(editedContent);
-                    
-                    // 更新工具参数
-                    var updatedToolArgs = Object.assign({}, originalToolArgs);
-                    if (toolName === 'create-flow') {
-                        updatedToolArgs.flowJson = editedContent;
-                    }
-                    
-                    console.log("执行工具:", toolName, updatedToolArgs);
-                    
-                    // 禁用按钮
-                    $(this).prop('disabled', true)
-                           .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> 执行中...')
-                           .css({
-                               'background': '#f3f4f6',
-                               'color': '#6b7280',
-                               'cursor': 'not-allowed'
-                           });
-                    
-                    // 调用执行工具的API
-                    executeJSONEditorTool(toolName, updatedToolArgs, $(this));
-                    
-                } catch (e) {
-                    RED.notify("JSON格式错误: " + e.message, "error");
-                    // 高亮错误行
-                    document.getElementById(editorId).style.borderColor = '#dc3545';
-                }
-            });
-            
-            forceScrollToBottom();
-            console.log("JSON编辑器添加完成");
-        } else {
-            console.error("找不到消息元素:", messageId);
-        }
-    }
-    
-    // 执行JSON编辑器的工具调用
-    function executeJSONEditorTool(toolName, toolArgs, buttonElement) {
-        console.log("执行JSON编辑器工具调用:", toolName, toolArgs);
-        
-        var nodeId = getSelectedConfigNodeId();
-        if (!nodeId) {
-            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
-            buttonElement.prop('disabled', false).html('<i class="fa fa-check"></i> Apply');
-            return;
-        }
-        
-        var selectedFlow = null;
-        try {
-            var activeWorkspace = RED.workspaces.active();
-            if (activeWorkspace) {
-                selectedFlow = {
-                    id: activeWorkspace,
-                    label: RED.nodes.workspace(activeWorkspace).label
-                };
-            }
-        } catch (error) {
-            console.warn("获取当前流程失败:", error);
-        }
-        
-        fetch('/make-iot-smart/execute-tool', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                toolName: toolName,
-                toolArgs: toolArgs,
-                nodeId: nodeId,
-                selectedFlow: selectedFlow
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("工具执行结果:", data);
-            
-            if (data.success) {
-                // 成功执行
-                buttonElement.removeClass('execute-tool-btn')
-                    .css({
-                        'background': '#059669',
-                        'cursor': 'default'
-                    })
-                    .html('<i class="fa fa-check"></i> 已应用')
-                    .prop('disabled', true);
-                
-                // 显示成功消息
-                addMessageToChat("system", "✅ 流程创建成功！");
-                
-                // 可选：刷新页面或更新流程列表
-                if (typeof RED !== 'undefined' && RED.view) {
-                    RED.view.redraw();
-                }
-            } else {
-                // 执行失败
-                buttonElement.prop('disabled', false)
-                    .css('background', '#ef4444')
-                    .text('执行失败');
-                
-                addMessageToChat("error", "❌ 工具执行失败: " + data.error);
-                
-                // 3秒后恢复按钮
-                setTimeout(() => {
-                    buttonElement.css('background', '#10b981').text('Apply');
-                }, 3000);
-            }
-        })
-        .catch(error => {
-            console.error("工具执行错误:", error);
-            buttonElement.prop('disabled', false)
-                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
-                      .css({
-                          'background': '#fef2f2',
-                          'color': '#dc2626',
-                          'border-color': '#fecaca'
-                      });
-            
-            addMessageToChat("error", "❌ 网络错误: " + error.message);
-        });
-    }
 </script>
 
 <script type="text/x-red" data-template-name="auto_layout_sidebar">
