@@ -572,6 +572,244 @@
         }
     }
 
+    // 预处理Node-RED流程JSON中的function节点代码
+    function preprocessNodeRedFunctionCode(content) {
+        console.log('预处理Node-RED function代码');
+        
+        // 查找JSON代码块
+        const jsonBlockPattern = /```json\s*([\s\S]*?)\s*```/g;
+        
+        return content.replace(jsonBlockPattern, function(match, jsonContent) {
+            try {
+                console.log('处理JSON代码块');
+                
+                // 尝试解析JSON
+                const parsedJson = JSON.parse(jsonContent);
+                
+                // 如果是Node-RED流程配置
+                if (parsedJson.nodes && Array.isArray(parsedJson.nodes)) {
+                    console.log('检测到Node-RED流程配置，处理function节点');
+                    
+                    // 处理每个节点
+                    parsedJson.nodes = parsedJson.nodes.map(function(node, index) {
+                        if (node.type === 'function' && node.func && typeof node.func === 'string') {
+                            console.log('处理function节点: ' + (node.name || node.id));
+                            
+                            // 生成唯一ID
+                            const codeId = 'func-code-' + Date.now() + '-' + index;
+                            
+                            // 保存原始代码到全局变量
+                            if (!window.nodeRedFunctionCodes) {
+                                window.nodeRedFunctionCodes = {};
+                            }
+                            window.nodeRedFunctionCodes[codeId] = {
+                                code: node.func,
+                                nodeName: node.name || node.id,
+                                nodeId: node.id
+                            };
+                            
+                            // 替换func内容为简单文本
+                            node.func = 'code <click-to-view data-code-id="' + codeId + '">查看代码</click-to-view>';
+                        }
+                        return node;
+                    });
+                    
+                    // 返回处理后的JSON代码块
+                    return '```json\n' + JSON.stringify(parsedJson, null, 2) + '\n```';
+                }
+                
+                // 如果不是Node-RED流程配置，返回原内容
+                return match;
+                
+            } catch (e) {
+                console.warn('JSON解析失败，跳过处理:', e.message);
+                return match;
+            }
+        });
+    }
+
+    // 显示function代码的模态框
+    function showFunctionCodeModal(codeData) {
+        console.log('显示function代码:', codeData.nodeName);
+        
+        // 转义节点名称以防止HTML注入
+        var escapedNodeName = codeData.nodeName.replace(/[<>&"']/g, function(match) {
+            var escapeMap = {
+                '<': '&lt;',
+                '>': '&gt;',
+                '&': '&amp;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return escapeMap[match];
+        });
+        
+        var escapedCode = codeData.code.replace(/[<>&"']/g, function(match) {
+            var escapeMap = {
+                '<': '&lt;',
+                '>': '&gt;',
+                '&': '&amp;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return escapeMap[match];
+        });
+        
+        // 创建模态框HTML
+        var modalHtml = '<div id="function-code-modal" style="' +
+            'position: fixed;' +
+            'top: 0;' +
+            'left: 0;' +
+            'width: 100%;' +
+            'height: 100%;' +
+            'background: rgba(0,0,0,0.5);' +
+            'z-index: 10000;' +
+            'display: flex;' +
+            'align-items: center;' +
+            'justify-content: center;' +
+            '">' +
+                '<div style="' +
+                    'background: white;' +
+                    'border-radius: 8px;' +
+                    'width: 80%;' +
+                    'max-width: 800px;' +
+                    'max-height: 80%;' +
+                    'display: flex;' +
+                    'flex-direction: column;' +
+                    'box-shadow: 0 4px 20px rgba(0,0,0,0.3);' +
+                    '">' +
+                    '<div style="' +
+                        'padding: 16px 20px;' +
+                        'border-bottom: 1px solid #e5e7eb;' +
+                        'display: flex;' +
+                        'justify-content: space-between;' +
+                        'align-items: center;' +
+                        '">' +
+                        '<h3 style="margin: 0; color: #374151;">Function节点代码: ' + escapedNodeName + '</h3>' +
+                        '<button id="close-code-modal" style="' +
+                            'background: none;' +
+                            'border: none;' +
+                            'font-size: 20px;' +
+                            'cursor: pointer;' +
+                            'color: #6b7280;' +
+                            '">&times;</button>' +
+                    '</div>' +
+                    '<div style="' +
+                        'flex: 1;' +
+                        'overflow: auto;' +
+                        'padding: 20px;' +
+                        '">' +
+                        '<pre style="' +
+                            'background: #f8fafc;' +
+                            'border: 1px solid #e2e8f0;' +
+                            'border-radius: 6px;' +
+                            'padding: 16px;' +
+                            'margin: 0;' +
+                            'overflow: auto;' +
+                            'font-family: Monaco, Menlo, Ubuntu Mono, monospace;' +
+                            'font-size: 14px;' +
+                            'line-height: 1.5;' +
+                            '"><code class="javascript">' + escapedCode + '</code></pre>' +
+                    '</div>' +
+                    '<div style="' +
+                        'padding: 16px 20px;' +
+                        'border-top: 1px solid #e5e7eb;' +
+                        'display: flex;' +
+                        'justify-content: flex-end;' +
+                        'gap: 10px;' +
+                        '">' +
+                        '<button id="copy-code-btn" style="' +
+                            'background: #3b82f6;' +
+                            'color: white;' +
+                            'border: none;' +
+                            'padding: 8px 16px;' +
+                            'border-radius: 6px;' +
+                            'cursor: pointer;' +
+                            '">复制代码</button>' +
+                        '<button id="close-code-modal-btn" style="' +
+                            'background: #6b7280;' +
+                            'color: white;' +
+                            'border: none;' +
+                            'padding: 8px 16px;' +
+                            'border-radius: 6px;' +
+                            'cursor: pointer;' +
+                            '">关闭</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        
+        // 添加到页面
+        $('body').append(modalHtml);
+        
+        // 应用语法高亮
+        if (typeof hljs !== 'undefined') {
+            $('#function-code-modal code.javascript').each(function(i, block) {
+                try {
+                    hljs.highlightElement(block);
+                } catch (e) {
+                    console.warn('语法高亮失败:', e);
+                }
+            });
+        }
+        
+        // 绑定关闭事件
+        $('#close-code-modal, #close-code-modal-btn').click(function() {
+            $('#function-code-modal').remove();
+        });
+        
+        // 绑定复制事件
+        $('#copy-code-btn').click(function() {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(codeData.code).then(function() {
+                    $('#copy-code-btn').text('已复制').css('background', '#10b981');
+                    setTimeout(function() {
+                        $('#copy-code-btn').text('复制代码').css('background', '#3b82f6');
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('复制失败:', err);
+                });
+            } else {
+                // 降级方案
+                var textArea = document.createElement("textarea");
+                textArea.value = codeData.code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    $('#copy-code-btn').text('已复制').css('background', '#10b981');
+                    setTimeout(function() {
+                        $('#copy-code-btn').text('复制代码').css('background', '#3b82f6');
+                    }, 2000);
+                } catch (err) {
+                    console.error('复制失败:', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+        
+        // 点击背景关闭
+        $('#function-code-modal').click(function(e) {
+            if (e.target === this) {
+                $(this).remove();
+            }
+        });
+    }
+
+    // 添加代码查看功能的事件处理
+    $(document).on('click', 'click-to-view', function(e) {
+        e.preventDefault();
+        
+        var codeId = $(this).attr('data-code-id');
+        
+        if (codeId && window.nodeRedFunctionCodes) {
+            var codeData = window.nodeRedFunctionCodes[codeId];
+            
+            if (codeData) {
+                showFunctionCodeModal(codeData);
+            }
+        }
+    });
+
     // 获取动作对应的工具名称
     function getToolNameForAction(actionType) {
         const toolMap = {
@@ -1614,8 +1852,10 @@
             return content || '';
         }
         
-        console.log('渲染Markdown内容长度:', content.length);
-        console.log('内容预览:', content.substring(0, 200) + (content.length > 200 ? '...' : ''));
+        console.log('开始渲染Markdown，内容长度:', content.length);
+        
+        // 预处理：处理Node-RED流程JSON中的function节点代码
+        content = preprocessNodeRedFunctionCode(content);
         
         // Check if showdown is available
         if (typeof showdown !== 'undefined') {
@@ -1716,6 +1956,8 @@
         
         // 处理行内格式
         result = result
+            // 处理自定义的click-to-view标签
+            .replace(/<click-to-view data-code-id="([^"]+)">([^<]+)<\/click-to-view>/g, '<span style="color: #3b82f6; cursor: pointer; text-decoration: underline;" data-code-id="$1" onclick="$(this).trigger(\'click\')">$2</span>')
             // 行内代码
             .replace(/`([^`\n]+)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
             // 粗体
