@@ -96,6 +96,45 @@
         });
     }
     
+    // 预处理ACTION_TYPE标记，转换为可执行按钮
+    function preprocessActionType(content) {
+        // 查找ACTION_TYPE标记
+        const actionTypePattern = /ACTION_TYPE:\s*(\w+)/g;
+        
+        return content.replace(actionTypePattern, function(match, actionType) {
+            console.log('检测到动作类型:', actionType);
+            
+            // 生成按钮HTML
+            const buttonText = getButtonTextForAction(actionType);
+            const buttonColor = getButtonColorForAction(actionType);
+            const buttonIcon = getButtonIconForAction(actionType);
+            
+            return `<div class="action-type-button-container" style="margin: 16px 0; text-align: right;">
+                <button class="action-type-btn" 
+                        data-action-type="${actionType}"
+                        style="
+                            background: ${buttonColor};
+                            border: 1px solid ${buttonColor};
+                            border-radius: 6px;
+                            padding: 8px 16px;
+                            font-size: 14px;
+                            color: white;
+                            cursor: pointer;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            transition: all 0.2s;
+                            font-weight: 500;
+                        "
+                        onmouseover="this.style.opacity='0.8'"
+                        onmouseout="this.style.opacity='1'">
+                    <i class="fa ${buttonIcon}" style="font-size: 12px;"></i>
+                    ${buttonText}
+                </button>
+            </div>`;
+        });
+    }
+
     function sendMessage() {
         var message = $("#augment-chat-input").val().trim();
         if (message) {
@@ -796,7 +835,7 @@
     }
 
     // 添加代码查看功能的事件处理
-    $(document).on('click', 'click-to-view', function(e) {
+    $(document).on('click', '.code-view-btn', function(e) {
         e.preventDefault();
         
         var codeId = $(this).attr('data-code-id');
@@ -809,6 +848,78 @@
             }
         }
     });
+
+    // 添加动作类型按钮的事件处理
+    $(document).on('click', '.action-type-btn', function(e) {
+        e.preventDefault();
+        
+        var actionType = $(this).attr('data-action-type');
+        var messageContainer = $(this).closest('.augment-message-container');
+        
+        console.log('点击动作按钮:', actionType);
+        
+        // 查找消息中的JSON内容
+        var jsonContent = extractJSONFromMessage(messageContainer);
+        
+        if (jsonContent) {
+            try {
+                var parsedJson = JSON.parse(jsonContent);
+                
+                // 构建动作数据
+                var actionData = {
+                    type: 'action_button',
+                    actionType: actionType,
+                    toolName: getToolNameForAction(actionType),
+                    toolArgs: buildToolArgsForAction(actionType, parsedJson),
+                    jsonContent: JSON.stringify(parsedJson, null, 2),
+                    buttonText: getButtonTextForAction(actionType),
+                    buttonColor: getButtonColorForAction(actionType),
+                    buttonIcon: getButtonIconForAction(actionType),
+                    description: getDescriptionForAction(actionType)
+                };
+                
+                console.log('构建动作数据:', actionData);
+                
+                // 替换动作按钮为Apply按钮
+                var messageId = messageContainer.attr('id');
+                if (messageId) {
+                    // 移除原有的动作按钮
+                    $(this).parent().remove();
+                    
+                    // 添加Apply按钮
+                    addActionButton(messageId, actionData);
+                }
+                
+            } catch (error) {
+                console.error('处理动作失败:', error);
+                RED.notify('动作处理失败: ' + error.message, 'error');
+            }
+        } else {
+            console.warn('未找到JSON内容');
+            RED.notify('未找到有效的配置内容', 'warning');
+        }
+    });
+
+    // 从消息中提取JSON内容
+    function extractJSONFromMessage(messageContainer) {
+        var jsonContent = '';
+        
+        // 查找代码块中的JSON
+        messageContainer.find('pre code').each(function() {
+            var codeText = $(this).text().trim();
+            if (codeText.startsWith('{') && codeText.endsWith('}')) {
+                try {
+                    JSON.parse(codeText);
+                    jsonContent = codeText;
+                    return false; // 找到第一个有效JSON就停止
+                } catch (e) {
+                    // 继续查找
+                }
+            }
+        });
+        
+        return jsonContent;
+    }
 
     // 获取动作对应的工具名称
     function getToolNameForAction(actionType) {
@@ -1857,6 +1968,9 @@
         // 预处理：处理Node-RED流程JSON中的function节点代码
         content = preprocessNodeRedFunctionCode(content);
         
+        // 预处理：处理ACTION_TYPE标记
+        content = preprocessActionType(content);
+        
         // Check if showdown is available
         if (typeof showdown !== 'undefined') {
             try {
@@ -1956,8 +2070,22 @@
         
         // 处理行内格式
         result = result
-            // 处理自定义的click-to-view标签
-            .replace(/<click-to-view data-code-id="([^"]+)">([^<]+)<\/click-to-view>/g, '<span style="color: #3b82f6; cursor: pointer; text-decoration: underline;" data-code-id="$1" onclick="$(this).trigger(\'click\')">$2</span>')
+            // 处理自定义的click-to-view标签 - 渲染为小按钮
+            .replace(/<click-to-view data-code-id="([^"]+)">([^<]+)<\/click-to-view>/g, 
+                '<button class="code-view-btn" data-code-id="$1" style="' +
+                'background: #f1f5f9; ' +
+                'border: 1px solid #cbd5e1; ' +
+                'border-radius: 4px; ' +
+                'padding: 2px 8px; ' +
+                'font-size: 12px; ' +
+                'color: #475569; ' +
+                'cursor: pointer; ' +
+                'margin-left: 4px; ' +
+                'vertical-align: middle; ' +
+                'transition: all 0.2s;' +
+                '" ' +
+                'onmouseover="this.style.background=\'#e2e8f0\'" ' +
+                'onmouseout="this.style.background=\'#f1f5f9\'">$2</button>')
             // 行内代码
             .replace(/`([^`\n]+)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
             // 粗体
