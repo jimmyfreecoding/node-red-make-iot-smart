@@ -647,8 +647,19 @@
                                 nodeId: node.id
                             };
                             
-                            // 替换func内容为简单文本
-                            node.func = 'code <click-to-view data-code-id="' + codeId + '">查看代码</click-to-view>';
+                            // 替换func内容为简单文本和按钮
+                            node.func = 'code <button class="code-view-btn" data-code-id="' + codeId + '" style="' +
+                                'background: #f1f5f9; ' +
+                                'border: 1px solid #cbd5e1; ' +
+                                'border-radius: 4px; ' +
+                                'padding: 2px 8px; ' +
+                                'font-size: 12px; ' +
+                                'color: #475569; ' +
+                                'cursor: pointer; ' +
+                                'margin-left: 4px; ' +
+                                'vertical-align: middle; ' +
+                                'transition: all 0.2s;' +
+                                '">查看代码</button>';
                         }
                         return node;
                     });
@@ -1354,6 +1365,42 @@
                 });
             }
             
+            // 处理语法高亮后的按钮HTML
+            messageElement.find('pre code').each(function() {
+                var $code = $(this);
+                
+                // 查找包含按钮HTML的字符串span
+                $code.find('span.hljs-string').each(function() {
+                    var $span = $(this);
+                    var content = $span.html();
+                    
+                    // 检查是否包含按钮HTML
+                    if (content.includes('&lt;button') && content.includes('code-view-btn') && content.includes('查看代码')) {
+                        console.log('找到包含按钮的字符串span');
+                        
+                        // 提取按钮HTML部分
+                        var buttonMatch = content.match(/&lt;button[\s\S]*?&gt;查看代码&lt;\/button&gt;/);
+                        if (buttonMatch) {
+                            var buttonHtml = buttonMatch[0];
+                            
+                            // 解码按钮HTML
+                            var decodedButton = buttonHtml
+                                .replace(/&lt;/g, '<')
+                                .replace(/&gt;/g, '>')
+                                .replace(/&quot;/g, '"')
+                                .replace(/&amp;/g, '&')
+                                .replace(/&#39;/g, "'");
+                            
+                            // 替换原内容
+                            var newContent = content.replace(buttonHtml, decodedButton);
+                            $span.html(newContent);
+                            
+                            console.log('按钮HTML已解码并替换');
+                        }
+                    }
+                });
+            });
+            
             // 检测动作标记
             detectAndProcessActionMarkers(messageId);
             
@@ -1989,6 +2036,28 @@
                     backslashEscapesHTMLTags: true
                 });
                 var result = converter.makeHtml(content);
+                
+                // 后处理：在代码块中恢复按钮HTML
+                result = result.replace(/<code([^>]*)>([\s\S]*?)<\/code>/g, function(match, attrs, codeContent) {
+                    // 在代码块中查找转义的按钮HTML并恢复
+                    var processedContent = codeContent
+                        .replace(/&lt;button class=&quot;code-view-btn&quot;[\s\S]*?&gt;查看代码&lt;\/button&gt;/g, 
+                            function(buttonMatch) {
+                                // 完全解码按钮HTML
+                                var decodedButton = buttonMatch
+                                    .replace(/&lt;/g, '<')
+                                    .replace(/&gt;/g, '>')
+                                    .replace(/&quot;/g, '"')
+                                    .replace(/&amp;/g, '&')
+                                    .replace(/&#39;/g, "'");
+                                
+                                console.log('恢复按钮HTML:', decodedButton);
+                                return decodedButton;
+                            });
+                    
+                    return '<code' + attrs + '>' + processedContent + '</code>';
+                });
+                
                 console.log('Showdown渲染成功，结果长度:', result.length);
                 console.log('Showdown渲染结果预览:', result.substring(0, 300));
                 return result;
@@ -2070,22 +2139,6 @@
         
         // 处理行内格式
         result = result
-            // 处理自定义的click-to-view标签 - 渲染为小按钮
-            .replace(/<click-to-view data-code-id="([^"]+)">([^<]+)<\/click-to-view>/g, 
-                '<button class="code-view-btn" data-code-id="$1" style="' +
-                'background: #f1f5f9; ' +
-                'border: 1px solid #cbd5e1; ' +
-                'border-radius: 4px; ' +
-                'padding: 2px 8px; ' +
-                'font-size: 12px; ' +
-                'color: #475569; ' +
-                'cursor: pointer; ' +
-                'margin-left: 4px; ' +
-                'vertical-align: middle; ' +
-                'transition: all 0.2s;' +
-                '" ' +
-                'onmouseover="this.style.background=\'#e2e8f0\'" ' +
-                'onmouseout="this.style.background=\'#f1f5f9\'">$2</button>')
             // 行内代码
             .replace(/`([^`\n]+)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
             // 粗体
