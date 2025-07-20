@@ -405,7 +405,10 @@
                 
             case 'done':
             case 'end':
-                // 流式响应完成
+                // 流式响应完成，最后检测一次动作标记
+                if (currentStreamMessageId) {
+                    detectAndProcessActionMarkers(currentStreamMessageId);
+                }
                 currentStreamMessageId = null;
                 saveChatMessage("assistant", data.final_content || "");
                 break;
@@ -437,6 +440,9 @@
                     }
                 });
             }
+            
+            // 检测动作标记
+            detectAndProcessActionMarkers(messageId);
             
             forceScrollToBottom();
         }
@@ -473,6 +479,217 @@
             console.warn("获取配置节点失败:", error);
         }
         return configNodeId;
+    }
+
+    // 检测和处理动作标记 - 支持ACTION_TYPE格式
+    function detectAndProcessActionMarkers(messageId) {
+        console.log("=== 检测动作标记 ===");
+        console.log("消息ID:", messageId);
+        
+        var messageElement = $("#" + messageId + " .message-content");
+        if (messageElement.length === 0) {
+            console.log("消息元素未找到:", messageId);
+            return;
+        }
+        
+        var rawText = messageElement.attr('data-raw-text') || '';
+        console.log("检查文本长度:", rawText.length);
+        
+        // 检测ACTION_TYPE格式
+        const actionTypePattern = /ACTION_TYPE:\s*(\w+)/gi;
+        const jsonBlockPattern = /```json\s*([\s\S]*?)\s*```/gi;
+        
+        let actionType = null;
+        let jsonContent = null;
+        
+        // 查找ACTION_TYPE
+        actionTypePattern.lastIndex = 0;
+        const actionMatch = actionTypePattern.exec(rawText);
+        if (actionMatch) {
+            actionType = actionMatch[1].toUpperCase();
+            console.log("检测到动作类型:", actionType);
+        }
+        
+        // 查找JSON配置
+        jsonBlockPattern.lastIndex = 0;
+        const jsonMatch = jsonBlockPattern.exec(rawText);
+        if (jsonMatch) {
+            jsonContent = jsonMatch[1].trim();
+            console.log("找到JSON配置:", jsonContent.substring(0, 200));
+        }
+        
+        // 如果没有明确的ACTION_TYPE，尝试从JSON内容推断
+        if (!actionType && jsonContent) {
+            try {
+                const parsedJson = JSON.parse(jsonContent);
+                if (parsedJson.nodes || parsedJson.label) {
+                    actionType = 'CREATE';
+                    console.log("从JSON推断动作类型: CREATE");
+                } else if (parsedJson.packages) {
+                    actionType = 'INSTALL';
+                    console.log("从JSON推断动作类型: INSTALL");
+                } else if (parsedJson.settings) {
+                    actionType = 'CONFIG';
+                    console.log("从JSON推断动作类型: CONFIG");
+                }
+            } catch (e) {
+                console.warn("JSON解析失败:", e);
+            }
+        }
+        
+        // 如果检测到动作类型和JSON配置，添加按钮
+        if (actionType && jsonContent) {
+            try {
+                const parsedJson = JSON.parse(jsonContent);
+                
+                const actionData = {
+                    type: 'action_button',
+                    actionType: actionType,
+                    toolName: getToolNameForAction(actionType),
+                    toolArgs: buildToolArgsForAction(actionType, parsedJson),
+                    jsonContent: JSON.stringify(parsedJson, null, 2),
+                    buttonText: getButtonTextForAction(actionType),
+                    buttonColor: getButtonColorForAction(actionType),
+                    buttonIcon: getButtonIconForAction(actionType),
+                    description: getDescriptionForAction(actionType)
+                };
+                
+                console.log("构建动作数据成功:", {
+                    actionType: actionData.actionType,
+                    toolName: actionData.toolName,
+                    buttonText: actionData.buttonText
+                });
+                
+                // 添加动作按钮
+                addEnhancedActionButton(messageId, actionData);
+                
+            } catch (error) {
+                console.error("处理动作失败:", error);
+                addErrorMessage(messageId, `❌ 动作处理失败: ${error.message}`);
+            }
+        } else {
+            console.log("未检测到完整的动作配置");
+        }
+    }
+
+    // 获取动作对应的工具名称
+    function getToolNameForAction(actionType) {
+        const toolMap = {
+            'CREATE': 'create-flow',
+            'MODIFY': 'update-flow', 
+            'DELETE': 'delete-flow',
+            'INSTALL': 'install-nodes',
+            'RESTART': 'restart-nodered',
+            'CONFIG': 'update-config',
+            'DEPLOY': 'deploy-flows',
+            'BACKUP': 'backup-flows',
+            'RESTORE': 'restore-flows'
+        };
+        return toolMap[actionType] || 'unknown-action';
+    }
+
+    // 获取动作对应的按钮文本
+    function getButtonTextForAction(actionType) {
+        const textMap = {
+            'CREATE': 'Create Flow',
+            'MODIFY': 'Modify Flow',
+            'DELETE': 'Delete Flow', 
+            'INSTALL': 'Install Nodes',
+            'RESTART': 'Restart Node-RED',
+            'CONFIG': 'Update Config',
+            'DEPLOY': 'Deploy Changes',
+            'BACKUP': 'Backup Flows',
+            'RESTORE': 'Restore Flows'
+        };
+        return textMap[actionType] || 'Execute';
+    }
+
+    // 获取动作对应的按钮颜色
+    function getButtonColorForAction(actionType) {
+        const colorMap = {
+            'CREATE': '#10b981',
+            'MODIFY': '#3b82f6',
+            'DELETE': '#ef4444',
+            'INSTALL': '#8b5cf6',
+            'RESTART': '#f59e0b',
+            'CONFIG': '#6b7280',
+            'DEPLOY': '#059669',
+            'BACKUP': '#0891b2',
+            'RESTORE': '#7c3aed'
+        };
+        return colorMap[actionType] || '#6b7280';
+    }
+
+    // 获取动作对应的按钮图标
+    function getButtonIconForAction(actionType) {
+        const iconMap = {
+            'CREATE': 'fa-plus',
+            'MODIFY': 'fa-edit',
+            'DELETE': 'fa-trash',
+            'INSTALL': 'fa-download',
+            'RESTART': 'fa-refresh',
+            'CONFIG': 'fa-cog',
+            'DEPLOY': 'fa-rocket',
+            'BACKUP': 'fa-save',
+            'RESTORE': 'fa-upload'
+        };
+        return iconMap[actionType] || 'fa-play';
+    }
+
+    // 获取动作对应的描述
+    function getDescriptionForAction(actionType) {
+        const descMap = {
+            'CREATE': '点击创建新的流程',
+            'MODIFY': '点击修改现有流程',
+            'DELETE': '点击删除选中流程',
+            'INSTALL': '点击安装Node-RED节点包',
+            'RESTART': '点击重启Node-RED服务',
+            'CONFIG': '点击更新Node-RED配置',
+            'DEPLOY': '点击部署当前更改',
+            'BACKUP': '点击备份当前流程',
+            'RESTORE': '点击恢复流程备份'
+        };
+        return descMap[actionType] || '点击执行操作';
+    }
+
+    // 构建动作对应的工具参数
+    function buildToolArgsForAction(actionType, parsedJson) {
+        switch (actionType) {
+            case 'CREATE':
+            case 'MODIFY':
+                return {
+                    flowJson: JSON.stringify(parsedJson),
+                    label: parsedJson.label || '新流程',
+                    description: parsedJson.description || ''
+                };
+            case 'INSTALL':
+                return {
+                    packages: parsedJson.packages || [],
+                    description: parsedJson.description || ''
+                };
+            case 'CONFIG':
+                return {
+                    settings: parsedJson.settings || {},
+                    description: parsedJson.description || ''
+                };
+            case 'RESTART':
+                return {
+                    reason: parsedJson.reason || '用户请求重启',
+                    backup: parsedJson.backup !== false
+                };
+            case 'BACKUP':
+                return {
+                    name: parsedJson.name || `backup_${new Date().toISOString().slice(0,10)}`,
+                    description: parsedJson.description || ''
+                };
+            case 'RESTORE':
+                return {
+                    backupName: parsedJson.backupName || '',
+                    description: parsedJson.description || ''
+                };
+            default:
+                return parsedJson;
+        }
     }
 
     function createDefaultApiConfigNode() {
@@ -787,6 +1004,9 @@
                     }
                 });
             }
+            
+            // 检测动作标记
+            detectAndProcessActionMarkers(messageId);
             
             forceScrollToBottom();
         }
