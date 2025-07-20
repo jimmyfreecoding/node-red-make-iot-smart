@@ -1613,6 +1613,40 @@
                     
                     // 添加成功消息
                     addMessageToChat("assistant", `✅ ${toolName} 执行成功！\n\n${response.result}`);
+                    
+                    // 如果是创建流程相关的工具，刷新工作区
+                    if (['create-flow', 'update-flows', 'update-flow'].includes(toolName)) {
+                        console.log('流程创建成功，刷新工作区');
+                        
+                        // 刷新工作区列表
+                        if (RED.workspaces && RED.workspaces.refresh) {
+                            RED.workspaces.refresh();
+                        }
+                        
+                        // 重新加载流程
+                        if (RED.deploy && RED.deploy.setDeployInflight) {
+                            RED.deploy.setDeployInflight(false);
+                        }
+                        
+                        // 触发视图重绘
+                        setTimeout(function() {
+                            if (RED.view && RED.view.redraw) {
+                                RED.view.redraw();
+                            }
+                            
+                            // 如果响应中包含流程ID，尝试切换到新流程
+                            var flowIdMatch = response.result.match(/ID:\s*([a-f0-9]+)/);
+                            if (flowIdMatch && flowIdMatch[1]) {
+                                var newFlowId = flowIdMatch[1];
+                                console.log('尝试切换到新流程:', newFlowId);
+                                
+                                // 切换到新创建的流程
+                                if (RED.workspaces && RED.workspaces.show) {
+                                    RED.workspaces.show(newFlowId);
+                                }
+                            }
+                        }, 1000);
+                    }
                 } else {
                     // 显示执行失败
                     button.prop('disabled', false)
