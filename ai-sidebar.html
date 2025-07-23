@@ -177,8 +177,14 @@
         });
         
         // 工具按钮点击事件
-        $("#augment-attach-file, #augment-at-mention").on("click", function() {
+        $("#augment-attach-file").on("click", function() {
             RED.notify("此功能正在开发中", "info");
+        });
+
+           // @按钮点击事件 - 显示场景选择菜单
+        $("#augment-at-mention").on("click", function(e) {
+            e.preventDefault();
+            showScenarioMenu(e);
         });
     }
     
@@ -1929,6 +1935,121 @@
             // 降级显示为普通代码块
             document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
         }
+    }
+
+    // 显示场景选择菜单
+    function showScenarioMenu(event) {
+        // 移除已存在的菜单
+        $('.scenario-menu').remove();
+        
+        // 创建场景选择菜单
+        var menuHtml = `
+            <div class="scenario-menu" style="
+                position: absolute;
+                bottom: 60px;
+                right: 16px;
+                background: white;
+                border: 1px solid #d1d5db;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                min-width: 160px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 13px;
+                padding: 4px 0;
+            ">
+                <div class="scenario-option" data-scenario="learning" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">🎓</span>
+                    <span>学习</span>
+                </div>
+                <div class="scenario-option" data-scenario="solution" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">💡</span>
+                    <span>方案</span>
+                </div>
+                <div class="scenario-option" data-scenario="integration" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">🔌</span>
+                    <span>集成</span>
+                </div>
+                <div class="scenario-option" data-scenario="development" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">💻</span>
+                    <span>开发</span>
+                </div>
+                <div class="scenario-option" data-scenario="configuration" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">⚙️</span>
+                    <span>配置</span>
+                </div>
+                <div class="scenario-option" data-scenario="management" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">🖥️</span>
+                    <span>管理</span>
+                </div>
+            </div>
+        `;
+        
+        // 添加菜单到页面
+        $('#augment-chat-container').append(menuHtml);
+        
+        // 绑定场景选择事件
+        $('.scenario-option').on('click', function() {
+            var scenarioId = $(this).data('scenario');
+            ScenarioManager.switchScenario(scenarioId);
+            $('.scenario-menu').remove();
+        });
+        
+        // 点击其他地方关闭菜单
+        $(document).on('click.scenario-menu', function(e) {
+            if (!$(e.target).closest('.scenario-menu, #augment-at-mention').length) {
+                $('.scenario-menu').remove();
+                $(document).off('click.scenario-menu');
+            }
+        });
     }
 
     function copyEditorContent(editorId) {
