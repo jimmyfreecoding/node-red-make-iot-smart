@@ -196,100 +196,85 @@ module.exports = function (RED) {
             return JSON.stringify(toolResult);
         };
 
-        // 生成增强的系统提示
-        node.generateSystemPrompt = function(selectedFlow, selectedNodes, flowData, mcpTools = []) {
+        // 生成增强的系统提示 - 支持场景化
+        node.generateSystemPrompt = function(selectedFlow, selectedNodes, flowData, mcpTools = [], scenario = 'general') {
             const nodeRedVersion = RED.version || 'unknown';
             const nodeVersion = process.version;
             
+            // 场景特定指令
+            const scenarioPrompts = {
+                learning: `
+                    You are an AI assistant helping users learn Node-RED. Your role is to:
+                    - Explain Node-RED nodes, flows, or concepts in detail, using examples from official Node-RED documentation, local examples, or third-party flows.
+                    - Provide step-by-step explanations for beginners, including node purposes and configurations.
+                    - Generate a sample flow JSON for the user to import and experiment with.
+                    - Suggest interactive tasks to help users understand the flow.
+                    ACTION_TYPE: CREATE (for flow creation) or EXPLAIN (for explanations without flow creation).
+                `,
+                solution: `
+                    You are an AI assistant helping users find IoT solutions. Your role is to:
+                    - Analyze the user's requirements and context.
+                    - Provide three distinct solutions with pros, cons, and a comparison table.
+                    - Recommend nodes to install and provide a sample flow JSON for each solution.
+                    - Guide the user to install nodes and import flows.
+                    ACTION_TYPE: INSTALL (for node installation) or CREATE (for flow creation).
+                `,
+                integration: `
+                    You are an AI assistant for integrating IoT protocols or software with Node-RED. Your role is to:
+                    - Read and interpret provided integration documentation (e.g., MQTT, HTTP, Modbus).
+                    - Generate a sample flow JSON for the integration.
+                    - Suggest necessary nodes and provide installation instructions.
+                    - Assist with configuration steps for the integration.
+                    ACTION_TYPE: CREATE (for flow creation) or INSTALL (for node installation).
+                `,
+                development: `
+                    You are an AI assistant for Node-RED development. Your role is to:
+                    - Analyze existing flows and function node code.
+                    - Suggest optimizations or modifications based on user requirements.
+                    - Generate updated flow JSON or function node code.
+                    - Recommend additional nodes if needed.
+                    ACTION_TYPE: MODIFY (for flow edits) or INSTALL (for new nodes).
+                `,
+                configuration: `
+                    You are an AI assistant for Node-RED configuration. Your role is to:
+                    - Guide users through modifying Node-RED settings (e.g., settings.js) via SSH or local file edits.
+                    - Provide commands for restarting Node-RED after changes.
+                    - Explain configuration options clearly.
+                    ACTION_TYPE: CONFIG (for settings changes) or RESTART (for service restart).
+                `,
+                management: `
+                    You are an AI assistant for managing Node-RED deployments. Your role is to:
+                    - Provide guidance for remote access setup, Git integration, or batch deployment.
+                    - Generate scripts or flows for Git operations or multi-device management.
+                    - Suggest tools or nodes for management tasks.
+                    ACTION_TYPE: CONFIG (for remote access) or DEPLOY (for batch deployment).
+                `,
+                general: `
+                    You are an AI assistant for general Node-RED queries. Provide clear, concise answers and, if applicable, include:
+                    - Explanations of nodes or flows.
+                    - Sample flow JSON or node installation instructions.
+                    - Suggestions for next steps.
+                    ACTION_TYPE: Varies based on query (CREATE, INSTALL, MODIFY, etc.).
+                `
+            };
+
+            // 选择适当的场景提示
+            const scenarioInstruction = scenarioPrompts[scenario] || scenarioPrompts.general;
+
+            // 构建完整的系统提示
             let systemPrompt = `You are an AI assistant specialized in Node-RED development and IoT applications.
 
-CRITICAL WORKFLOW FOR FLOW/NODE OPERATIONS:
-When user asks to create, modify, or manage flows/nodes, you MUST follow this exact sequence:
-1. First provide a detailed text explanation of what you will create/modify
-2. Then provide the complete configuration in JSON format
-3. Add an action type indicator to enable the appropriate operation button
+CRITICAL WORKFLOW:
+- Always follow the scenario-specific instructions below.
+- For flow/node operations, provide:
+  1. A detailed text explanation.
+  2. A complete JSON configuration (if applicable).
+  3. An ACTION_TYPE indicator (CREATE, MODIFY, DELETE, INSTALL, RESTART, CONFIG, DEPLOY, BACKUP, RESTORE, EXPLAIN).
+- For JSON outputs, format them cleanly and avoid displaying excessively large JSON in the UI (use a button to show JSON).
+- If tools are called, describe the tool's purpose before execution.
 
-SUPPORTED ACTIONS:
-- CREATE: Create new flows or nodes
-- MODIFY: Modify existing flows or nodes  
-- DELETE: Delete flows or nodes
-- INSTALL: Install new Node-RED nodes/packages
-- RESTART: Restart Node-RED service
-- CONFIG: Modify Node-RED configuration
-- DEPLOY: Deploy current changes
-- BACKUP: Backup current flows
-- RESTORE: Restore flows from backup
-
-ACTION FORMAT:
-After providing your explanation and JSON configuration, add:
-ACTION_TYPE: [ACTION_NAME]
-
-For flow creation, provide JSON in this format:
-\`\`\`json
-{
-  "label": "Flow Name",
-  "description": "Flow description", 
-  "nodes": [
-    {
-      "id": "node1",
-      "type": "inject",
-      "name": "Start",
-      "props": [{"p":"payload","v":"Hello","vt":"str"}],
-      "repeat": "",
-      "crontab": "",
-      "once": false,
-      "x": 100,
-      "y": 100,
-      "wires": [["node2"]]
-    },
-    {
-      "id": "node2", 
-      "type": "debug",
-      "name": "Output",
-      "active": true,
-      "tosidebar": true,
-      "console": false,
-      "tostatus": false,
-      "complete": "payload",
-      "x": 300,
-      "y": 100,
-      "wires": []
-    }
-  ]
-}
-\`\`\`
-ACTION_TYPE: CREATE
-
-For node installation:
-\`\`\`json
-{
-  "packages": ["node-red-contrib-dashboard", "node-red-node-sqlite"],
-  "description": "Install dashboard and SQLite nodes"
-}
-\`\`\`
-ACTION_TYPE: INSTALL
-
-For Node-RED restart:
-\`\`\`json
-{
-  "reason": "Apply new configuration changes",
-  "backup": true
-}
-\`\`\`
-ACTION_TYPE: RESTART
-
-For configuration changes:
-\`\`\`json
-{
-  "settings": {
-    "httpAdminRoot": "/admin",
-    "httpNodeRoot": "/api",
-    "functionGlobalContext": {}
-  },
-  "description": "Update Node-RED settings"
-}
-\`\`\`
-ACTION_TYPE: CONFIG
+SCENARIO-SPECIFIC INSTRUCTIONS:
+${scenarioInstruction}
 
 Available MCP Tools: ${mcpTools.length} tools
 ${mcpTools.map(tool => `- ${tool.function?.name}: ${tool.function?.description}`).join('\n')}
@@ -298,13 +283,33 @@ Current Context:
 - Node-RED Version: ${nodeRedVersion}
 - Node.js Version: ${nodeVersion}
 - Current Time: ${new Date().toISOString()}
-
 ${selectedFlow ? `Current Flow: ${selectedFlow.label} (ID: ${selectedFlow.id})` : 'No flow selected'}
 ${selectedNodes && selectedNodes.length > 0 ? `Selected Nodes: ${selectedNodes.length} node(s)` : 'No nodes selected'}
 
-Always provide clear explanations followed by properly formatted JSON and action type indicators.`;
+Always provide clear explanations, properly formatted JSON, and action type indicators.`;
 
             return systemPrompt;
+        };
+
+        // 场景检测函数
+        node.detectScenario = function(message) {
+            const messageLower = message.toLowerCase();
+            
+            if (messageLower.includes('learn') || messageLower.includes('explain') || messageLower.includes('教学') || messageLower.includes('学习')) {
+                return 'learning';
+            } else if (messageLower.includes('solution') || messageLower.includes('options') || messageLower.includes('方案') || messageLower.includes('解决方案')) {
+                return 'solution';
+            } else if (messageLower.includes('integrate') || messageLower.includes('protocol') || messageLower.includes('集成') || messageLower.includes('协议')) {
+                return 'integration';
+            } else if (messageLower.includes('optimize') || messageLower.includes('develop') || messageLower.includes('优化') || messageLower.includes('开发')) {
+                return 'development';
+            } else if (messageLower.includes('configure') || messageLower.includes('settings') || messageLower.includes('配置') || messageLower.includes('设置')) {
+                return 'configuration';
+            } else if (messageLower.includes('manage') || messageLower.includes('deploy') || messageLower.includes('管理') || messageLower.includes('部署')) {
+                return 'management';
+            }
+            
+            return 'general';
         };
 
         // 初始化MCP（如果启用）
@@ -541,57 +546,52 @@ Always provide clear explanations followed by properly formatted JSON and action
 
         // 将MCP工具转换为AI SDK兼容的工具格式
         node.convertMCPToolsForAI = function(mcpTools) {
-            console.log('开始转换MCP工具，数量:', mcpTools.length);
+            console.log('转换MCP工具为AI SDK格式，数量:', mcpTools.length);
             
             try {
                 const { z } = require('zod');
                 const { tool } = require('ai');
-                console.log('zod和tool导入成功');
                 
                 return mcpTools.map((mcpTool, index) => {
                     try {
                         console.log(`处理工具 ${index + 1}/${mcpTools.length}: ${mcpTool.function.name}`);
                         
-                        // 获取参数schema
                         const params = mcpTool.function.parameters;
-                        console.log(`工具 ${mcpTool.function.name} 的参数:`, JSON.stringify(params, null, 2));
-                        
-                        // 创建zod schema
                         let zodSchema;
-                        
+
                         if (!params.properties || Object.keys(params.properties).length === 0) {
-                            console.log(`工具 ${mcpTool.function.name} 无参数，创建空schema`);
                             zodSchema = z.object({});
                         } else {
-                            const properties = params.properties;
+                            const zodObject = {};
                             const required = params.required || [];
                             
-                            const zodObject = {};
-                            
-                            Object.keys(properties).forEach(key => {
-                                const prop = properties[key];
+                            Object.keys(params.properties).forEach(key => {
+                                const prop = params.properties[key];
                                 let zodType;
                                 
                                 switch (prop.type) {
-                                    case 'string':
+                                    case 'string': 
                                         zodType = z.string();
+                                        if (prop.enum) {
+                                            zodType = z.enum(prop.enum);
+                                        }
                                         break;
-                                    case 'boolean':
-                                        zodType = z.boolean();
+                                    case 'boolean': 
+                                        zodType = z.boolean(); 
                                         break;
-                                    case 'number':
-                                        zodType = z.number();
+                                    case 'number': 
+                                        zodType = z.number(); 
                                         break;
-                                    case 'integer':
-                                        zodType = z.number().int();
+                                    case 'integer': 
+                                        zodType = z.number().int(); 
                                         break;
-                                    case 'array':
-                                        zodType = z.array(z.any());
+                                    case 'array': 
+                                        zodType = z.array(z.any()); 
                                         break;
-                                    case 'object':
-                                        zodType = z.object({}).passthrough();
+                                    case 'object': 
+                                        zodType = z.object({}).passthrough(); 
                                         break;
-                                    default:
+                                    default: 
                                         zodType = z.string();
                                 }
                                 
@@ -608,24 +608,19 @@ Always provide clear explanations followed by properly formatted JSON and action
                             
                             zodSchema = z.object(zodObject);
                         }
-                        
-                        // 使用AI SDK的tool函数创建工具
+
                         const aiTool = tool({
                             description: mcpTool.function.description,
                             parameters: zodSchema,
                             execute: async (params) => {
-                                // 这里不会被调用，因为我们会手动处理工具调用
-                                return 'Tool execution handled separately';
+                                console.log(`执行MCP工具: ${mcpTool.function.name}`, params);
+                                const result = await node.executeMCPTool(mcpTool.function.name, params);
+                                return node.formatToolResult(result);
                             }
                         });
-                        
-                        // 返回带有名称的工具对象
-                        const result = {
-                            [mcpTool.function.name]: aiTool
-                        };
-                        
-                        console.log(`工具 ${mcpTool.function.name} 转换完成（使用tool函数）`);
-                        return result;
+
+                        console.log(`工具 ${mcpTool.function.name} 转换完成`);
+                        return { [mcpTool.function.name]: aiTool };
                         
                     } catch (error) {
                         console.error(`转换工具 ${mcpTool.function.name} 失败:`, error);
@@ -634,7 +629,7 @@ Always provide clear explanations followed by properly formatted JSON and action
                 }).filter(tool => tool !== null);
                 
             } catch (error) {
-                console.error('工具转换失败:', error);
+                console.error('MCP工具转换失败:', error);
                 return [];
             }
         };
@@ -705,12 +700,12 @@ Always provide clear explanations followed by properly formatted JSON and action
         }
     });
 
-    // 流式聊天端点
+    // 流式聊天端点 - 添加场景检测
     RED.httpAdmin.post('/make-iot-smart/chat-stream', async function(req, res) {
         console.log('收到聊天请求:', req.body);
         
         try {
-            const { message, history = [], nodeId, selectedFlow, selectedNodes, flowData } = req.body;
+            const { message, history = [], nodeId, selectedFlow, selectedNodes, flowData, scenario: userScenario } = req.body;
             
             if (!nodeId) {
                 console.error('缺少nodeId');
@@ -723,12 +718,9 @@ Always provide clear explanations followed by properly formatted JSON and action
                 return res.status(404).json({ error: 'Configuration node not found' });
             }
             
-            console.log('找到配置节点:', {
-                provider: configNode.provider,
-                model: configNode.model,
-                enableMcp: configNode.enableMcp,
-                mcpConnected: configNode.mcpClient ? configNode.mcpClient.isClientConnected() : false
-            });
+            // 场景检测
+            let detectedScenario = userScenario || configNode.detectScenario(message);
+            console.log('检测到场景:', detectedScenario);
             
             // 设置SSE响应头
             res.writeHead(200, {
@@ -738,18 +730,16 @@ Always provide clear explanations followed by properly formatted JSON and action
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Cache-Control'
             });
-            
-            const sendSSE = (data) => {
-                const jsonData = JSON.stringify(data);
-                // console.log('发送SSE数据:', jsonData);
-                res.write(`data: ${jsonData}\n\n`);
-            };
-            
-            // 尝试获取MCP工具
+
+            function sendSSE(data) {
+                res.write(`data: ${JSON.stringify(data)}\n\n`);
+            }
+
             let mcpTools = [];
             let aiCompatibleTools = [];
             let mcpAvailable = false;
             
+            // 获取MCP工具
             if (configNode.enableMcp && configNode.mcpClient && configNode.mcpClient.isClientConnected()) {
                 try {
                     console.log('尝试获取MCP工具...');
@@ -757,12 +747,9 @@ Always provide clear explanations followed by properly formatted JSON and action
                     console.log('原始MCP工具:', mcpTools.length, '个');
                     
                     if (mcpTools.length > 0) {
-                        console.log('MCP工具详情:', JSON.stringify(mcpTools, null, 2));
-                        
                         console.log('转换MCP工具为AI SDK格式...');
                         aiCompatibleTools = configNode.convertMCPToolsForAI(mcpTools);
                         console.log(`成功转换 ${aiCompatibleTools.length} 个工具`);
-                        console.log('转换后的工具:', JSON.stringify(aiCompatibleTools, null, 2));
                     }
                     
                     mcpAvailable = true;
@@ -771,17 +758,11 @@ Always provide clear explanations followed by properly formatted JSON and action
                     console.error('获取MCP工具失败:', error);
                     mcpAvailable = false;
                 }
-            } else {
-                console.log('MCP未启用或未连接:', {
-                    enableMcp: configNode.enableMcp,
-                    hasClient: !!configNode.mcpClient,
-                    connected: configNode.mcpClient ? configNode.mcpClient.isClientConnected() : false
-                });
             }
             
-            // 生成增强的系统提示（传入MCP工具信息）
-            const systemPrompt = configNode.generateSystemPrompt(selectedFlow, selectedNodes, flowData, mcpTools);
-            console.log('生成的系统提示长度:', systemPrompt.length);
+            // 生成场景化的系统提示
+            const systemPrompt = configNode.generateSystemPrompt(selectedFlow, selectedNodes, flowData, mcpTools, detectedScenario);
+            console.log('生成场景化系统提示，场景:', detectedScenario);
             
             // 构建消息历史
             const messages = [
@@ -792,16 +773,17 @@ Always provide clear explanations followed by properly formatted JSON and action
             
             console.log('构建的消息历史:', messages.length, '条消息');
             
-            // 发送开始信号
+            // 发送开始信号，包含场景信息
             sendSSE({ 
                 type: 'start', 
+                scenario: detectedScenario,
                 mcpAvailable: mcpAvailable,
                 mcpToolsCount: mcpTools.length,
                 mcpTools: mcpTools.map(t => ({ name: t.function?.name || 'unknown', description: t.function?.description || '' }))
             });
             
             // 使用工具调用LLM
-            if (aiCompatibleTools.length > 0) { // 重新启用工具
+            if (aiCompatibleTools.length > 0) {
                 console.log('开始调用LLM（带工具）...');
                 
                 // 合并所有工具到一个对象
@@ -822,11 +804,10 @@ Always provide clear explanations followed by properly formatted JSON and action
                     maxTokens: configNode.maxTokens,
                     temperature: configNode.temperature,
                     onStepFinish: async (step) => {
-                        console.log('步骤完成:', step.stepType, step);
+                        console.log('步骤完成:', step.stepType);
                         
-                        // 处理文本内容
                         if (step.text) {
-                            console.log('步骤文本内容:', step.text);
+                            console.log('步骤文本内容长度:', step.text.length);
                         }
                         
                         if (step.toolCalls && step.toolCalls.length > 0) {
@@ -835,63 +816,23 @@ Always provide clear explanations followed by properly formatted JSON and action
                             for (const toolCall of step.toolCalls) {
                                 console.log('工具调用:', toolCall.toolName, toolCall.args);
                                 
-                                // 检查是否是创建流程相关的工具
-                                const isFlowCreationTool = ['create-flow', 'update-flows', 'update-flow'].includes(toolCall.toolName);
+                                // 发送工具调用信息
+                                sendSSE({
+                                    type: 'tool_call',
+                                    toolName: toolCall.toolName,
+                                    toolArgs: toolCall.args,
+                                    scenario: detectedScenario
+                                });
                                 
-                                if (isFlowCreationTool) {
-                                    // 对于流程创建工具，发送JSON编辑器而不是直接执行
-                                    console.log('发送JSON编辑器:', toolCall.toolName);
-                                    
-                                    // 格式化JSON数据
-                                    let jsonData = '';
-                                    if (toolCall.args.flowJson) {
-                                        try {
-                                            // 美化JSON格式
-                                            const parsedJson = JSON.parse(toolCall.args.flowJson);
-                                            jsonData = JSON.stringify(parsedJson, null, 2);
-                                        } catch (e) {
-                                            jsonData = toolCall.args.flowJson;
-                                        }
-                                    } else {
-                                        jsonData = JSON.stringify(toolCall.args, null, 2);
-                                    }
-                                    
-                                    const editorData = {
-                                        type: 'json_editor',
-                                        toolName: toolCall.toolName,
-                                        toolArgs: toolCall.args,
-                                        jsonContent: jsonData,
-                                        editorTitle: `${toolCall.args.label || '新流程'} - 流程配置`,
-                                        description: `以下是将要创建的流程配置，您可以编辑后点击Apply按钮执行创建。`
-                                    };
-                                    
-                                    console.log('编辑器数据:', editorData);
-                                    sendSSE(editorData);
-                                    
-                                    // 重要：不要在这里执行工具，只发送编辑器
-                                } else {
-                                    // 其他工具直接执行
+                                try {
+                                    // 这里工具已经通过AI SDK自动执行
+                                    console.log('工具调用已通过AI SDK执行');
+                                } catch (error) {
+                                    console.error('工具调用失败:', error);
                                     sendSSE({
-                                        type: 'tool',
-                                        content: `🔧 调用工具: ${toolCall.toolName}`
+                                        type: 'error',
+                                        content: `❌ 工具调用失败: ${error.message}`
                                     });
-                                    
-                                    try {
-                                        const toolResult = await configNode.executeMCPTool(
-                                            toolCall.toolName, 
-                                            toolCall.args
-                                        );
-                                        
-                                        const formattedResult = configNode.formatToolResult(toolResult);
-                                        console.log('工具调用结果:', formattedResult.substring(0, 200) + '...');
-                                        
-                                    } catch (error) {
-                                        console.error('工具调用失败:', error);
-                                        sendSSE({
-                                            type: 'error',
-                                            content: `❌ 工具调用失败: ${error.message}`
-                                        });
-                                    }
                                 }
                             }
                         }
@@ -907,24 +848,12 @@ Always provide clear explanations followed by properly formatted JSON and action
                     fullText += delta;
                     sendSSE({
                         type: 'content',
-                        content: delta
+                        content: delta,
+                        scenario: detectedScenario
                     });
                 }
 
                 console.log('文本流读取完成，总长度:', fullText.length);
-                
-                // 获取最终结果以检查工具调用
-                const finalResult = await result.response;
-                console.log('最终结果:', finalResult);
-                
-                // 如果有工具调用但没有文本，说明LLM直接调用了工具
-                if (fullText.length === 0 && finalResult.toolCalls && finalResult.toolCalls.length > 0) {
-                    console.log('检测到直接工具调用，添加默认说明');
-                    sendSSE({
-                        type: 'content',
-                        content: '我将为您创建这个流程。'
-                    });
-                }
                 
             } else {
                 console.log('开始调用LLM（无工具）...');
@@ -947,14 +876,18 @@ Always provide clear explanations followed by properly formatted JSON and action
                     fullText += delta;
                     sendSSE({
                         type: 'content',
-                        content: delta
+                        content: delta,
+                        scenario: detectedScenario
                     });
                 }
 
                 console.log('文本流读取完成，总长度:', fullText.length);
             }
             
-            sendSSE({ type: 'end' });
+            sendSSE({ 
+                type: 'end',
+                scenario: detectedScenario
+            });
             
             console.log('LLM调用完成');
             res.end();
