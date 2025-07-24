@@ -1119,13 +1119,115 @@
         }
     }
 
+    // 获取当前选择的模型信息
+    function getCurrentModelInfo() {
+        try {
+            var nodeId = getSelectedConfigNodeId();
+            if (!nodeId) {
+                return { name: 'AI Assistant', firstLetter: 'A' };
+            }
+            
+            var configNode = RED.nodes.node(nodeId);
+            if (!configNode) {
+                return { name: 'AI Assistant', firstLetter: 'A' };
+            }
+            
+            var modelName = configNode.model || 'gpt-4o-mini';
+            var provider = configNode.provider || 'openai';
+            
+            // 根据提供商和模型生成显示名称
+            var displayName = '';
+            var firstLetter = '';
+            
+            switch (provider.toLowerCase()) {
+                case 'openai':
+                    if (modelName.includes('gpt-4o')) {
+                        displayName = 'GPT-4o';
+                        firstLetter = 'G';
+                    } else if (modelName.includes('gpt-4')) {
+                        displayName = 'GPT-4';
+                        firstLetter = 'G';
+                    } else if (modelName.includes('gpt-3.5')) {
+                        displayName = 'GPT-3.5';
+                        firstLetter = 'G';
+                    } else {
+                        displayName = modelName.toUpperCase();
+                        firstLetter = modelName.charAt(0).toUpperCase();
+                    }
+                    break;
+                case 'deepseek':
+                    if (modelName.includes('chat')) {
+                        displayName = 'DeepSeek Chat';
+                        firstLetter = 'D';
+                    } else if (modelName.includes('coder')) {
+                        displayName = 'DeepSeek Coder';
+                        firstLetter = 'D';
+                    } else {
+                        displayName = 'DeepSeek';
+                        firstLetter = 'D';
+                    }
+                    break;
+                case 'anthropic':
+                    if (modelName.includes('claude-3-5-sonnet')) {
+                        displayName = 'Claude 3.5 Sonnet';
+                        firstLetter = 'C';
+                    } else if (modelName.includes('claude-3-5-haiku')) {
+                        displayName = 'Claude 3.5 Haiku';
+                        firstLetter = 'C';
+                    } else if (modelName.includes('claude-3-opus')) {
+                        displayName = 'Claude 3 Opus';
+                        firstLetter = 'C';
+                    } else {
+                        displayName = 'Claude';
+                        firstLetter = 'C';
+                    }
+                    break;
+                case 'google':
+                    if (modelName.includes('gemini-1.5-pro')) {
+                        displayName = 'Gemini 1.5 Pro';
+                        firstLetter = 'G';
+                    } else if (modelName.includes('gemini-1.5-flash')) {
+                        displayName = 'Gemini 1.5 Flash';
+                        firstLetter = 'G';
+                    } else if (modelName.includes('gemini-1.0-pro')) {
+                        displayName = 'Gemini 1.0 Pro';
+                        firstLetter = 'G';
+                    } else {
+                        displayName = 'Gemini';
+                        firstLetter = 'G';
+                    }
+                    break;
+                default:
+                    displayName = modelName || 'AI Assistant';
+                    firstLetter = displayName.charAt(0).toUpperCase();
+            }
+            
+            return { name: displayName, firstLetter: firstLetter };
+        } catch (error) {
+            console.warn('获取模型信息失败:', error);
+            return { name: 'AI Assistant', firstLetter: 'A' };
+        }
+    }
+
     // Add message to chat UI with markdown rendering
     function addMessageToChat(role, content, messageId) {
         loadAISidebarConfig().then(function(config) {
             var isUser = role === "user";
             var userLabel = config.ui.userLabel;
-            var assistantLabel = config.ui.assistantLabel;
-            var label = isUser ? userLabel : assistantLabel;
+            
+            // 根据角色设置标签和图标
+            var label, avatarContent;
+            if (isUser) {
+                label = userLabel;
+                avatarContent = userLabel.charAt(0).toUpperCase();
+            } else {
+                // AI消息显示当前模型名称
+                var modelInfo = getCurrentModelInfo();
+                var currentScenario = ScenarioManager.getCurrentScenario();
+                var scenarioName = ScenarioManager.scenarios[currentScenario].name;
+                label = modelInfo.name + ' - ' + scenarioName + ' 场景';
+                avatarContent = modelInfo.firstLetter;
+            }
             
             var timestamp = new Date().toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
@@ -1140,8 +1242,7 @@
             messageHtml += '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">';
             messageHtml += '<div style="width: 24px; height: 24px; border-radius: 50%; background: ' + 
                           (isUser ? '#3b82f6' : '#10b981') + '; display: flex; align-items: center; justify-content: center;">';
-            messageHtml += '<span style="color: white; font-size: 12px; font-weight: 600;">' + 
-                          (isUser ? 'Y' : 'A') + '</span>';
+            messageHtml += '<span style="color: white; font-size: 12px; font-weight: 600;">' + avatarContent + '</span>';
             messageHtml += '</div>';
             messageHtml += '<span style="font-weight: 600; color: #374151;">' + label + '</span>';
             messageHtml += '<span style="color: #9ca3af; font-size: 12px; margin-left: auto;">' + timestamp + '</span>';
@@ -1158,15 +1259,23 @@
             
             $("#augment-chat-messages").append(messageHtml);
             
+            // 获取刚添加的消息元素
+            var messageElement = $("#augment-chat-messages .augment-message-container").last();
+            
             // Apply syntax highlighting if highlight.js is available
             if (typeof hljs !== 'undefined') {
-                $("#augment-chat-messages pre code").each(function(i, block) {
+                messageElement.find('pre code').each(function(i, block) {
                     try {
                         hljs.highlightElement(block);
                     } catch (e) {
                         console.warn('语法高亮失败:', e);
                     }
                 });
+            }
+            
+            // 检测动作标记
+            if (messageId) {
+                detectAndProcessActionMarkers(messageId);
             }
             
             // Add markdown styles
@@ -2406,25 +2515,9 @@
     <div class="red-ui-sidebar-info">
         <div class="red-ui-sidebar-header red-ui-info-toolbar">
             <span class="button-group"><a id="show-config-node-button" class="red-ui-button red-ui-button-small selected" href="#">
-                <i class="fa fa-cog"></i></a></span>
-            <!-- 场景选择器替换搜索框 -->
-            <div class="red-ui-searchBox-container red-ui-searchBox-compact">
-                场景：
-                <select id="scenario-selector" class="scenario-dropdown" style="
-                    width: 100%;
-                    background: transparent;
-                    color: #666;
-                    font-size: 12px;
-                    padding: 4px 8px;
-                    outline: none;
-                ">
-                    <option value="learning">🎓 学习</option>
-                    <option value="solution">💡 方案</option>
-                    <option value="integration">🔌 集成</option>
-                    <option value="development">💻 开发</option>
-                    <option value="configuration">⚙️ 配置</option>
-                    <option value="management">🖥️ 管理</option>
-                </select>
+                <i class="fa fa-cog"></i></a></span><div class="red-ui-searchBox-container red-ui-searchBox-compact"><i class="fa fa-search"></i>
+                  <form class="red-ui-searchBox-form"><input type="text" data-i18n="[placeholder]sidebar.help.search" class="red-ui-searchBox-input" placeholder="搜索帮助"></form>
+                 <a class="red-ui-searchBox-clear" href="#"><i class="fa fa-times"></i></a>
                 <span class="red-ui-searchBox-resultCount hide"></span>
             </div>
         </div>
