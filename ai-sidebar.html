@@ -86,6 +86,11 @@
             
             // 滚动到底部
             forceScrollToBottom();
+            
+            // 自动发送空消息到AI获取场景初始信息
+            setTimeout(function() {
+                sendToAI('', true); // 第二个参数表示是静默发送，不显示用户消息
+            }, 500);
         },
         
         updateUI: function() {
@@ -245,27 +250,33 @@
             $("#augment-chat-input").css("height", "72px");
             
             // 发送到AI后台
-            sendToAI(message);
+            sendToAI(message, false); // 明确指定不是静默发送
         }
     }
 
-    function sendToAI(message) {
+    function sendToAI(message, silent = false) {
         var nodeId = getSelectedConfigNodeId();
         if (!nodeId) {
-            addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            if (!silent) {
+                addMessageToChat("error", "❌ 未找到配置节点，请先创建并配置API密钥");
+            }
             return;
         }
 
         // 检查节点是否已部署
         var configNode = RED.nodes.node(nodeId);
         if (!configNode) {
-            addMessageToChat("error", "❌ 配置节点未部署，请点击部署按钮后重试");
+            if (!silent) {
+                addMessageToChat("error", "❌ 配置节点未部署，请点击部署按钮后重试");
+            }
             return;
         }
 
         // 检查是否有未部署的更改
         if (RED.nodes.dirty()) {
-            addMessageToChat("warning", "⚠️ 检测到未部署的更改，请先点击部署按钮");
+            if (!silent) {
+                addMessageToChat("warning", "⚠️ 检测到未部署的更改，请先点击部署按钮");
+            }
             return;
         }
 
@@ -316,12 +327,20 @@
             console.warn("获取选中信息失败:", error);
         }
 
+        // 构建发送的消息，如果是空消息则发送场景初始化请求
+        var sendMessage = message.trim();
+        if (!sendMessage) {
+            var scenario = ScenarioManager.scenarios[currentScenario];
+            sendMessage = `请为${scenario.name}场景提供初始指导信息和建议。`;
+        }
+
         console.log("发送AI请求:", {
-            message: message,
+            message: sendMessage,
             scenario: currentScenario,
             nodeId: nodeId,
             selectedFlow: selectedFlow,
-            selectedNodes: selectedNodes
+            selectedNodes: selectedNodes,
+            silent: silent
         });
         
         // 创建加载消息
@@ -336,18 +355,19 @@
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                message: message,
+                message: sendMessage,
                 scenario: currentScenario,  // 添加场景信息
                 nodeId: nodeId,
                 selectedFlow: selectedFlow,
                 selectedNodes: selectedNodes,
                 flowData: flowData,
-                history: getChatHistory()
+                history: getChatHistory(),
+                silent: silent  // 添加静默标记
             })
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const reader = response.body.getReader();
@@ -356,25 +376,23 @@
             function readStream() {
                 return reader.read().then(({ done, value }) => {
                     if (done) {
-                        console.log("流式响应完成");
-                        $("#" + loadingMessageId).remove();
+                        console.log('流式响应完成');
                         return;
                     }
                     
-                    const chunk = decoder.decode(value, { stream: true });
+                    const chunk = decoder.decode(value);
                     const lines = chunk.split('\n');
                     
-                    lines.forEach(line => {
+                    for (const line of lines) {
                         if (line.startsWith('data: ')) {
                             try {
                                 const data = JSON.parse(line.slice(6));
-                                console.log("收到SSE数据:", data.type, data.scenario);
                                 handleStreamData(data, loadingMessageId);
                             } catch (e) {
-                                console.warn("解析SSE数据失败:", line, e);
+                                console.warn('解析SSE数据失败:', e, line);
                             }
                         }
-                    });
+                    }
                     
                     return readStream();
                 });
@@ -383,7 +401,7 @@
             return readStream();
         })
         .catch(error => {
-            console.error("AI请求失败:", error);
+            console.error('AI请求失败:', error);
             $("#" + loadingMessageId).remove();
             addMessageToChat("error", "❌ AI请求失败: " + error.message);
         });
@@ -2627,17 +2645,18 @@
                             justify-content: center;
                         " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
                             <i class="fa fa-at"></i>
+                            <span style="
+                                font-size: 11px;
+                                color: #6b7280;
+                                display: flex;
+                                align-items: center;
+                                padding: 0 4px;
+                                line-height: 1;
+                            ">
+                                场景:<span id="current-scenario-name" style="font-weight: 500;">对话</span>
+                            </span>
                         </button>
-                        <span style="
-                            font-size: 11px;
-                            color: #6b7280;
-                            display: flex;
-                            align-items: center;
-                            padding: 0 4px;
-                            line-height: 1;
-                        ">
-                            场景:<span id="current-scenario-name" style="font-weight: 500;">对话</span>
-                        </span>
+                    
                     </div>
                     
                     <!-- 发送按钮 -->
