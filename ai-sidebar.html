@@ -19,6 +19,11 @@
         currentScenario: 'learning',
         
         scenarios: {
+            conversation: {
+                name: '对话',
+                description: '自由对话和通用问答',
+                placeholder: '请输入您的问题或指令...'
+            },
             learning: {
                 name: '学习',
                 description: '学习Node-RED节点和流程概念',
@@ -92,6 +97,9 @@
             
             // 更新选择器值
             $("#scenario-selector").val(this.currentScenario);
+            
+            // 更新当前场景显示
+            $("#current-scenario-name").text(scenario.name);
             
             console.log('UI已更新为场景:', this.currentScenario);
         },
@@ -1132,74 +1140,32 @@
                 return { name: 'AI Assistant', firstLetter: 'A' };
             }
             
-            var modelName = configNode.model || 'gpt-4o-mini';
             var provider = configNode.provider || 'openai';
             
-            // 根据提供商和模型生成显示名称
+            // 根据提供商生成显示名称和首字母
             var displayName = '';
             var firstLetter = '';
             
             switch (provider.toLowerCase()) {
                 case 'openai':
-                    if (modelName.includes('gpt-4o')) {
-                        displayName = 'GPT-4o';
-                        firstLetter = 'G';
-                    } else if (modelName.includes('gpt-4')) {
-                        displayName = 'GPT-4';
-                        firstLetter = 'G';
-                    } else if (modelName.includes('gpt-3.5')) {
-                        displayName = 'GPT-3.5';
-                        firstLetter = 'G';
-                    } else {
-                        displayName = modelName.toUpperCase();
-                        firstLetter = modelName.charAt(0).toUpperCase();
-                    }
+                    displayName = 'OpenAI';
+                    firstLetter = 'O';
                     break;
                 case 'deepseek':
-                    if (modelName.includes('chat')) {
-                        displayName = 'DeepSeek Chat';
-                        firstLetter = 'D';
-                    } else if (modelName.includes('coder')) {
-                        displayName = 'DeepSeek Coder';
-                        firstLetter = 'D';
-                    } else {
-                        displayName = 'DeepSeek';
-                        firstLetter = 'D';
-                    }
+                    displayName = 'DeepSeek';
+                    firstLetter = 'D';
                     break;
                 case 'anthropic':
-                    if (modelName.includes('claude-3-5-sonnet')) {
-                        displayName = 'Claude 3.5 Sonnet';
-                        firstLetter = 'C';
-                    } else if (modelName.includes('claude-3-5-haiku')) {
-                        displayName = 'Claude 3.5 Haiku';
-                        firstLetter = 'C';
-                    } else if (modelName.includes('claude-3-opus')) {
-                        displayName = 'Claude 3 Opus';
-                        firstLetter = 'C';
-                    } else {
-                        displayName = 'Claude';
-                        firstLetter = 'C';
-                    }
+                    displayName = 'Claude';
+                    firstLetter = 'C';
                     break;
                 case 'google':
-                    if (modelName.includes('gemini-1.5-pro')) {
-                        displayName = 'Gemini 1.5 Pro';
-                        firstLetter = 'G';
-                    } else if (modelName.includes('gemini-1.5-flash')) {
-                        displayName = 'Gemini 1.5 Flash';
-                        firstLetter = 'G';
-                    } else if (modelName.includes('gemini-1.0-pro')) {
-                        displayName = 'Gemini 1.0 Pro';
-                        firstLetter = 'G';
-                    } else {
-                        displayName = 'Gemini';
-                        firstLetter = 'G';
-                    }
+                    displayName = 'Gemini';
+                    firstLetter = 'G';
                     break;
                 default:
-                    displayName = modelName || 'AI Assistant';
-                    firstLetter = displayName.charAt(0).toUpperCase();
+                    displayName = provider.charAt(0).toUpperCase() + provider.slice(1);
+                    firstLetter = provider.charAt(0).toUpperCase();
             }
             
             return { name: displayName, firstLetter: firstLetter };
@@ -1221,11 +1187,11 @@
                 label = userLabel;
                 avatarContent = userLabel.charAt(0).toUpperCase();
             } else {
-                // AI消息显示当前模型名称
+                // AI消息显示当前厂商名称
                 var modelInfo = getCurrentModelInfo();
                 var currentScenario = ScenarioManager.getCurrentScenario();
                 var scenarioName = ScenarioManager.scenarios[currentScenario].name;
-                label = modelInfo.name + ' - ' + scenarioName + ' 场景';
+                label = modelInfo.name;
                 avatarContent = modelInfo.firstLetter;
             }
             
@@ -1245,6 +1211,14 @@
             messageHtml += '<span style="color: white; font-size: 12px; font-weight: 600;">' + avatarContent + '</span>';
             messageHtml += '</div>';
             messageHtml += '<span style="font-weight: 600; color: #374151;">' + label + '</span>';
+            
+            // 添加场景信息，使用较小的字体
+            if (!isUser) {
+                var currentScenario = ScenarioManager.getCurrentScenario();
+                var scenarioName = ScenarioManager.scenarios[currentScenario].name;
+                messageHtml += '<span style="color: #6b7280; font-size: 11px; font-weight: 400; margin-left: 4px;">- ' + scenarioName + ' 模式</span>';
+            }
+            
             messageHtml += '<span style="color: #9ca3af; font-size: 12px; margin-left: auto;">' + timestamp + '</span>';
             messageHtml += '</div>';
             
@@ -2047,7 +2021,7 @@
     }
 
     // 显示场景选择菜单
-    function showScenarioMenu(event) {
+    function showScenarioMenu(e) {
         // 移除已存在的菜单
         $('.scenario-menu').remove();
         
@@ -2067,6 +2041,18 @@
                 font-size: 13px;
                 padding: 4px 0;
             ">
+                <div class="scenario-option" data-scenario="conversation" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">💬</span>
+                    <span>对话</span>
+                </div>
                 <div class="scenario-option" data-scenario="learning" style="
                     padding: 6px 12px;
                     cursor: pointer;
@@ -2642,6 +2628,16 @@
                         " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">
                             <i class="fa fa-at"></i>
                         </button>
+                        <span style="
+                            font-size: 11px;
+                            color: #6b7280;
+                            display: flex;
+                            align-items: center;
+                            padding: 0 4px;
+                            line-height: 1;
+                        ">
+                            场景:<span id="current-scenario-name" style="font-weight: 500;">对话</span>
+                        </span>
                     </div>
                     
                     <!-- 发送按钮 -->
