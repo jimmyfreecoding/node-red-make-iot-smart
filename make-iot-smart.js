@@ -40,6 +40,9 @@ module.exports = function (RED) {
         
         // MCP配置 - 添加详细日志
         node.mcpCommand = config.mcpCommand || 'npx @supcon-international/node-red-mcp-server';
+        // MCP配置 - 使用node-red-contrib-mcp-server
+        // node.mcpCommand = config.mcpCommand || 'npx node-red-contrib-mcp-server';
+
         node.mcpArgs = config.mcpArgs || '';
         node.mcpEnv = config.mcpEnv || '';
         node.enableMcp = config.enableMcp || false;
