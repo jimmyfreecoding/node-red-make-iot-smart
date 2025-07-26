@@ -212,6 +212,17 @@ module.exports = function (RED) {
                     - Provide step-by-step explanations for beginners, including node purposes and configurations.
                     - Generate a sample flow JSON for the user to import and experiment with.
                     - Suggest interactive tasks to help users understand the flow.
+                    
+                    For initial learning scenario responses, always end with a "Usage Guide" section that includes:
+                    
+                    **Usage Guide**
+                    You can use these prompts for node learning:
+                    1) Introduce Node-RED basics
+                    2) Introduce the usage of xxx node with examples
+                    3) Introduce dashboard usage methods
+                    4) Explain the current flow
+                    5) Explain the current node
+                    
                     ACTION_TYPE: CREATE (for flow creation) or EXPLAIN (for explanations without flow creation).
                 `,
                 solution: `

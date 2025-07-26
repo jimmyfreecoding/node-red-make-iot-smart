@@ -611,12 +611,19 @@
                 });
                 
                 // 添加动作按钮
-                addEnhancedActionButton(messageId, actionData);
+                addActionButton(messageId, actionData);
                 
             } catch (error) {
                 console.error("处理动作失败:", error);
-                addErrorMessage(messageId, `❌ 动作处理失败: ${error.message}`);
+                // 添加错误信息到消息中
+                var messageElement = $("#" + messageId + " .message-content");
+                if (messageElement.length > 0) {
+                    messageElement.append('<div class="error-message" style="color: #ef4444; margin-top: 10px;">❌ 动作处理失败: ' + error.message + '</div>');
+                }
             }
+        } else if (actionType === 'EXPLAIN') {
+            // 对于EXPLAIN类型，不需要添加按钮，只是说明性内容
+            console.log("检测到EXPLAIN类型，无需添加按钮");
         } else {
             console.log("未检测到完整的动作配置");
         }
