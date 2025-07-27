@@ -202,44 +202,36 @@
     }
     
     // 预处理ACTION_TYPE标记，转换为可执行按钮
+    // 预处理：处理ACTION_TYPE标记
     function preprocessActionType(content) {
-        // 查找ACTION_TYPE标记
-        const actionTypePattern = /ACTION_TYPE:\s*(\w+)/g;
+        console.log('预处理ACTION_TYPE标记');
         
-        return content.replace(actionTypePattern, function(match, actionType) {
-            console.log('检测到动作类型:', actionType);
+        // 查找ACTION_TYPE和JSON代码块的组合
+        const actionPattern = /ACTION_TYPE:\s*(\w+)([\s\S]*?)```json\s*([\s\S]*?)\s*```/gi;
+        
+        return content.replace(actionPattern, function(match, actionTypeMatch, middleContent, jsonContent) {
+            console.log('找到ACTION_TYPE:', actionTypeMatch, 'JSON长度:', jsonContent.length);
             
-            // 生成按钮HTML
-            const buttonText = getButtonTextForAction(actionType);
-            const buttonColor = getButtonColorForAction(actionType);
-            const buttonIcon = getButtonIconForAction(actionType);
+            // 如果是EXPLAIN类型，不添加按钮标记
+            if (actionTypeMatch.toUpperCase() === 'EXPLAIN') {
+                return match; // 保持原内容不变
+            }
             
-            return `<div class="action-type-button-container" style="margin: 16px 0; text-align: right;">
-                <button class="action-type-btn" 
-                        data-action-type="${actionType}"
-                        style="
-                            background: ${buttonColor};
-                            border: 1px solid ${buttonColor};
-                            border-radius: 6px;
-                            padding: 8px 16px;
-                            font-size: 14px;
-                            color: white;
-                            cursor: pointer;
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 6px;
-                            transition: all 0.2s;
-                            font-weight: 500;
-                        "
-                        onmouseover="this.style.opacity='0.8'"
-                        onmouseout="this.style.opacity='1'">
-                    <i class="fa ${buttonIcon}" style="font-size: 12px;"></i>
-                    ${buttonText}
-                </button>
-            </div>`;
+            try {
+                // 验证JSON格式
+                JSON.parse(jsonContent);
+                
+                // 为非EXPLAIN类型添加动作标记
+                var actionId = 'action-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                
+                return match + `\n\n<div class="action-marker" data-action-type="${actionTypeMatch.toUpperCase()}" data-json-content="${encodeURIComponent(jsonContent)}" data-action-id="${actionId}" style="display: none;"></div>`;
+                
+            } catch (e) {
+                console.warn('JSON格式无效，跳过处理:', e.message);
+                return match;
+            }
         });
     }
-
     function sendMessage() {
         var message = $("#augment-chat-input").val().trim();
         if (message) {
@@ -491,9 +483,12 @@
                 });
             }
             
-            // 检测动作标记
-            detectAndProcessActionMarkers(messageId);
+            // 增强代码块显示 - 确保在语法高亮后执行
+            setTimeout(function() {
+                enhanceCodeBlocks(messageElement);
+            }, 100);
             
+            // 滚动到底部
             forceScrollToBottom();
         }
     }
@@ -542,66 +537,101 @@
             return;
         }
         
+        // 先尝试增强代码块
+        enhanceCodeBlocks(messageElement);
+        
+        // 检查是否已经添加过按钮
+        if (messageElement.find('.action-button-container').length > 0) {
+            console.log("按钮已存在，跳过重复添加");
+            return;
+        }
+        
+        // 查找动作标记
+        var actionMarkers = messageElement.find('.action-marker');
+        if (actionMarkers.length > 0) {
+            console.log("找到动作标记:", actionMarkers.length, "个");
+            
+            // 处理第一个动作标记
+            var firstMarker = actionMarkers.first();
+            var markerActionType = firstMarker.data('action-type');
+            var jsonContent = decodeURIComponent(firstMarker.data('json-content') || '');
+            
+            console.log("处理动作标记:", markerActionType, "JSON长度:", jsonContent.length);
+            
+            if (markerActionType && jsonContent && markerActionType !== 'EXPLAIN') {
+                try {
+                    var parsedJson = JSON.parse(jsonContent);
+                    
+                    var actionData = {
+                        type: 'action_button',
+                        actionType: markerActionType,
+                        toolName: getToolNameForAction(markerActionType),
+                        toolArgs: buildToolArgsForAction(markerActionType, parsedJson),
+                        jsonContent: JSON.stringify(parsedJson, null, 2),
+                        buttonText: getButtonTextForAction(markerActionType),
+                        buttonColor: getButtonColorForAction(markerActionType),
+                        buttonIcon: getButtonIconForAction(markerActionType),
+                        description: getDescriptionForAction(markerActionType)
+                    };
+                    
+                    console.log("构建动作数据成功:", {
+                        actionType: actionData.actionType,
+                        toolName: actionData.toolName,
+                        buttonText: actionData.buttonText
+                    });
+                    
+                    // 添加动作按钮
+                    addActionButton(messageId, actionData);
+                    
+                } catch (error) {
+                    console.error("处理动作失败:", error);
+                }
+            }
+            return;
+        }
+        
+        // 如果没有找到动作标记，使用原有的文本解析方式
         var rawText = messageElement.attr('data-raw-text') || '';
-        console.log("检查文本长度:", rawText.length);
+        console.log("使用文本解析方式，文本长度:", rawText.length);
         
         // 检测ACTION_TYPE格式
-        const actionTypePattern = /ACTION_TYPE:\s*(\w+)/gi;
-        const jsonBlockPattern = /```json\s*([\s\S]*?)\s*```/gi;
+        var actionTypePattern = /ACTION_TYPE:\s*(\w+)/gi;
+        var jsonBlockPattern = /```json\s*([\s\S]*?)\s*```/gi;
         
-        let actionType = null;
-        let jsonContent = null;
+        var detectedActionType = null;
+        var detectedJsonContent = null;
         
         // 查找ACTION_TYPE
         actionTypePattern.lastIndex = 0;
-        const actionMatch = actionTypePattern.exec(rawText);
+        var actionMatch = actionTypePattern.exec(rawText);
         if (actionMatch) {
-            actionType = actionMatch[1].toUpperCase();
-            console.log("检测到动作类型:", actionType);
+            detectedActionType = actionMatch[1].toUpperCase();
+            console.log("检测到动作类型:", detectedActionType);
         }
         
         // 查找JSON配置
         jsonBlockPattern.lastIndex = 0;
-        const jsonMatch = jsonBlockPattern.exec(rawText);
+        var jsonMatch = jsonBlockPattern.exec(rawText);
         if (jsonMatch) {
-            jsonContent = jsonMatch[1].trim();
-            console.log("找到JSON配置:", jsonContent.substring(0, 200));
+            detectedJsonContent = jsonMatch[1].trim();
+            console.log("找到JSON配置:", detectedJsonContent.substring(0, 200));
         }
         
-        // 如果没有明确的ACTION_TYPE，尝试从JSON内容推断
-        if (!actionType && jsonContent) {
+        // 只有在有JSON配置且不是EXPLAIN类型时才添加按钮
+        if (detectedActionType && detectedJsonContent && detectedActionType !== 'EXPLAIN') {
             try {
-                const parsedJson = JSON.parse(jsonContent);
-                if (parsedJson.nodes || parsedJson.label) {
-                    actionType = 'CREATE';
-                    console.log("从JSON推断动作类型: CREATE");
-                } else if (parsedJson.packages) {
-                    actionType = 'INSTALL';
-                    console.log("从JSON推断动作类型: INSTALL");
-                } else if (parsedJson.settings) {
-                    actionType = 'CONFIG';
-                    console.log("从JSON推断动作类型: CONFIG");
-                }
-            } catch (e) {
-                console.warn("JSON解析失败:", e);
-            }
-        }
-        
-        // 如果检测到动作类型和JSON配置，添加按钮
-        if (actionType && jsonContent) {
-            try {
-                const parsedJson = JSON.parse(jsonContent);
+                var parsedJson = JSON.parse(detectedJsonContent);
                 
-                const actionData = {
+                var actionData = {
                     type: 'action_button',
-                    actionType: actionType,
-                    toolName: getToolNameForAction(actionType),
-                    toolArgs: buildToolArgsForAction(actionType, parsedJson),
+                    actionType: detectedActionType,
+                    toolName: getToolNameForAction(detectedActionType),
+                    toolArgs: buildToolArgsForAction(detectedActionType, parsedJson),
                     jsonContent: JSON.stringify(parsedJson, null, 2),
-                    buttonText: getButtonTextForAction(actionType),
-                    buttonColor: getButtonColorForAction(actionType),
-                    buttonIcon: getButtonIconForAction(actionType),
-                    description: getDescriptionForAction(actionType)
+                    buttonText: getButtonTextForAction(detectedActionType),
+                    buttonColor: getButtonColorForAction(detectedActionType),
+                    buttonIcon: getButtonIconForAction(detectedActionType),
+                    description: getDescriptionForAction(detectedActionType)
                 };
                 
                 console.log("构建动作数据成功:", {
@@ -615,17 +645,12 @@
                 
             } catch (error) {
                 console.error("处理动作失败:", error);
-                // 添加错误信息到消息中
-                var messageElement = $("#" + messageId + " .message-content");
-                if (messageElement.length > 0) {
-                    messageElement.append('<div class="error-message" style="color: #ef4444; margin-top: 10px;">❌ 动作处理失败: ' + error.message + '</div>');
-                }
             }
-        } else if (actionType === 'EXPLAIN') {
+        } else if (detectedActionType === 'EXPLAIN') {
             // 对于EXPLAIN类型，不需要添加按钮，只是说明性内容
             console.log("检测到EXPLAIN类型，无需添加按钮");
         } else {
-            console.log("未检测到完整的动作配置");
+            console.log("未检测到完整的动作配置或为纯说明内容");
         }
     }
 
@@ -862,7 +887,502 @@
             }
         });
     }
+        // 添加更多选项按钮的下拉菜单事件处理
+    $(document).on('click', '.code-more-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var blockId = $(this).data('block-id');
+        var jsonContent = $(this).data('json-content');
+        var $button = $(this);
+        var existingMenu = $('.code-dropdown-menu');
+        
+        // 如果已有菜单，先移除
+        if (existingMenu.length > 0) {
+            existingMenu.remove();
+            return;
+        }
+        
+        // 获取当前流程信息
+        var currentFlowName = '未选择流程';
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                var workspace = RED.nodes.workspace(activeWorkspace);
+                currentFlowName = workspace ? workspace.label : '当前流程';
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 添加CSS重置样式来确保菜单项没有默认间距
+        if (!document.getElementById('code-dropdown-reset-styles')) {
+            var resetStyle = document.createElement('style');
+            resetStyle.id = 'code-dropdown-reset-styles';
+            resetStyle.textContent = `
+                .code-dropdown-menu {
+                    box-sizing: border-box !important;
+                }
+                .code-dropdown-menu .menu-item {
+                    margin: 0 !important;
+                    padding: 0px 16px !important;
+                    border: none !important;
+                    line-height: 1 !important;
+                    height: 0px !important;
+                    box-sizing: border-box !important;
+                    display: flex !important;
+                    align-items: center !important;
+                }
+                .code-dropdown-menu .menu-item:first-child {
+                    border-top-left-radius: 6px;
+                    border-top-right-radius: 6px;
+                }
+                .code-dropdown-menu .menu-item:last-child {
+                    border-bottom-left-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                }
+            `;
+            document.head.appendChild(resetStyle);
+        }
+        
+        // 创建下拉菜单
+        var menuHtml = `
+            <div class="code-dropdown-menu" style="
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: white;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                min-width: 140px;
+                font-size: 13px;
+                padding: 0;
+                margin-top: 4px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                line-height: 1;
+            ">
+                <div class="menu-item" data-action="copy" data-block-id="${blockId}" data-json-content='${jsonContent}' style="
+                    padding: 10px 16px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                    font-weight: 400;
+                    margin: 0;
+                    border: none;
+                    line-height: 1;
+                    height: 36px;
+                    box-sizing: border-box;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <i class="fa fa-copy" style="font-size: 12px; width: 14px; color: #6b7280;"></i>
+                    <span>Copy</span>
+                </div>
+                <div class="menu-item" data-action="create-new" data-block-id="${blockId}" data-json-content='${jsonContent}' style="
+                    padding: 10px 16px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                    font-weight: 400;
+                    margin: 0;
+                    border: none;
+                    line-height: 1;
+                    height: 36px;
+                    box-sizing: border-box;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <i class="fa fa-plus" style="font-size: 12px; width: 14px; color: #6b7280;"></i>
+                    <span>在新流程中创建</span>
+                </div>
+                <div class="menu-item" data-action="create-current" data-block-id="${blockId}" data-json-content='${jsonContent}' style="
+                    padding: 10px 16px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                    font-weight: 400;
+                    margin: 0;
+                    border: none;
+                    line-height: 1;
+                    height: 36px;
+                    box-sizing: border-box;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <i class="fa fa-edit" style="font-size: 12px; width: 14px; color: #6b7280;"></i>
+                    <span>在${currentFlowName}中创建</span>
+                </div>
+            </div>
+        `; $button.parent().append(menuHtml);
+        
+        // 点击其他地方关闭菜单
+        $(document).on('click.code-dropdown', function(e) {
+            if (!$(e.target).closest('.code-dropdown-menu, .code-more-btn').length) {
+                $('.code-dropdown-menu').remove();
+                $(document).off('click.code-dropdown');
+            }
+        });
+    });
+    
+    // 处理下拉菜单项点击
+    $(document).on('click', '.menu-item', function(e) {
+        e.preventDefault();
+        
+        var action = $(this).data('action');
+        var blockId = $(this).data('block-id');
+        var jsonContent = $(this).data('json-content');
+        var $button = $('.code-more-btn[data-block-id="' + blockId + '"]');
+        
+        console.log('菜单项点击:', action, blockId);
+        
+        // 关闭菜单
+        $('.code-dropdown-menu').remove();
+        $(document).off('click.code-dropdown');
+        
+        // 处理复制操作
+        if (action === 'copy') {
+            try {
+                var parsedJson = JSON.parse(jsonContent);
+                var formattedJson = JSON.stringify(parsedJson, null, 2);
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(formattedJson).then(function() {
+                        RED.notify("JSON数据已复制到剪贴板", "success");
+                        
+                        // 临时更新按钮状态显示复制成功
+                        var originalHtml = $button.html();
+                        var originalBg = $button.css('background-color');
+                        
+                        $button.html('<i class="fa fa-check" style="font-size: 9px;"></i> 已复制')
+                               .css('background', '#10b981');
+                        
+                        setTimeout(function() {
+                            $button.html(originalHtml).css('background', originalBg);
+                        }, 2000);
+                        
+                    }).catch(function(err) {
+                        console.error('复制失败:', err);
+                        fallbackCopyTextToClipboard(formattedJson);
+                    });
+                } else {
+                    fallbackCopyTextToClipboard(formattedJson);
+                }
+            } catch (e) {
+                RED.notify("JSON格式错误，无法复制", "error");
+            }
+            return;
+        }
+        
+        // 处理创建操作
+        if (action === 'create-new' || action === 'create-current') {
+            // 更新按钮状态为执行中
+            $button.prop('disabled', true)
+                   .html('<i class="fa fa-spinner fa-spin" style="font-size: 9px;"></i> 执行中...')
+                   .css({
+                       'background': '#6c757d',
+                       'cursor': 'not-allowed'
+                   });
+            
+            // 获取当前选中的流程信息
+            var selectedFlow = null;
+            var nodeId = null;
+            
+            try {
+                // 获取配置节点ID
+                var configNodes = [];
+                RED.nodes.eachConfig(function(configNode) {
+                    if (configNode.type === 'api-config') {
+                        configNodes.push(configNode);
+                    }
+                });
+                
+                if (configNodes.length > 0) {
+                    nodeId = configNodes[0].id;
+                }
+                
+                // 获取当前流程信息
+                if (action === 'create-current') {
+                    var activeWorkspace = RED.workspaces.active();
+                    if (activeWorkspace) {
+                        selectedFlow = {
+                            id: activeWorkspace,
+                            label: RED.nodes.workspace(activeWorkspace).label || '当前流程'
+                        };
+                    }
+                }
+            } catch (error) {
+                console.warn("获取流程信息失败:", error);
+            }
+            
+            if (!nodeId) {
+                RED.notify("未找到API配置节点", "error");
+                resetButton($button);
+                return;
+            }
+            
+            // 解析JSON内容
+            var parsedJson;
+            try {
+                parsedJson = JSON.parse(jsonContent);
+            } catch (e) {
+                RED.notify("JSON格式错误", "error");
+                resetButton($button);
+                return;
+            }
+            
+            // 构建工具参数
+            var toolArgs = {
+                flowJson: JSON.stringify(parsedJson),
+                label: parsedJson.label || '新流程',
+                description: parsedJson.description || ''
+            };
+            
+            // 如果是在当前流程中创建，添加流程ID
+            if (action === 'create-current' && selectedFlow && selectedFlow.id) {
+                toolArgs.flowId = selectedFlow.id;
+            }
+            
+            console.log('执行create-flow工具:', toolArgs);
+            
+            // 调用MCP工具
+            fetch('/make-iot-smart/execute-tool', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    toolName: 'create-flow',
+                    toolArgs: toolArgs,
+                    nodeId: nodeId,
+                    selectedFlow: selectedFlow
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('工具执行结果:', data);
+                
+                if (data.success) {
+                    // 成功执行
+                    $button.css({
+                            'background': '#10b981',
+                            'cursor': 'default'
+                        })
+                        .html('<i class="fa fa-check" style="font-size: 9px;"></i> 已完成')
+                        .prop('disabled', true);
+                    
+                    // 显示成功消息
+                    var successMsg = action === 'create-new' ? 
+                        "✅ 新流程创建成功！" : 
+                        "✅ 流程已添加到当前工作区！";
+                    addMessageToChat("system", successMsg);
+                    
+                    // 刷新视图
+                    if (typeof RED !== 'undefined' && RED.view) {
+                        RED.view.redraw();
+                    }
+                } else {
+                    // 执行失败
+                    resetButton($button);
+                    addMessageToChat("error", "❌ 工具执行失败: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('工具调用失败:', error);
+                resetButton($button);
+                addMessageToChat("error", "❌ 网络错误: " + error.message);
+            });
+        }
+    });
+    
+    function fallbackCopyTextToClipboard(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        
+        // 避免滚动到底部
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            var successful = document.execCommand('copy');
+            if (successful) {
+                RED.notify("JSON数据已复制到剪贴板", "success");
+            } else {
+                RED.notify("复制失败", "error");
+            }
+        } catch (err) {
+            console.error('降级复制方案失败:', err);
+            RED.notify("复制失败", "error");
+        }
+        
+        document.body.removeChild(textArea);
+    }
+    // 重置按钮状态的辅助函数
+    function resetButton($button) {
+        $button.prop('disabled', false)
+            .css('background', '#dc3545')
+            .html('<i class="fa fa-exclamation" style="font-size: 9px;"></i> 失败');
+        
+        // 3秒后恢复按钮
+        setTimeout(() => {
+            $button.css('background', '#28a745')
+                   .html('<i class="fa fa-check" style="font-size: 9px;"></i> Apply');
+        }, 3000);
+    }
+    // 添加代码块工具栏事件处理
+    $(document).on('click', '.code-collapse-btn', function(e) {
+        e.preventDefault();
+        
+        var blockId = $(this).data('block-id');
+        var $pre = $('#' + blockId);
+        var $code = $pre.find('code');
+        var $icon = $(this).find('i');
+        
+        if ($code.is(':visible')) {
+            // 折叠
+            $code.slideUp(200);
+            $icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+            $pre.css('height', '32px');
+        } else {
+            // 展开
+            $code.slideDown(200);
+            $icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+            $pre.css('height', 'auto');
+        }
+    });
 
+    // 代码块运行按钮事件处理
+    $(document).on('click', '.code-run-btn', function(e) {
+        e.preventDefault();
+        
+        var $button = $(this);
+        var blockId = $button.data('block-id');
+        var jsonContent = $button.data('json-content');
+        
+        console.log('代码块运行按钮被点击:', blockId);
+        
+        if (!jsonContent) {
+            RED.notify('未找到有效的JSON配置', 'error');
+            return;
+        }
+        
+        // 获取配置节点ID
+        var nodeId = getSelectedConfigNodeId();
+        if (!nodeId) {
+            RED.notify('未找到配置节点，请先创建并配置API密钥', 'error');
+            return;
+        }
+        
+        // 获取当前选中的流程
+        var selectedFlow = null;
+        try {
+            var activeWorkspace = RED.workspaces.active();
+            if (activeWorkspace) {
+                selectedFlow = {
+                    id: activeWorkspace,
+                    label: RED.nodes.workspace(activeWorkspace).label
+                };
+            }
+        } catch (error) {
+            console.warn("获取当前流程失败:", error);
+        }
+        
+        // 构建工具参数
+        var toolArgs = {
+            flowJson: JSON.stringify(jsonContent),
+            label: jsonContent.label || '新流程',
+            description: jsonContent.description || ''
+        };
+        
+        // 如果有选中的流程，在当前流程中创建
+        if (selectedFlow && selectedFlow.id) {
+            toolArgs.flowId = selectedFlow.id;
+        }
+        
+        console.log('执行create-flow工具:', toolArgs);
+        
+        // 更新按钮状态
+        $button.prop('disabled', true)
+               .html('<i class="fa fa-spinner fa-spin" style="font-size: 9px;"></i> 运行中...')
+               .css({
+                   'background': '#6c757d',
+                   'cursor': 'not-allowed'
+               });
+        
+        // 调用MCP工具
+        fetch('/make-iot-smart/execute-tool', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                toolName: 'create-flow',
+                toolArgs: toolArgs,
+                nodeId: nodeId,
+                selectedFlow: selectedFlow
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('工具执行结果:', data);
+            
+            if (data.success) {
+                // 成功执行
+                $button.css({
+                        'background': '#28a745',
+                        'cursor': 'default'
+                    })
+                    .html('<i class="fa fa-check" style="font-size: 9px;"></i> 已完成')
+                    .prop('disabled', true);
+                
+                // 显示成功消息
+                addMessageToChat("system", "✅ 流程创建成功！");
+                
+                // 刷新视图
+                if (typeof RED !== 'undefined' && RED.view) {
+                    RED.view.redraw();
+                }
+            } else {
+                // 执行失败
+                $button.prop('disabled', false)
+                    .css('background', '#dc3545')
+                    .html('<i class="fa fa-exclamation" style="font-size: 9px;"></i> 失败');
+                
+                addMessageToChat("error", "❌ 工具执行失败: " + data.error);
+                
+                // 3秒后恢复按钮
+                setTimeout(() => {
+                    $button.css('background', '#28a745')
+                           .html('<i class="fa fa-play" style="font-size: 9px;"></i> Apply');
+                }, 3000);
+            }
+        })
+        .catch(error => {
+            console.error('工具调用失败:', error);
+            
+            $button.prop('disabled', false)
+                .css('background', '#dc3545')
+                .html('<i class="fa fa-exclamation" style="font-size: 9px;"></i> 错误');
+            
+            addMessageToChat("error", "❌ 网络错误: " + error.message);
+            
+            // 3秒后恢复按钮
+            setTimeout(() => {
+                $button.css('background', '#28a745')
+                       .html('<i class="fa fa-play" style="font-size: 9px;"></i> Apply');
+            }, 3000);
+        });
+    });
     // 添加代码查看功能的事件处理
     $(document).on('click', '.code-view-btn', function(e) {
         e.preventDefault();
@@ -882,10 +1402,10 @@
     $(document).on('click', '.action-type-btn', function(e) {
         e.preventDefault();
         
-        var actionType = $(this).attr('data-action-type');
+        var buttonActionType = $(this).attr('data-action-type');
         var messageContainer = $(this).closest('.augment-message-container');
         
-        console.log('点击动作按钮:', actionType);
+        console.log('点击动作按钮:', buttonActionType);
         
         // 查找消息中的JSON内容
         var jsonContent = extractJSONFromMessage(messageContainer);
@@ -897,14 +1417,14 @@
                 // 构建动作数据
                 var actionData = {
                     type: 'action_button',
-                    actionType: actionType,
-                    toolName: getToolNameForAction(actionType),
-                    toolArgs: buildToolArgsForAction(actionType, parsedJson),
+                    actionType: buttonActionType,
+                    toolName: getToolNameForAction(buttonActionType),
+                    toolArgs: buildToolArgsForAction(buttonActionType, parsedJson),
                     jsonContent: JSON.stringify(parsedJson, null, 2),
-                    buttonText: getButtonTextForAction(actionType),
-                    buttonColor: getButtonColorForAction(actionType),
-                    buttonIcon: getButtonIconForAction(actionType),
-                    description: getDescriptionForAction(actionType)
+                    buttonText: getButtonTextForAction(buttonActionType),
+                    buttonColor: getButtonColorForAction(buttonActionType),
+                    buttonIcon: getButtonIconForAction(buttonActionType),
+                    description: getDescriptionForAction(buttonActionType)
                 };
                 
                 console.log('构建动作数据:', actionData);
@@ -1031,8 +1551,8 @@
     }
 
     // 构建动作对应的工具参数
-    function buildToolArgsForAction(actionType, parsedJson) {
-        switch (actionType) {
+    function buildToolArgsForAction(actionTypeParam, parsedJson) {
+        switch (actionTypeParam) {
             case 'CREATE':
             case 'MODIFY':
                 return {
@@ -1458,45 +1978,12 @@
                 });
             }
             
-            // 处理语法高亮后的按钮HTML
-            messageElement.find('pre code').each(function() {
-                var $code = $(this);
-                
-                // 查找包含按钮HTML的字符串span
-                $code.find('span.hljs-string').each(function() {
-                    var $span = $(this);
-                    var content = $span.html();
-                    
-                    // 检查是否包含按钮HTML
-                    if (content.includes('&lt;button') && content.includes('code-view-btn') && content.includes('查看代码')) {
-                        console.log('找到包含按钮的字符串span');
-                        
-                        // 提取按钮HTML部分
-                        var buttonMatch = content.match(/&lt;button[\s\S]*?&gt;查看代码&lt;\/button&gt;/);
-                        if (buttonMatch) {
-                            var buttonHtml = buttonMatch[0];
-                            
-                            // 解码按钮HTML
-                            var decodedButton = buttonHtml
-                                .replace(/&lt;/g, '<')
-                                .replace(/&gt;/g, '>')
-                                .replace(/&quot;/g, '"')
-                                .replace(/&amp;/g, '&')
-                                .replace(/&#39;/g, "'");
-                            
-                            // 替换原内容
-                            var newContent = content.replace(buttonHtml, decodedButton);
-                            $span.html(newContent);
-                            
-                            console.log('按钮HTML已解码并替换');
-                        }
-                    }
-                });
-            });
+            // 增强代码块显示 - 确保在语法高亮后执行
+            setTimeout(function() {
+                enhanceCodeBlocks(messageElement);
+            }, 100);
             
-            // 检测动作标记
-            detectAndProcessActionMarkers(messageId);
-            
+            // 滚动到底部
             forceScrollToBottom();
         }
     }
@@ -2172,6 +2659,200 @@
         });
     }
 
+    // 增强代码块显示 - 为JSON代码块添加工具栏
+    function enhanceCodeBlocks(messageElement) {
+        console.log('开始增强代码块显示');
+        
+        messageElement.find('pre code').each(function(index) {
+            var $code = $(this);
+            var $pre = $code.parent();
+            var codeText = $code.text().trim();
+            
+            console.log('检查代码块', index, '内容长度:', codeText.length, '前100字符:', codeText.substring(0, 100));
+            
+            // 检查是否已经处理过
+            if ($pre.hasClass('enhanced-code-block')) {
+                console.log('代码块已处理，跳过');
+                return;
+            }
+            
+            // 检查是否是JSON代码块 - 支持对象和数组格式
+            var isJsonFormat = (codeText.startsWith('{') && codeText.endsWith('}')) || 
+                              (codeText.startsWith('[') && codeText.endsWith(']'));
+            
+            if (isJsonFormat) {
+                console.log('检测到JSON代码块，尝试解析...');
+                
+                try {
+                    var parsedJson = JSON.parse(codeText);
+                    console.log('JSON解析成功:', parsedJson);
+                    
+                    // 检查是否是流程配置JSON
+                    var isFlowConfig = false;
+                    
+                    if (Array.isArray(parsedJson)) {
+                        // 数组格式：检查是否包含Node-RED节点
+                        isFlowConfig = parsedJson.some(item => 
+                            item && typeof item === 'object' && 
+                            (item.type === 'tab' || item.type || item.id || item.nodes)
+                        );
+                    } else if (typeof parsedJson === 'object' && parsedJson !== null) {
+                        // 对象格式：检查是否是流程配置
+                        isFlowConfig = parsedJson.nodes || parsedJson.label || parsedJson.id || 
+                                      parsedJson.type || parsedJson.flows;
+                    }
+                    
+                    console.log('是否为流程配置:', isFlowConfig);
+                    
+                    if (isFlowConfig) {
+                        console.log('为JSON代码块添加工具栏');
+                        
+                        // 标记已处理
+                        $pre.addClass('enhanced-code-block');
+                        
+                        // 生成唯一ID
+                        var blockId = 'code-block-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                        $pre.attr('id', blockId);
+                        
+                        // 获取文件名
+                        var fileName = 'flow-config';
+                        if (Array.isArray(parsedJson)) {
+                            var tabNode = parsedJson.find(item => item.type === 'tab');
+                            if (tabNode && tabNode.label) {
+                                fileName = tabNode.label;
+                            }
+                        } else if (parsedJson.label || parsedJson.name) {
+                            fileName = parsedJson.label || parsedJson.name;
+                        }
+                        
+                        // 创建工具栏HTML
+                        var toolbarHtml = `
+                            <div id="code-toolbar-${blockId}" class="code-toolbar" style="
+                                height: 32px;
+                                background: #f8f9fa;
+                                border-bottom: 1px solid #e9ecef;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                padding: 0 12px;
+                                font-size: 12px;
+                                border-radius: 6px 6px 0 0;
+                                box-sizing: border-box;
+                                width: 100%;
+                                flex-shrink: 0;
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                            ">
+                                <!-- 左侧：折叠按钮 + 文件标题 -->
+                                <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+                                    <button class="code-collapse-btn" data-block-id="${blockId}" style="
+                                        background: none;
+                                        border: none;
+                                        color: #6c757d;
+                                        cursor: pointer;
+                                        padding: 2px 4px;
+                                        border-radius: 3px;
+                                        display: flex;
+                                        align-items: center;
+                                        font-size: 10px;
+                                        line-height: 1;
+                                        flex-shrink: 0;
+                                    " title="折叠/展开">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </button>
+                                    <span style="
+                                        color: #495057; 
+                                        font-weight: 500; 
+                                        font-size: 11px;
+                                        white-space: nowrap;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        min-width: 0;
+                                    ">
+                                        <i class="fa fa-file-code-o" style="margin-right: 4px; color: #28a745; font-size: 10px;"></i>
+                                        ${fileName}.json
+                                    </span>
+                                </div>
+                                
+                                <!-- 右侧：操作按钮组 -->
+                                <div style="display: flex; align-items: center; gap: 6px; position: relative; flex-shrink: 0;">
+                                    <button class="code-more-btn" 
+                                            data-block-id="${blockId}"
+                                            data-json-content='${JSON.stringify(parsedJson).replace(/'/g, "&#39;")}'
+                                            style="
+                                                background: #28a745;
+                                                border: none;
+                                                border-radius: 4px;
+                                                color: white;
+                                                padding: 4px 8px;
+                                                font-size: 11px;
+                                                cursor: pointer;
+                                                display: flex;
+                                                align-items: center;
+                                                gap: 4px;
+                                                transition: all 0.2s;
+                                                font-weight: 500;
+                                                line-height: 1;
+                                                white-space: nowrap;
+                                                position: relative;
+                                            "
+                                            onmouseover="this.style.background='#218838'"
+                                            onmouseout="this.style.background='#28a745'"
+                                            title="创建流程">
+                                        <i class="fa fa-check" style="font-size: 9px;"></i>
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        // 修改pre样式以容纳工具栏
+                        $pre.css({
+                            'position': 'relative',
+                            'margin': '16px 0',
+                            'border': '1px solid #e9ecef',
+                            'border-radius': '6px',
+                            'background': '#ffffff',
+                            'padding-top': '32px',
+                            'overflow': 'hidden',
+                            'width': '100%',
+                            'box-sizing': 'border-box'
+                        });
+                        
+                        // 修改code样式
+                        $code.css({
+                            'display': 'block',
+                            'padding': '16px',
+                            'background': 'transparent',
+                            'border': 'none',
+                            'border-radius': '0 0 6px 6px',
+                            'max-height': '400px',
+                            'overflow-x': 'hidden',
+                            'overflow-y': 'auto',
+                            'margin': '0',
+                            'width': '100%',
+                            'box-sizing': 'border-box',
+                            'white-space': 'pre',
+                            'word-wrap': 'normal'
+                        });
+                        
+                        // 添加工具栏到pre元素
+                        $pre.prepend(toolbarHtml);
+                        
+                        console.log('JSON代码块工具栏添加完成:', blockId);
+                    } else {
+                        console.log('不是流程配置JSON，跳过处理');
+                    }
+                } catch (e) {
+                    console.log('JSON解析失败，跳过处理:', e.message);
+                }
+            } else {
+                console.log('不是JSON代码块，跳过处理');
+            }
+        });
+    }
+    
     function copyEditorContent(editorId) {
         try {
             var editor = window.jsonEditors && window.jsonEditors[editorId];
