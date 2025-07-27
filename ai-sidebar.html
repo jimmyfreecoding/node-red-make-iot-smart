@@ -556,6 +556,35 @@
             return null;
         }
     }
+
+
+    // 降级复制方案
+    function fallbackCopyTextToClipboard(text) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            var successful = document.execCommand('copy');
+            if (successful) {
+                RED.notify("JSON数据已复制到剪贴板", "success");
+            } else {
+                RED.notify("复制失败，请手动复制", "error");
+            }
+        } catch (err) {
+            console.error('降级复制失败:', err);
+            RED.notify("复制失败，请手动复制", "error");
+        }
+        
+        document.body.removeChild(textArea);
+    }
+
+
     // 检测和处理动作标记 - 支持ACTION_TYPE格式
     function detectAndProcessActionMarkers(messageId) {
         console.log("=== 检测动作标记 ===");
@@ -1066,7 +1095,6 @@
         
         var action = $(this).data('action');
         var blockId = $(this).data('block-id');
-        var $button = $('.code-more-btn[data-block-id="' + blockId + '"]');
         
         console.log('菜单项点击:', action, blockId);
         
@@ -1089,18 +1117,6 @@
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(formattedJson).then(function() {
                         RED.notify("JSON数据已复制到剪贴板", "success");
-                        
-                        // 临时更新按钮状态显示复制成功
-                        var originalHtml = $button.html();
-                        var originalBg = $button.css('background-color');
-                        
-                        $button.html('<i class="fa fa-check" style="font-size: 9px;"></i> 已复制')
-                               .css('background', '#10b981');
-                        
-                        setTimeout(function() {
-                            $button.html(originalHtml).css('background', originalBg);
-                        }, 2000);
-                        
                     }).catch(function(err) {
                         console.error('复制失败:', err);
                         fallbackCopyTextToClipboard(formattedJson);
@@ -1116,14 +1132,6 @@
         
         // 处理创建操作
         if (action === 'create-new' || action === 'create-current') {
-            // 更新按钮状态为执行中
-            $button.prop('disabled', true)
-                   .html('<i class="fa fa-spinner fa-spin" style="font-size: 9px;"></i> 执行中...')
-                   .css({
-                       'background': '#6c757d',
-                       'cursor': 'not-allowed'
-                   });
-            
             // 获取当前选中的流程信息
             var selectedFlow = null;
             var nodeId = null;
@@ -1157,7 +1165,6 @@
             
             if (!nodeId) {
                 RED.notify("未找到API配置节点", "error");
-                resetButton($button);
                 return;
             }
             
@@ -1174,6 +1181,12 @@
             }
             
             console.log('执行create-flow工具:', toolArgs);
+            
+            // 显示执行中的消息
+            var executingMsg = action === 'create-new' ? 
+                "🔄 正在创建新流程..." : 
+                "🔄 正在添加到当前流程...";
+            addMessageToChat("system", executingMsg);
             
             // 调用MCP工具
             fetch('/make-iot-smart/execute-tool', {
@@ -1193,14 +1206,6 @@
                 console.log('工具执行结果:', data);
                 
                 if (data.success) {
-                    // 成功执行
-                    $button.css({
-                            'background': '#10b981',
-                            'cursor': 'default'
-                        })
-                        .html('<i class="fa fa-check" style="font-size: 9px;"></i> 已完成')
-                        .prop('disabled', true);
-                    
                     // 显示成功消息
                     var successMsg = action === 'create-new' ? 
                         "✅ 新流程创建成功！" : 
@@ -1213,17 +1218,16 @@
                     }
                 } else {
                     // 执行失败
-                    resetButton($button);
                     addMessageToChat("error", "❌ 工具执行失败: " + data.error);
                 }
             })
             .catch(error => {
                 console.error('工具调用失败:', error);
-                resetButton($button);
                 addMessageToChat("error", "❌ 网络错误: " + error.message);
             });
         }
-    });  
+    });
+  
     function fallbackCopyTextToClipboard(text) {
         var textArea = document.createElement("textarea");
         textArea.value = text;
