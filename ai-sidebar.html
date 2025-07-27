@@ -525,7 +525,37 @@
         }
         return configNodeId;
     }
-
+    // 从代码块中获取JSON数据
+    function getJsonFromCodeBlock(blockId) {
+        try {
+            var $codeBlock = $('#' + blockId);
+            if (!$codeBlock.length) {
+                console.error('未找到代码块:', blockId);
+                return null;
+            }
+            
+            // 查找代码块中的code元素
+            var $code = $codeBlock.find('code');
+            if (!$code.length) {
+                console.error('代码块中未找到code元素:', blockId);
+                return null;
+            }
+            
+            // 获取代码文本内容
+            var codeText = $code.text().trim();
+            
+            // 尝试解析JSON
+            var parsedJson = JSON.parse(codeText);
+            return {
+                jsonString: codeText,
+                parsedJson: parsedJson
+            };
+            
+        } catch (e) {
+            console.error('从代码块获取JSON失败:', e, 'blockId:', blockId);
+            return null;
+        }
+    }
     // 检测和处理动作标记 - 支持ACTION_TYPE格式
     function detectAndProcessActionMarkers(messageId) {
         console.log("=== 检测动作标记 ===");
@@ -887,13 +917,12 @@
             }
         });
     }
-        // 添加更多选项按钮的下拉菜单事件处理
+    // 添加更多选项按钮的下拉菜单事件处理
     $(document).on('click', '.code-more-btn', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
         var blockId = $(this).data('block-id');
-        var jsonContent = $(this).data('json-content');
         var $button = $(this);
         var existingMenu = $('.code-dropdown-menu');
         
@@ -963,7 +992,7 @@
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 line-height: 1;
             ">
-                <div class="menu-item" data-action="copy" data-block-id="${blockId}" data-json-content='${jsonContent}' style="
+                <div class="menu-item" data-action="copy" data-block-id="${blockId}" style="
                     padding: 10px 16px;
                     cursor: pointer;
                     display: flex;
@@ -981,7 +1010,7 @@
                     <i class="fa fa-copy" style="font-size: 12px; width: 14px; color: #6b7280;"></i>
                     <span>Copy</span>
                 </div>
-                <div class="menu-item" data-action="create-new" data-block-id="${blockId}" data-json-content='${jsonContent}' style="
+                <div class="menu-item" data-action="create-new" data-block-id="${blockId}" style="
                     padding: 10px 16px;
                     cursor: pointer;
                     display: flex;
@@ -999,7 +1028,7 @@
                     <i class="fa fa-plus" style="font-size: 12px; width: 14px; color: #6b7280;"></i>
                     <span>在新流程中创建</span>
                 </div>
-                <div class="menu-item" data-action="create-current" data-block-id="${blockId}" data-json-content='${jsonContent}' style="
+                <div class="menu-item" data-action="create-current" data-block-id="${blockId}" style="
                     padding: 10px 16px;
                     cursor: pointer;
                     display: flex;
@@ -1018,7 +1047,10 @@
                     <span>在${currentFlowName}中创建</span>
                 </div>
             </div>
-        `; $button.parent().append(menuHtml);
+        `;
+        
+        // 将菜单添加到按钮的父容器中
+        $button.parent().append(menuHtml);
         
         // 点击其他地方关闭菜单
         $(document).on('click.code-dropdown', function(e) {
@@ -1028,14 +1060,12 @@
             }
         });
     });
-    
     // 处理下拉菜单项点击
     $(document).on('click', '.menu-item', function(e) {
         e.preventDefault();
         
         var action = $(this).data('action');
         var blockId = $(this).data('block-id');
-        var jsonContent = $(this).data('json-content');
         var $button = $('.code-more-btn[data-block-id="' + blockId + '"]');
         
         console.log('菜单项点击:', action, blockId);
@@ -1044,11 +1074,17 @@
         $('.code-dropdown-menu').remove();
         $(document).off('click.code-dropdown');
         
+        // 从代码块中获取JSON数据
+        var jsonData = getJsonFromCodeBlock(blockId);
+        if (!jsonData) {
+            RED.notify("无法获取JSON数据", "error");
+            return;
+        }
+        
         // 处理复制操作
         if (action === 'copy') {
             try {
-                var parsedJson = JSON.parse(jsonContent);
-                var formattedJson = JSON.stringify(parsedJson, null, 2);
+                var formattedJson = JSON.stringify(jsonData.parsedJson, null, 2);
                 
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(formattedJson).then(function() {
@@ -1125,21 +1161,11 @@
                 return;
             }
             
-            // 解析JSON内容
-            var parsedJson;
-            try {
-                parsedJson = JSON.parse(jsonContent);
-            } catch (e) {
-                RED.notify("JSON格式错误", "error");
-                resetButton($button);
-                return;
-            }
-            
             // 构建工具参数
             var toolArgs = {
-                flowJson: JSON.stringify(parsedJson),
-                label: parsedJson.label || '新流程',
-                description: parsedJson.description || ''
+                flowJson: jsonData.jsonString, // 使用原始JSON字符串
+                label: jsonData.parsedJson.label || '新流程',
+                description: jsonData.parsedJson.description || ''
             };
             
             // 如果是在当前流程中创建，添加流程ID
@@ -1197,8 +1223,7 @@
                 addMessageToChat("error", "❌ 网络错误: " + error.message);
             });
         }
-    });
-    
+    });  
     function fallbackCopyTextToClipboard(text) {
         var textArea = document.createElement("textarea");
         textArea.value = text;
