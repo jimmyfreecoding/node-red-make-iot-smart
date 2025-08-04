@@ -509,16 +509,28 @@
     }
 
     function getSelectedConfigNodeId() {
-        // 查找api-config类型的配置节点
+        // 首先查找AI助手节点，然后获取其关联的API配置节点
         var configNodeId = null;
         try {
-            RED.nodes.eachConfig(function(configNode) {
-                if (configNode.type === 'api-config') {
-                    configNodeId = configNode.id;
-                    console.log("找到api-config节点:", configNodeId, configNode);
+            // 查找make-iot-smart类型的AI助手节点
+            RED.nodes.eachNode(function(node) {
+                if (node.type === 'make-iot-smart' && node.apiConfig) {
+                    configNodeId = node.apiConfig;
+                    console.log("通过AI助手节点找到api-config:", configNodeId, node);
                     return false; // 找到第一个就停止
                 }
             });
+            
+            // 如果没有通过AI助手节点找到，直接查找api-config节点
+            if (!configNodeId) {
+                RED.nodes.eachConfig(function(configNode) {
+                    if (configNode.type === 'api-config') {
+                        configNodeId = configNode.id;
+                        console.log("直接找到api-config节点:", configNodeId, configNode);
+                        return false; // 找到第一个就停止
+                    }
+                });
+            }
             
             // 如果没有找到，尝试创建一个默认的配置节点
             if (!configNodeId) {

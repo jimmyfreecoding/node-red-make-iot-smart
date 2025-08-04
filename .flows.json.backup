@@ -1,0 +1,52 @@
+[
+    {
+        "id": "workspace-001",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "api-config-001",
+        "type": "api-config",
+        "name": "Default AI Config",
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "useDifferentModels": false,
+        "planningModel": "",
+        "executionModel": "",
+        "temperature": 0.1,
+        "maxTokens": 2000,
+        "enableMcp": true,
+        "mcpCommand": "npx @supcon-international/node-red-mcp-server",
+        "mcpArgs": "",
+        "mcpEnv": ""
+    },
+    {
+        "id": "bd1b195657d18eb1",
+        "type": "inject",
+        "z": "workspace-001",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    }
+]

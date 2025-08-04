@@ -14,23 +14,49 @@
 (function ($) {
     RED.nodes.registerType('make-iot-smart', {
         category: 'config',
-        hasUsers: false,
         defaults: {
-            name: { value: "AutoLayout" },
+            name: { value: "AI助手" },
+            apiConfig: { value: "", type: "api-config", required: true },
             algorithm: { value: "dagre_lr" },
-            settings: { value: {} }
+            settings: { value: {} },
+            valid: { value: true }
         },
-        paletteLabel: 'AutoLayout',
+        inputs: 0,
+        outputs: 0,
+        icon: "font-awesome/fa-magic",
+        paletteLabel: 'AI助手',
         label: function () {
-            return this.name;
+            return this.name || "AI助手";
+        },
+        oneditprepare: function() {
+            // 自动隐藏节点
+            var node = this;
+            setTimeout(function() {
+                if (node.z && RED.view) {
+                    // 将节点移到画布外不可见区域
+                    node.x = -1000;
+                    node.y = -1000;
+                    RED.view.redraw();
+                }
+            }, 100);
         }
     });
 })(jQuery);
 </script>
 
-<!-- The html for the config node does NOT include input fields, because the data only arrives from user input in the sidebar screen. -->
+<!-- AI助手节点的HTML模板 -->
 <script type="text/x-red" data-template-name="make-iot-smart">
-    <div class="form-tips">This config node is read-only, because it stores the information entered in the 'Auto Layout' sidebar.</div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> 名称</label>
+        <input type="text" id="node-input-name" placeholder="AI助手">
+    </div>
+    <div class="form-row">
+        <label for="node-input-apiConfig"><i class="fa fa-cog"></i> API配置</label>
+        <input type="text" id="node-input-apiConfig">
+    </div>
+    <div class="form-tips">
+        <p>此节点会自动隐藏，用于连接AI配置。如果被删除，系统会自动重新创建。</p>
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="make-iot-smart">
