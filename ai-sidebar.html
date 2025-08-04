@@ -395,7 +395,17 @@
         .catch(error => {
             console.error('AI请求失败:', error);
             $("#" + loadingMessageId).remove();
-            addMessageToChat("error", "❌ AI请求失败: " + error.message);
+            
+            var errorMessage = "❌ AI请求失败: " + error.message;
+            addMessageToChat("error", errorMessage);
+            
+            // 检查是否是网络或认证相关错误，显示RED.notify通知
+            if (error.message.includes('401') || error.message.includes('403') || 
+                error.message.includes('Unauthorized') || error.message.includes('API key')) {
+                RED.notify('API密钥认证失败，请检查配置节点中的API密钥是否正确', 'error');
+            } else {
+                RED.notify('AI服务连接失败，请检查网络连接和配置', 'error');
+            }
         });
     }
 
@@ -441,7 +451,12 @@
                 
             case 'error':
                 if (currentStreamMessageId) {
-                    appendToMessage(currentStreamMessageId, `❌ 错误: ${data.error}`);
+                    appendToMessage(currentStreamMessageId, `❌ 错误: ${data.content || data.error}`);
+                }
+                
+                // 检查是否是API认证失败错误，显示RED.notify通知
+                if (data.code === 'API_AUTH_FAILED' || data.notify) {
+                    RED.notify(data.content || data.error || 'API密钥认证失败', 'error');
                 }
                 break;
                 

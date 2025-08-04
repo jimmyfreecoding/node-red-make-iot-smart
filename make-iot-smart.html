@@ -54,7 +54,7 @@
     </div>
     <div class="form-row">
         <label for="node-config-input-apiKey"><i class="fa fa-key"></i> API密钥</label>
-        <input type="password" id="node-config-input-apiKey">
+        <input type="password" id="node-config-input-apiKey" placeholder="请输入API密钥">
     </div>
     <div class="form-row">
         <div class="form-tips">此密钥存储在本地，仅用于从此扩展发出API请求。</div>
@@ -237,6 +237,25 @@
             if (node.enableMcp) {
                 $('.mcp-config').show();
             }
+            
+            // API密钥输入验证 - 只允许数字、字母和常见符号
+            $('#node-config-input-apiKey').on('input', function() {
+                var value = $(this).val();
+                // 只保留ASCII字符：数字、字母、常见符号
+                var filteredValue = value.replace(/[^\x20-\x7E]/g, '');
+                if (value !== filteredValue) {
+                    $(this).val(filteredValue);
+                    // 显示提示信息
+                    if (!$('#apikey-warning').length) {
+                        $(this).after('<div id="apikey-warning" style="color: orange; font-size: 12px; margin-top: 2px;"><i class="fa fa-warning"></i> 已过滤非法字符，API密钥只能包含数字、字母和符号</div>');
+                        setTimeout(function() {
+                            $('#apikey-warning').fadeOut(function() {
+                                $(this).remove();
+                            });
+                        }, 3000);
+                    }
+                }
+            });
         }
     });
 </script>

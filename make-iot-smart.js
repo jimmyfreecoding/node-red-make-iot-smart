@@ -364,7 +364,9 @@ Always provide clear explanations, properly formatted JSON, and action type indi
         // 获取模型实例
         node.getModel = function(modelType = 'default') {
             if (!node.apiKey) {
-                throw new Error('API key is required');
+                const error = new Error('API密钥缺失，请在配置节点中设置API密钥');
+                error.code = 'API_KEY_MISSING';
+                throw error;
             }
             
             let modelName;
@@ -377,7 +379,9 @@ Always provide clear explanations, properly formatted JSON, and action type indi
             }
             
             if (!modelName) {
-                throw new Error('Model name is required');
+                const error = new Error('模型名称缺失，请在配置节点中选择模型');
+                error.code = 'MODEL_NAME_MISSING';
+                throw error;
             }
             
             try {
@@ -404,16 +408,48 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                         throw new Error(`Unsupported provider: ${node.provider}`);
                 }
             } catch (error) {
+                // 检查是否是API认证相关错误
+                if (node.isAuthError(error)) {
+                    const authError = new Error('API密钥认证失败，请检查密钥是否正确');
+                    authError.code = 'API_AUTH_FAILED';
+                    node.error(`Model creation failed: ${authError.message}`);
+                    throw authError;
+                }
+                
                 node.error(`Model creation failed: ${error.message}`);
                 throw error;
             }
         };
+        
+        // 检查是否是API认证错误
+        node.isAuthError = function(error) {
+            if (!error) return false;
+            
+            const errorMessage = error.message ? error.message.toLowerCase() : '';
+            const errorCode = error.code ? error.code.toLowerCase() : '';
+            const statusCode = error.status || error.statusCode;
+            
+            // 检查常见的认证失败错误
+            return (
+                statusCode === 401 ||
+                statusCode === 403 ||
+                errorCode.includes('unauthorized') ||
+                errorCode.includes('invalid_api_key') ||
+                errorCode.includes('authentication') ||
+                errorMessage.includes('unauthorized') ||
+                errorMessage.includes('invalid api key') ||
+                errorMessage.includes('authentication failed') ||
+                errorMessage.includes('api key') ||
+                errorMessage.includes('invalid_api_key') ||
+                errorMessage.includes('incorrect api key')
+            );
+        };
 
         // 调用LLM（支持工具调用）
         node.callLLMWithTools = async function(messages, tools = []) {
-            const model = node.getModel();
-            
             try {
+                const model = node.getModel();
+                
                 const result = await generateText({
                     model: model,
                     messages: messages,
@@ -429,6 +465,14 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                     usage: result.usage
                 };
             } catch (error) {
+                // 检查是否是API认证相关错误
+                if (node.isAuthError(error)) {
+                    const authError = new Error('API密钥认证失败，请检查密钥是否正确');
+                    authError.code = 'API_AUTH_FAILED';
+                    node.error(`LLM call failed: ${authError.message}`);
+                    throw authError;
+                }
+                
                 node.error(`LLM call failed: ${error.message}`);
                 throw error;
             }
@@ -718,6 +762,8 @@ Always provide clear explanations, properly formatted JSON, and action type indi
     RED.httpAdmin.post('/make-iot-smart/chat-stream', async function(req, res) {
         console.log('收到聊天请求:', req.body);
         
+        let configNode; // 在函数顶部声明configNode变量
+        
         try {
             const { message, history = [], nodeId, selectedFlow, selectedNodes, flowData, scenario: userScenario } = req.body;
             
@@ -726,7 +772,7 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                 return res.status(400).json({ error: 'Node ID is required' });
             }
             
-            const configNode = RED.nodes.getNode(nodeId);
+            configNode = RED.nodes.getNode(nodeId);
             if (!configNode) {
                 console.error('找不到配置节点:', nodeId);
                 return res.status(404).json({ error: 'Configuration node not found' });
@@ -908,7 +954,25 @@ Always provide clear explanations, properly formatted JSON, and action type indi
             
         } catch (error) {
             console.error('Stream chat error:', error);
-            res.write(`data: ${JSON.stringify({ type: 'error', content: error.message })}\n\n`);
+            
+            // 检查是否是API认证相关错误
+            if (configNode && configNode.isAuthError && configNode.isAuthError(error)) {
+                const authErrorMsg = 'API密钥认证失败，请检查配置节点中的API密钥是否正确';
+                
+                // 发送错误到前端
+                res.write(`data: ${JSON.stringify({ 
+                    type: 'error', 
+                    content: authErrorMsg,
+                    code: 'API_AUTH_FAILED',
+                    notify: true // 标记需要显示通知
+                })}\n\n`);
+                
+                console.error('API认证失败:', error.message);
+            } else {
+                // 其他错误
+                res.write(`data: ${JSON.stringify({ type: 'error', content: error.message })}\n\n`);
+            }
+            
             res.end();
         }
     });
