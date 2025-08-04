@@ -23,6 +23,16 @@
         "mcpEnv": ""
     },
     {
+        "id": "0d029120c2a5184c",
+        "type": "make-iot-smart",
+        "z": "workspace-001",
+        "d": true,
+        "name": "AI助手",
+        "apiConfig": "api-config-001",
+        "algorithm": "dagre_lr",
+        "settings": {}
+    },
+    {
         "id": "bd1b195657d18eb1",
         "type": "inject",
         "z": "workspace-001",
@@ -48,18 +58,5 @@
         "wires": [
             []
         ]
-    },
-    {
-        "id": "0d029120c2a5184c",
-        "type": "make-iot-smart",
-        "name": "AI助手",
-        "apiConfig": "api-config-001",
-        "algorithm": "dagre_lr",
-        "settings": {},
-        "valid": true,
-        "d": true,
-        "x": 100,
-        "y": 100,
-        "z": "workspace-001"
     }
 ]

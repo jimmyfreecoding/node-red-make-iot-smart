@@ -38,14 +38,11 @@ module.exports = function (RED) {
         node.temperature = parseFloat(config.temperature) || 0.1;
         node.maxTokens = parseInt(config.maxTokens) || 2000;
         
-        // MCP配置 - 添加详细日志
-        node.mcpCommand = config.mcpCommand || 'npx @supcon-international/node-red-mcp-server';
-        // MCP配置 - 使用node-red-contrib-mcp-server
-        // node.mcpCommand = config.mcpCommand || 'npx node-red-contrib-mcp-server';
-
+        // MCP配置 - 使用node-red-mcp-server
+        node.mcpCommand = config.mcpCommand || 'npx node-red-mcp-server';
         node.mcpArgs = config.mcpArgs || '';
-        node.mcpEnv = config.mcpEnv || '';
-        node.enableMcp = config.enableMcp || false;
+        node.mcpEnv = config.mcpEnv || 'NODE_RED_URL=http://localhost:1880';
+        node.enableMcp = config.enableMcp !== false; // 默认启用MCP
         
         console.log('API配置节点初始化:', {
             name: node.name,
@@ -672,6 +669,19 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                             parameters: zodSchema,
                             execute: async (params) => {
                                 console.log(`执行MCP工具: ${mcpTool.function.name}`, params);
+                                
+                                // 特殊处理create-flow工具的flowJson参数
+                                if (mcpTool.function.name === 'create-flow' && params.flowJson) {
+                                    if (Array.isArray(params.flowJson)) {
+                                        console.log('检测到flowJson是数组，转换为字符串');
+                                        params.flowJson = JSON.stringify(params.flowJson);
+                                    } else if (typeof params.flowJson === 'object') {
+                                        console.log('检测到flowJson是对象，转换为字符串');
+                                        params.flowJson = JSON.stringify(params.flowJson);
+                                    }
+                                    console.log('处理后的flowJson类型:', typeof params.flowJson);
+                                }
+                                
                                 const result = await node.executeMCPTool(mcpTool.function.name, params);
                                 return node.formatToolResult(result);
                             }

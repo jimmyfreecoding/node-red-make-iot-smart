@@ -16,11 +16,7 @@
         "planningModel": "",
         "executionModel": "",
         "temperature": 0.1,
-        "maxTokens": 2000,
-        "enableMcp": true,
-        "mcpCommand": "npx @supcon-international/node-red-mcp-server",
-        "mcpArgs": "",
-        "mcpEnv": ""
+        "maxTokens": 2000
     },
     {
         "id": "0d029120c2a5184c",

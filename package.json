@@ -33,10 +33,13 @@
         "@ai-sdk/openai": "^0.0.66",
         "@modelcontextprotocol/sdk": "^1.15.1",
         "ai": "^3.4.32",
-        "zod": "^3.22.4",
-        "showdown": "^2.1.0",
+        "github-markdown-css": "^5.4.0",
         "highlight.js": "^11.9.0",
-        "github-markdown-css": "^5.4.0"
+        "mcp-hello-world": "^1.1.2",
+        "node-red-contrib-mcp-server": "^1.1.5",
+        "node-red-mcp-server": "^1.0.2",
+        "showdown": "^2.1.0",
+        "zod": "^3.22.4"
     },
     "node-red": {
         "version": ">=2.0.0",
