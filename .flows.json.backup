@@ -16,11 +16,7 @@
         "planningModel": "",
         "executionModel": "",
         "temperature": 0.1,
-        "maxTokens": 2000,
-        "enableMcp": true,
-        "mcpCommand": "npx @supcon-international/node-red-mcp-server",
-        "mcpArgs": "",
-        "mcpEnv": ""
+        "maxTokens": 2000
     },
     {
         "id": "0d029120c2a5184c",
@@ -58,5 +54,143 @@
         "wires": [
             []
         ]
+    },
+    {
+        "type": "tab",
+        "label": "新流程",
+        "id": "85e5a220ae2fb90a"
+    },
+    {
+        "id": "flow-1754348598316-9ed2ohsqc",
+        "type": "inject",
+        "z": "85e5a220ae2fb90a",
+        "name": "触发流程",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "flow-1754348598316-3kdc42dt1"
+            ]
+        ]
+    },
+    {
+        "id": "flow-1754348598316-3kdc42dt1",
+        "type": "function",
+        "z": "85e5a220ae2fb90a",
+        "name": "格式化时间",
+        "func": "// 将时间戳转换为易读的格式\nmsg.payload = new Date(msg.payload).toLocaleString();\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 100,
+        "wires": [
+            [
+                "flow-1754348598316-i2x1fpahd"
+            ]
+        ]
+    },
+    {
+        "id": "flow-1754348598316-i2x1fpahd",
+        "type": "debug",
+        "z": "85e5a220ae2fb90a",
+        "name": "显示结果",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "type": "tab",
+        "label": "新流程",
+        "id": "2d273a5e4318abc3"
+    },
+    {
+        "id": "flow-1754348618917-ca71jr3po",
+        "type": "inject",
+        "z": "2d273a5e4318abc3",
+        "name": "触发流程",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "flow-1754348618917-fl1qjgspe"
+            ]
+        ]
+    },
+    {
+        "id": "flow-1754348618917-fl1qjgspe",
+        "type": "function",
+        "z": "2d273a5e4318abc3",
+        "name": "格式化时间",
+        "func": "// 将时间戳转换为易读的格式\nmsg.payload = new Date(msg.payload).toLocaleString();\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 100,
+        "wires": [
+            [
+                "flow-1754348618917-o8dmwbokz"
+            ]
+        ]
+    },
+    {
+        "id": "flow-1754348618917-o8dmwbokz",
+        "type": "debug",
+        "z": "2d273a5e4318abc3",
+        "name": "显示结果",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 100,
+        "wires": []
     }
 ]

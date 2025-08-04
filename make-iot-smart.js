@@ -672,14 +672,52 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                                 
                                 // 特殊处理create-flow工具的flowJson参数
                                 if (mcpTool.function.name === 'create-flow' && params.flowJson) {
-                                    if (Array.isArray(params.flowJson)) {
-                                        console.log('检测到flowJson是数组，转换为字符串');
-                                        params.flowJson = JSON.stringify(params.flowJson);
-                                    } else if (typeof params.flowJson === 'object') {
-                                        console.log('检测到flowJson是对象，转换为字符串');
-                                        params.flowJson = JSON.stringify(params.flowJson);
+                                    let flowData;
+                                    
+                                    // 如果是字符串，尝试解析为JSON
+                                    if (typeof params.flowJson === 'string') {
+                                        try {
+                                            flowData = JSON.parse(params.flowJson);
+                                            console.log('解析flowJson字符串为对象');
+                                        } catch (error) {
+                                            console.error('解析flowJson失败:', error);
+                                            throw new Error('Invalid flowJson format: ' + error.message);
+                                        }
+                                    } else {
+                                        flowData = params.flowJson;
                                     }
-                                    console.log('处理后的flowJson类型:', typeof params.flowJson);
+                                    
+                                    // 确保flowData是数组格式（Node-RED流程格式）
+                                    if (Array.isArray(flowData)) {
+                                        // 创建包含nodes属性的对象，符合Node-RED addFlow要求
+                                        params.flowJson = {
+                                            nodes: flowData,
+                                            label: params.label || '新流程',
+                                            description: params.description || ''
+                                        };
+                                        console.log('转换flowJson为包含nodes属性的对象');
+                                    } else if (flowData && typeof flowData === 'object') {
+                                        // 如果已经是对象，确保有nodes属性
+                                        if (!flowData.nodes) {
+                                            // 如果对象没有nodes属性，假设整个对象就是nodes数组
+                                            params.flowJson = {
+                                                nodes: [flowData],
+                                                label: params.label || '新流程',
+                                                description: params.description || ''
+                                            };
+                                        } else {
+                                            params.flowJson = flowData;
+                                        }
+                                        console.log('确保flowJson包含nodes属性');
+                                    } else {
+                                        throw new Error('flowJson must be an array or object with nodes property');
+                                    }
+                                    
+                                    console.log('处理后的flowJson结构:', {
+                                        hasNodes: !!params.flowJson.nodes,
+                                        nodesCount: Array.isArray(params.flowJson.nodes) ? params.flowJson.nodes.length : 0,
+                                        label: params.flowJson.label
+                                    });
                                 }
                                 
                                 const result = await node.executeMCPTool(mcpTool.function.name, params);
