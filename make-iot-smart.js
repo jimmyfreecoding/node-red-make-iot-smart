@@ -1028,7 +1028,17 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                 console.log(`合并后的工具数量: ${Object.keys(toolsObject).length}`);
                 console.log('工具名称:', Object.keys(toolsObject));
                 
-                const model = configNode.getModel();
+                let model;
+                try {
+                    model = configNode.getModel();
+                } catch (error) {
+                    if (error.code === 'API_KEY_MISSING') {
+                        // 通过SSE发送错误消息给客户端
+                        sendSSE({ type: 'error', message: 'API密钥缺失，请在配置节点中设置API密钥' });
+                        return;
+                    }
+                    throw error;
+                }
                 
                 const result = await streamText({
                     model: model,
@@ -1091,7 +1101,17 @@ Always provide clear explanations, properly formatted JSON, and action type indi
             } else {
                 console.log('开始调用LLM（无工具）...');
                 
-                const model = configNode.getModel();
+                let model;
+                try {
+                    model = configNode.getModel();
+                } catch (error) {
+                    if (error.code === 'API_KEY_MISSING') {
+                        // 通过SSE发送错误消息给客户端
+                        sendSSE({ type: 'error', message: 'API密钥缺失，请在配置节点中设置API密钥' });
+                        return;
+                    }
+                    throw error;
+                }
                 
                 const result = await streamText({
                     model: model,

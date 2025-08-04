@@ -451,13 +451,11 @@
                 
             case 'error':
                 if (currentStreamMessageId) {
-                    appendToMessage(currentStreamMessageId, `❌ 错误: ${data.content || data.error}`);
+                    appendToMessage(currentStreamMessageId, `❌ 错误: ${data.message || data.content || data.error}`);
                 }
                 
-                // 检查是否是API认证失败错误，显示RED.notify通知
-                if (data.code === 'API_AUTH_FAILED' || data.notify) {
-                    RED.notify(data.content || data.error || 'API密钥认证失败', 'error');
-                }
+                // 显示RED.notify通知
+                RED.notify(data.message || data.content || data.error || '发生未知错误', 'error');
                 break;
                 
             case 'done':
