@@ -341,7 +341,7 @@
         addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
         
         // 使用fetch进行流式请求
-        fetch('/make-iot-smart/chat-stream', {
+        fetch('/ai-sidebar/stream-chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1221,7 +1221,7 @@
             addMessageToChat("system", executingMsg);
             
             // 调用MCP工具
-            fetch('/make-iot-smart/execute-tool', {
+            fetch('/ai-sidebar/execute-tool', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1381,7 +1381,7 @@
                });
         
         // 调用MCP工具
-        fetch('/make-iot-smart/execute-tool', {
+        fetch('/ai-sidebar/execute-tool', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2233,7 +2233,7 @@
         
         // 发送工具执行请求
         $.ajax({
-            url: '/make-iot-smart/execute-tool',
+            url: '/ai-sidebar/execute-tool',
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -2458,7 +2458,7 @@
             console.warn("获取当前流程失败:", error);
         }
         
-        fetch('/make-iot-smart/execute-tool', {
+        fetch('/ai-sidebar/execute-tool', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

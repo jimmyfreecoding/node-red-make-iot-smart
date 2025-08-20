@@ -13,7 +13,9 @@ Node-RED Make IoT Smart 是一个专为Node-RED开发设计的综合性AI助手�
 - **智能代码建议**：为Node-RED流程提供上下文感知的代码推荐。
 - **智能流程分析**：分析流程并提供优化建议。
 - **自然语言界面**：使用自然语言命令与Node-RED环境交互。
-- **多提供商支持**：兼容DeepSeek、OpenAI和Anthropic AI模型。
+- **多提供商支持**：基于LangChain.js框架，支持OpenAI、Anthropic、Google、DeepSeek等多种AI模型。
+- **智能记忆管理**：基于SQLite的短期和长期记忆系统，支持对话历史、用户偏好和流程模板存储。
+- **场景化提示词**：JSON配置的场景化提示词管理，支持动态参数注入。
 
 ### 🔧 开发工具
 
@@ -21,7 +23,9 @@ Node-RED Make IoT Smart 是一个专为Node-RED开发设计的综合性AI助手�
 - **配置管理**：为不同AI提供商提供集中式API配置。
 - **交互式侧边栏**：集成到Node-RED编辑器中的专用AI助手面板。
 - **JSON编辑器**：内置配置文件编辑器，支持语法高亮。
-- **场景化支持**：为六大场景提供定制支持：
+- **MCP工具集成**：支持Model Context Protocol (MCP)工具调用，扩展AI助手能力。
+- **LangChain工具管理**：统一的工具管理框架，支持内置工具和MCP工具。
+- **场景化支持**：为七大场景提供定制支持：
   - **学习**：解释节点和概念，提供示例流程。
   - **方案**：提供多种IoT解决方案，包含流程JSON和节点安装指导。
   - **集成**：协助集成协议（例如MQTT、Modbus）或软件。
@@ -95,11 +99,13 @@ npm install @jimmyfreecoding/node-red-make-iot-smart
 ## 支持的AI提供商
 
 
-| 提供商    | 模型                          | 功能特性           |
-| --------- | ----------------------------- | ------------------ |
-| DeepSeek  | deepseek-chat, deepseek-coder | 经济高效，专注编码 |
-| OpenAI    | GPT-3.5, GPT-4                | 通用目的，广泛兼容 |
-| Anthropic | Claude-3                      | 高级推理，注重安全 |
+| 提供商    | 模型                                    | 功能特性           |
+| --------- | --------------------------------------- | ------------------ |
+| OpenAI    | GPT-3.5, GPT-4, GPT-4o                 | 通用目的，广泛兼容 |
+| Anthropic | Claude-3, Claude-3.5                    | 高级推理，注重安全 |
+| Google    | Gemini Pro, Gemini Flash                | 多模态，高性能     |
+| DeepSeek  | deepseek-chat, deepseek-coder           | 经济高效，专注编码 |
+| 其他      | 通过LangChain.js支持的所有LLM提供商     | 扩展性强，灵活配置 |
 
 ## API配置
 
@@ -117,8 +123,26 @@ npm install @jimmyfreecoding/node-red-make-iot-smart
 ├── ai-sidebar-config.json   # UI配置
 ├── make-iot-smart.html      # 节点配置模板
 ├── make-iot-smart.js        # 后端节点实现
+├── lib/
+│   ├── langchain-manager.js # LangChain核心管理器
+│   ├── memory-manager.js    # SQLite记忆管理
+│   └── scenario-manager.js  # 场景化提示词管理
+├── config/
+│   └── scenarios.json       # 场景配置文件
+├── data/
+│   └── memory.db           # SQLite数据库文件
 └── package.json            # 包配置
 ```
+
+### 技术架构
+
+本项目基于**LangChain.js**框架构建，采用模块化架构设计：
+
+- **LangChain Manager**：核心AI模型管理，支持多种LLM提供商
+- **Memory Manager**：基于SQLite的智能记忆系统，支持短期和长期记忆
+- **Scenario Manager**：场景化提示词管理，支持JSON配置和动态参数
+- **Tool Manager**：统一工具管理框架，集成MCP工具和内置工具
+- **API Layer**：RESTful API接口，支持流式聊天和工具执行
 
 ### 贡献
 
@@ -129,13 +153,17 @@ npm install @jimmyfreecoding/node-red-make-iot-smart
 
 ## 路线图
 
-### 第一阶段（当前）
+### 第一阶段（已完成）
 
 - ✅ AI助手集成
 - ✅ 多提供商支持
 - ✅ 交互式侧边栏
 - ✅ 配置管理
 - ✅ 场景化支持
+- ✅ LangChain.js架构迁移
+- ✅ SQLite记忆管理系统
+- ✅ MCP工具集成
+- ✅ 统一工具管理框架
 
 ### 第二阶段（即将推出）
 
