@@ -128,7 +128,7 @@ module.exports = function (RED) {
             try {
                 const serverInfo = await node.mcpClient.getServerInfo();
                 console.log('=== MCP工具原始数据 ===');
-                console.log(JSON.stringify(serverInfo.tools, null, 2));
+                // console.log(JSON.stringify(serverInfo.tools, null, 2));
                 
                 // 转换MCP工具格式为AI SDK兼容格式
                 const convertedTools = serverInfo.tools.map(tool => {
@@ -148,7 +148,7 @@ module.exports = function (RED) {
                         }
                     };
                     
-                    console.log(`转换工具 ${tool.name}:`, JSON.stringify(aiTool, null, 2));
+                    // console.log(`转换工具 ${tool.name}:`, JSON.stringify(aiTool, null, 2));
                     return aiTool;
                 });
                 
@@ -670,57 +670,203 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                             execute: async (params) => {
                                 console.log(`执行MCP工具: ${mcpTool.function.name}`, params);
                                 
-                                // 特殊处理create-flow工具的flowJson参数
-                                if (mcpTool.function.name === 'create-flow' && params.flowJson) {
+                                // 特殊处理create-flow和update-flow工具的flowJson参数
+                                if ((mcpTool.function.name === 'create-flow' || mcpTool.function.name === 'update-flow') && params.flowJson) {
+                                    console.log('开始处理flowJson参数，工具:', mcpTool.function.name);
                                     let flowData;
                                     
                                     // 如果是字符串，尝试解析为JSON
                                     if (typeof params.flowJson === 'string') {
                                         try {
                                             flowData = JSON.parse(params.flowJson);
-                                            console.log('解析flowJson字符串为对象');
+                                            console.log('解析flowJson字符串为对象，类型:', Array.isArray(flowData) ? 'array' : 'object');
                                         } catch (error) {
                                             console.error('解析flowJson失败:', error);
                                             throw new Error('Invalid flowJson format: ' + error.message);
                                         }
                                     } else {
                                         flowData = params.flowJson;
+                                        console.log('flowJson已是对象，类型:', Array.isArray(flowData) ? 'array' : 'object');
                                     }
                                     
                                     // 确保flowData是数组格式（Node-RED流程格式）
                                     if (Array.isArray(flowData)) {
-                                        // 创建包含nodes属性的对象，符合Node-RED addFlow要求
-                                        params.flowJson = {
-                                            nodes: flowData,
-                                            label: params.label || '新流程',
-                                            description: params.description || ''
-                                        };
-                                        console.log('转换flowJson为包含nodes属性的对象');
+                                        console.log('进入数组处理分支，原始节点数:', flowData.length);
+                                        
+                                        if (mcpTool.function.name === 'create-flow') {
+                            // create-flow工具期望包含nodes属性的对象格式，但需要过滤掉tab节点
+                            const functionalNodes = flowData.filter(node => node.type !== 'tab');
+                            const flowObject = {
+                                nodes: functionalNodes,
+                                label: params.label || '新流程',
+                                description: params.description || ''
+                            };
+                            params.flowJson = JSON.stringify(flowObject);
+                            console.log('转换flowJson为对象格式（create-flow），过滤掉tab节点，保留功能节点数:', functionalNodes.length);
+                                        } else {
+                                            // update-flow只需要功能节点，过滤掉tab类型的节点
+                                            const functionalNodes = flowData.filter(node => node.type !== 'tab');
+                                            console.log(`过滤前节点数: ${flowData.length}, 过滤后节点数: ${functionalNodes.length}`);
+                                            // update-flow需要节点数组，并且需要生成唯一ID避免冲突
+                                            // update-flow需要节点数组，并且需要生成唯一ID避免冲突
+                                            const nodesWithUniqueIds = functionalNodes.map(node => {
+                                                const newId = 'flow-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                                                const newNode = { ...node, id: newId };
+                                                
+                                                // 如果节点有z属性（所属流程），需要在update-flow时由工具自动设置
+                                                if (newNode.z) {
+                                                    delete newNode.z;
+                                                }
+                                                
+                                                return newNode;
+                                            });
+                                            
+                                            // 更新节点间的连接关系（wires）
+                                            const idMapping = {};
+                                            functionalNodes.forEach((node, index) => {
+                                                idMapping[node.id] = nodesWithUniqueIds[index].id;
+                                            });
+                                            
+                                            nodesWithUniqueIds.forEach(node => {
+                                                if (node.wires && Array.isArray(node.wires)) {
+                                                    node.wires = node.wires.map(wireArray => 
+                                                        wireArray.map(wireId => idMapping[wireId] || wireId)
+                                                    );
+                                                }
+                                            });
+                                            
+                                            params.flowJson = JSON.stringify(nodesWithUniqueIds);
+                                            console.log('转换flowJson为带唯一ID的节点数组（update-flow）');
+                                        }
                                     } else if (flowData && typeof flowData === 'object') {
                                         // 如果已经是对象，确保有nodes属性
                                         if (!flowData.nodes) {
-                                            // 如果对象没有nodes属性，假设整个对象就是nodes数组
-                                            params.flowJson = {
-                                                nodes: [flowData],
-                                                label: params.label || '新流程',
-                                                description: params.description || ''
-                                            };
+                                            // 如果对象没有nodes属性，假设整个对象就是单个节点
+                                            if (mcpTool.function.name === 'create-flow') {
+                                                // create-flow工具期望包含nodes属性的对象格式，但需要过滤掉tab节点
+                                                const functionalNodes = flowData.type !== 'tab' ? [flowData] : [];
+                                                const flowObject = {
+                                                    nodes: functionalNodes,
+                                                    label: params.label || '新流程',
+                                                    description: params.description || ''
+                                                };
+                                                params.flowJson = JSON.stringify(flowObject);
+                                            } else {
+                                                // update-flow过滤掉tab节点
+                                                const singleNode = flowData.type !== 'tab' ? [flowData] : [];
+                                                params.flowJson = JSON.stringify(singleNode);
+                                            }
                                         } else {
-                                            params.flowJson = flowData;
+                                            // 如果对象有nodes属性
+                                            if (mcpTool.function.name === 'create-flow') {
+                                                // create-flow工具期望包含nodes属性的对象格式，但需要过滤掉tab节点
+                                                const allNodes = Array.isArray(flowData.nodes) ? flowData.nodes : [];
+                                                const functionalNodes = allNodes.filter(node => node.type !== 'tab');
+                                                const flowObject = {
+                                                    nodes: functionalNodes,
+                                                    label: params.label || flowData.label || '新流程',
+                                                    description: params.description || flowData.description || ''
+                                                };
+                                                console.log(`对象格式create-flow过滤掉tab节点，保留功能节点数: ${functionalNodes.length}`);
+                                                params.flowJson = JSON.stringify(flowObject);
+                                            } else {
+                                                // update-flow过滤掉tab节点
+                                                const functionalNodes = Array.isArray(flowData.nodes) ? 
+                                                    flowData.nodes.filter(node => node.type !== 'tab') : [];
+                                                console.log(`对象格式过滤前节点数: ${Array.isArray(flowData.nodes) ? flowData.nodes.length : 0}, 过滤后节点数: ${functionalNodes.length}`);
+                                                 
+                                                 // update-flow需要生成唯一ID
+                                                const nodesWithUniqueIds = functionalNodes.map(node => {
+                                                    const newId = 'flow-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                                                    const newNode = { ...node, id: newId };
+                                                    if (newNode.z) {
+                                                        delete newNode.z;
+                                                    }
+                                                    return newNode;
+                                                });
+                                                
+                                                // 更新连接关系
+                                                const idMapping = {};
+                                                functionalNodes.forEach((node, index) => {
+                                                    idMapping[node.id] = nodesWithUniqueIds[index].id;
+                                                });
+                                                
+                                                nodesWithUniqueIds.forEach(node => {
+                                                    if (node.wires && Array.isArray(node.wires)) {
+                                                        node.wires = node.wires.map(wireArray => 
+                                                            wireArray.map(wireId => idMapping[wireId] || wireId)
+                                                        );
+                                                    }
+                                                });
+                                                
+                                                params.flowJson = JSON.stringify(nodesWithUniqueIds);
+                                            }
                                         }
-                                        console.log('确保flowJson包含nodes属性');
+                                        console.log('确保flowJson格式正确并过滤tab节点');
                                     } else {
                                         throw new Error('flowJson must be an array or object with nodes property');
                                     }
                                     
                                     console.log('处理后的flowJson结构:', {
+                                        isArray: Array.isArray(params.flowJson),
                                         hasNodes: !!params.flowJson.nodes,
-                                        nodesCount: Array.isArray(params.flowJson.nodes) ? params.flowJson.nodes.length : 0,
-                                        label: params.flowJson.label
+                                        nodesCount: Array.isArray(params.flowJson) ? params.flowJson.length : (Array.isArray(params.flowJson.nodes) ? params.flowJson.nodes.length : 0),
+                                        label: params.flowJson.label || params.label
                                     });
                                 }
                                 
-                                const result = await node.executeMCPTool(mcpTool.function.name, params);
+                                // 如果是创建流程工具，且有选中的流程，改为使用update-flow工具
+                                let actualToolName = mcpTool.function.name;
+                                if (mcpTool.function.name === 'create-flow' && selectedFlow && selectedFlow.id) {
+                                    // 改为调用update-flow工具来更新当前流程
+                                    actualToolName = 'update-flow';
+                                    params.id = selectedFlow.id;  // update-flow需要id参数
+                                    
+                                    // 获取当前流程的现有节点和信息
+                                    const currentWorkspace = RED.nodes.workspace(selectedFlow.id);
+                                    const existingNodes = RED.nodes.filterNodes({z: selectedFlow.id});
+                                    
+                                    // 保留当前流程的label
+                                    if (currentWorkspace && currentWorkspace.label) {
+                                        params.label = currentWorkspace.label;
+                                    }
+                                    
+                                    // 计算新节点的起始Y坐标（位于现有节点下方）
+                                    let maxY = 0;
+                                    if (existingNodes.length > 0) {
+                                        maxY = Math.max(...existingNodes.map(node => (node.y || 0) + 50)); // 50是节点高度的估计值
+                                    }
+                                    const startY = maxY + 100; // 在最下方节点下方留100像素间距
+                                    
+                                    // 解析新节点并调整坐标
+                                    let newNodes;
+                                    try {
+                                        newNodes = JSON.parse(params.flowJson);
+                                    } catch (e) {
+                                        console.error('解析flowJson失败:', e);
+                                        newNodes = [];
+                                    }
+                                    
+                                    // 为新节点重新计算坐标
+                                    if (Array.isArray(newNodes)) {
+                                        newNodes.forEach((node, index) => {
+                                            if (node.x !== undefined && node.y !== undefined) {
+                                                // 保持相对位置，但整体向下移动
+                                                const minY = Math.min(...newNodes.map(n => n.y || 0));
+                                                node.y = node.y - minY + startY;
+                                            } else {
+                                                // 如果没有坐标，设置默认位置
+                                                node.x = 100 + (index % 5) * 200; // 每行5个节点
+                                                node.y = startY + Math.floor(index / 5) * 100;
+                                            }
+                                        });
+                                        params.flowJson = JSON.stringify(newNodes);
+                                    }
+                                    
+                                    console.log('AI助手节点改为在当前流程中更新:', selectedFlow.id, '现有节点数:', existingNodes.length, '新节点起始Y:', startY);
+                                }
+                                
+                                const result = await node.executeMCPTool(actualToolName, params);
                                 return node.formatToolResult(result);
                             }
                         });
@@ -1290,7 +1436,7 @@ Always provide clear explanations, properly formatted JSON, and action type indi
     // 执行工具调用端点（用于按钮点击）
     RED.httpAdmin.post('/make-iot-smart/execute-tool', async function(req, res) {
         try {
-            const { toolName, toolArgs, nodeId, selectedFlow } = req.body;
+            const { toolName: originalToolName, toolArgs, nodeId, selectedFlow } = req.body;
             
             if (!nodeId) {
                 return res.status(400).json({ error: 'Node ID is required' });
@@ -1301,23 +1447,265 @@ Always provide clear explanations, properly formatted JSON, and action type indi
                 return res.status(404).json({ error: 'Configuration node not found' });
             }
             
-            console.log('执行工具调用:', toolName, toolArgs);
+            console.log('执行工具调用:', originalToolName, toolArgs);
             
-            // 如果是创建流程工具，且有选中的流程，添加到当前流程
-            if (toolName === 'create-flow' && selectedFlow && selectedFlow.id) {
-                // 修改工具参数，指定在当前流程中创建
-                toolArgs.flowId = selectedFlow.id;
-                console.log('在当前流程中创建:', selectedFlow.id);
+            // 特殊处理create-flow和update-flow工具的flowJson参数
+            if ((originalToolName === 'create-flow' || originalToolName === 'update-flow') && toolArgs.flowJson) {
+                console.log('API端点开始处理flowJson参数，工具:', originalToolName);
+                let flowData;
+                
+                // 如果是字符串，尝试解析为JSON
+                if (typeof toolArgs.flowJson === 'string') {
+                    try {
+                        flowData = JSON.parse(toolArgs.flowJson);
+                        console.log('API端点解析flowJson字符串为对象，类型:', Array.isArray(flowData) ? 'array' : 'object');
+                    } catch (error) {
+                        console.error('API端点解析flowJson失败:', error);
+                        return res.status(400).json({ error: 'Invalid flowJson format: ' + error.message });
+                    }
+                } else {
+                    flowData = toolArgs.flowJson;
+                    console.log('API端点flowJson已是对象，类型:', Array.isArray(flowData) ? 'array' : 'object');
+                }
+                
+                // 确保flowData是数组格式（Node-RED流程格式）
+            if (Array.isArray(flowData)) {
+                console.log('API端点进入数组处理分支，原始节点数:', flowData.length);
+                
+                if (originalToolName === 'create-flow') {
+                    // create-flow工具期望包含nodes属性的对象格式，但需要过滤掉tab节点
+                    const functionalNodes = flowData.filter(node => node.type !== 'tab');
+                    const flowObject = {
+                        nodes: functionalNodes,
+                        label: toolArgs.label || '新流程',
+                        description: toolArgs.description || ''
+                    };
+                    toolArgs.flowJson = JSON.stringify(flowObject);
+                    console.log('API端点create-flow处理完成，过滤掉tab节点，保留功能节点数:', functionalNodes.length);
+                    // 重要：如果后续会转换为update-flow，不要预设label，让后续逻辑处理
+                    if (selectedFlow && selectedFlow.id) {
+                        // 清除预设的label，让后续的currentLabel优先
+                        delete toolArgs.label;
+                    }
+                } else {
+                    // update-flow的节点合并将在后面的selectedFlow处理中进行，这里只做基本处理
+                    const functionalNodes = flowData.filter(node => node.type !== 'tab');
+                    console.log('API端点过滤后功能节点数:', functionalNodes.length);
+                    
+                    // 如果没有选中流程，才进行常规的update-flow处理
+                    if (!selectedFlow || !selectedFlow.id) {
+                        // update-flow需要节点数组，并且需要生成唯一ID，参数必须是JSON字符串
+                        const nodesWithUniqueIds = functionalNodes.map(node => {
+                            const newNode = { ...node };
+                            newNode.id = RED.util.generateId();
+                            // 移除z属性，让Node-RED自动分配
+                            delete newNode.z;
+                            return newNode;
+                        });
+                        
+                        // 更新连线关系中的节点ID
+                        const idMapping = {};
+                        functionalNodes.forEach((oldNode, index) => {
+                            idMapping[oldNode.id] = nodesWithUniqueIds[index].id;
+                        });
+                        
+                        nodesWithUniqueIds.forEach(node => {
+                            if (node.wires && Array.isArray(node.wires)) {
+                                node.wires = node.wires.map(wireArray => 
+                                    wireArray.map(wireId => idMapping[wireId] || wireId)
+                                );
+                            }
+                        });
+                        
+                        toolArgs.flowJson = JSON.stringify(nodesWithUniqueIds);
+                        console.log('API端点update-flow处理完成，节点数:', nodesWithUniqueIds.length);
+                    } else {
+                        // 有选中流程时，保持原始数据，等待后续的节点合并处理
+                        toolArgs.flowJson = JSON.stringify(functionalNodes);
+                        console.log('API端点保持原始节点数据，等待节点合并处理，节点数:', functionalNodes.length);
+                    }
+                }
+                } else if (flowData && typeof flowData === 'object' && flowData.nodes) {
+                    console.log('API端点进入对象处理分支，原始节点数:', flowData.nodes.length);
+                    
+                    if (originalToolName === 'create-flow') {
+                        // create-flow工具期望包含nodes属性的对象格式，但需要过滤掉tab节点
+                        const allNodes = Array.isArray(flowData.nodes) ? flowData.nodes : [];
+                        const functionalNodes = allNodes.filter(node => node.type !== 'tab');
+                        const flowObject = {
+                            nodes: functionalNodes,
+                            label: toolArgs.label || flowData.label || '新流程',
+                            description: toolArgs.description || flowData.description || ''
+                        };
+                        toolArgs.flowJson = JSON.stringify(flowObject);
+                        // 重要：如果后续会转换为update-flow，不要预设label，让后续逻辑处理
+                        if (selectedFlow && selectedFlow.id) {
+                            // 清除预设的label，让后续的currentLabel优先
+                            delete toolArgs.label;
+                        }
+                        console.log('API端点对象create-flow处理完成，过滤掉tab节点，保留功能节点数:', functionalNodes.length);
+                    } else {
+                        // update-flow的节点合并将在后面的selectedFlow处理中进行，这里只做基本处理
+                        const functionalNodes = flowData.nodes.filter(node => node.type !== 'tab');
+                        console.log('API端点对象过滤后功能节点数:', functionalNodes.length);
+                        
+                        // 如果没有选中流程，才进行常规的update-flow处理
+                        if (!selectedFlow || !selectedFlow.id) {
+                            // update-flow需要节点数组，并且需要生成唯一ID，参数必须是JSON字符串
+                            const nodesWithUniqueIds = functionalNodes.map(node => {
+                                const newNode = { ...node };
+                                newNode.id = RED.util.generateId();
+                                // 移除z属性，让Node-RED自动分配
+                                delete newNode.z;
+                                return newNode;
+                            });
+                            
+                            // 更新连线关系中的节点ID
+                            const idMapping = {};
+                            functionalNodes.forEach((oldNode, index) => {
+                                idMapping[oldNode.id] = nodesWithUniqueIds[index].id;
+                            });
+                            
+                            nodesWithUniqueIds.forEach(node => {
+                                if (node.wires && Array.isArray(node.wires)) {
+                                    node.wires = node.wires.map(wireArray => 
+                                        wireArray.map(wireId => idMapping[wireId] || wireId)
+                                    );
+                                }
+                            });
+                            
+                            toolArgs.flowJson = JSON.stringify(nodesWithUniqueIds);
+                            console.log('API端点对象update-flow处理完成，节点数:', nodesWithUniqueIds.length);
+                        } else {
+                            // 有选中流程时，保持原始数据，等待后续的节点合并处理
+                            toolArgs.flowJson = JSON.stringify(functionalNodes);
+                            console.log('API端点对象保持原始节点数据，等待节点合并处理，节点数:', functionalNodes.length);
+                        }
+                    }
+                } else {
+                    console.error('API端点flowData格式不正确:', typeof flowData, Array.isArray(flowData));
+                    return res.status(400).json({ error: 'flowData must be an array or object with nodes property' });
+                }
+                
+                console.log('API端点最终处理结果:', {
+                    isArray: Array.isArray(toolArgs.flowJson),
+                    hasNodes: toolArgs.flowJson && toolArgs.flowJson.nodes ? true : false,
+                    nodesCount: Array.isArray(toolArgs.flowJson) ? toolArgs.flowJson.length : (toolArgs.flowJson && toolArgs.flowJson.nodes ? toolArgs.flowJson.nodes.length : 0),
+                    label: toolArgs.label || '新流程'
+                });
+            }
+            
+            // 如果是创建流程工具，且有选中的流程，改为使用update-flow工具
+            let actualToolName = originalToolName;
+            if (originalToolName === 'create-flow' && selectedFlow && selectedFlow.id) {
+                // 改为调用update-flow工具来更新当前流程
+                actualToolName = 'update-flow';
+                toolArgs.id = selectedFlow.id;  // update-flow需要id参数，不是flowId
+                
+                // 获取当前流程的现有节点和信息（通过MCP工具）
+                try {
+                    const flowResult = await configNode.executeMCPTool('get-flow', { id: selectedFlow.id });
+                    console.log('get-flow返回结果:', JSON.stringify(flowResult, null, 2));
+                    if (flowResult && flowResult.content && flowResult.content.length > 0) {
+                        const flowData = JSON.parse(flowResult.content[0].text);
+                        console.log('解析后的flowData:', JSON.stringify(flowData, null, 2));
+                        
+                        // 智能解析flowData格式
+                        let currentLabel = '';
+                        let existingNodes = [];
+                        
+                        if (Array.isArray(flowData)) {
+                             // 如果是数组格式，查找tab节点获取label，其他为功能节点
+                             const tabNode = flowData.find(node => node.type === 'tab' && node.id === selectedFlow.id);
+                             currentLabel = tabNode ? tabNode.label : '';
+                             existingNodes = flowData.filter(node => node.type !== 'tab' && node.z === selectedFlow.id);
+                         } else if (flowData.nodes || flowData.configs) {
+                             // 如果是对象格式且有nodes或configs属性
+                             currentLabel = flowData.label || '';
+                             // 合并nodes和configs数组，排除tab节点
+                             const allFlowNodes = [
+                                 ...(flowData.nodes || []),
+                                 ...(flowData.configs || [])
+                             ];
+                             existingNodes = allFlowNodes.filter(node => node.type !== 'tab');
+                         } else {
+                             // 其他格式
+                             currentLabel = flowData.label || '';
+                             existingNodes = [];
+                         }
+                        
+                        console.log('解析结果 - 标签:', currentLabel, '现有节点数:', existingNodes.length);
+                        
+                        // 保留当前流程的label
+                        if (currentLabel) {
+                            toolArgs.label = currentLabel;
+                        }
+                        
+                        // 计算新节点的起始Y坐标（位于现有节点下方）
+                        let maxY = 0;
+                        if (existingNodes.length > 0) {
+                            maxY = Math.max(...existingNodes.map(node => (node.y || 0) + 50)); // 50是节点高度的估计值
+                        }
+                        const startY = maxY + 100; // 在最下方节点下方留100像素间距
+                        
+                        // 解析新节点并调整坐标
+                        let newNodes;
+                        try {
+                            newNodes = JSON.parse(toolArgs.flowJson);
+                        } catch (e) {
+                            console.error('解析flowJson失败:', e);
+                            newNodes = [];
+                        }
+                        
+                        // 为新节点重新计算坐标
+                        if (Array.isArray(newNodes)) {
+                            newNodes.forEach((node, index) => {
+                                if (node.x !== undefined && node.y !== undefined) {
+                                    // 保持相对位置，但整体向下移动
+                                    const minY = Math.min(...newNodes.map(n => n.y || 0));
+                                    node.y = node.y - minY + startY;
+                                } else {
+                                    // 如果没有坐标，设置默认位置
+                                    node.x = 100 + (index % 5) * 200; // 每行5个节点
+                                    node.y = startY + Math.floor(index / 5) * 100;
+                                }
+                            });
+                            
+                            // 关键修复：将现有节点和新节点合并，并构造正确的流程对象格式
+                            const allNodes = [...existingNodes, ...newNodes];
+                            
+                            // 构造符合Node-RED API要求的流程对象格式
+                            const flowObject = {
+                                id: selectedFlow.id,
+                                label: currentLabel || toolArgs.label || selectedFlow.label || '当前流程',
+                                nodes: allNodes,
+                                configs: [] // 配置节点通常为空，或者可以从现有流程中提取
+                            };
+                            
+                            toolArgs.flowJson = JSON.stringify(flowObject);
+                            console.log('合并节点完成 - 现有节点:', existingNodes.length, '新节点:', newNodes.length, '总节点:', allNodes.length, '保留标签:', flowObject.label);
+                        }
+                        
+                        console.log('API端点改为在当前流程中更新:', selectedFlow.id, '现有节点数:', existingNodes.length, '新节点起始Y:', startY);
+                    }
+                } catch (error) {
+                    console.error('获取流程信息失败:', error);
+                    // 如果获取失败，保持原有标签，不要覆盖
+                    if (!toolArgs.label) {
+                        toolArgs.label = selectedFlow.label || '当前流程';
+                    }
+                    console.log('改为在当前流程中更新:', selectedFlow.id, '(获取流程信息失败，保持原有标签:', toolArgs.label, ')');
+                }
             }
             
             try {
-                const toolResult = await configNode.executeMCPTool(toolName, toolArgs);
+                const toolResult = await configNode.executeMCPTool(actualToolName, toolArgs);
                 const formattedResult = configNode.formatToolResult(toolResult);
                 
                 res.json({
                     success: true,
                     result: formattedResult,
-                    toolName: toolName
+                    toolName: actualToolName
                 });
                 
             } catch (error) {

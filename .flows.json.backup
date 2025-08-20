@@ -1,12 +1,5 @@
 [
     {
-        "id": "workspace-001",
-        "type": "tab",
-        "label": "Flow 1",
-        "disabled": false,
-        "info": ""
-    },
-    {
         "id": "api-config-001",
         "type": "api-config",
         "name": "Default AI Config",
@@ -19,62 +12,21 @@
         "maxTokens": 2000
     },
     {
-        "id": "0d029120c2a5184c",
-        "type": "make-iot-smart",
-        "z": "workspace-001",
-        "d": true,
-        "name": "AI助手",
-        "apiConfig": "api-config-001",
-        "algorithm": "dagre_lr",
-        "settings": {}
-    },
-    {
-        "id": "bd1b195657d18eb1",
-        "type": "inject",
-        "z": "workspace-001",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 170,
-        "y": 120,
-        "wires": [
-            []
-        ]
-    },
-    {
         "type": "tab",
         "label": "新流程",
-        "id": "85e5a220ae2fb90a"
+        "id": "34ab4d95e517fb00"
     },
     {
-        "id": "flow-1754348598316-9ed2ohsqc",
+        "id": "inject-node",
         "type": "inject",
-        "z": "85e5a220ae2fb90a",
-        "name": "触发流程",
+        "z": "34ab4d95e517fb00",
+        "name": "定时触发",
         "props": [
             {
                 "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
             }
         ],
-        "repeat": "",
+        "repeat": "5",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -85,16 +37,16 @@
         "y": 100,
         "wires": [
             [
-                "flow-1754348598316-3kdc42dt1"
+                "function-node"
             ]
         ]
     },
     {
-        "id": "flow-1754348598316-3kdc42dt1",
+        "id": "function-node",
         "type": "function",
-        "z": "85e5a220ae2fb90a",
-        "name": "格式化时间",
-        "func": "// 将时间戳转换为易读的格式\nmsg.payload = new Date(msg.payload).toLocaleString();\nreturn msg;",
+        "z": "34ab4d95e517fb00",
+        "name": "添加问候语",
+        "func": "msg.greeting = \"你好，Node-RED！\";\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -104,89 +56,21 @@
         "y": 100,
         "wires": [
             [
-                "flow-1754348598316-i2x1fpahd"
+                "debug-node"
             ]
         ]
     },
     {
-        "id": "flow-1754348598316-i2x1fpahd",
+        "id": "debug-node",
         "type": "debug",
-        "z": "85e5a220ae2fb90a",
-        "name": "显示结果",
+        "z": "34ab4d95e517fb00",
+        "name": "输出调试信息",
         "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 550,
-        "y": 100,
-        "wires": []
-    },
-    {
-        "type": "tab",
-        "label": "新流程",
-        "id": "2d273a5e4318abc3"
-    },
-    {
-        "id": "flow-1754348618917-ca71jr3po",
-        "type": "inject",
-        "z": "2d273a5e4318abc3",
-        "name": "触发流程",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 150,
-        "y": 100,
-        "wires": [
-            [
-                "flow-1754348618917-fl1qjgspe"
-            ]
-        ]
-    },
-    {
-        "id": "flow-1754348618917-fl1qjgspe",
-        "type": "function",
-        "z": "2d273a5e4318abc3",
-        "name": "格式化时间",
-        "func": "// 将时间戳转换为易读的格式\nmsg.payload = new Date(msg.payload).toLocaleString();\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 350,
-        "y": 100,
-        "wires": [
-            [
-                "flow-1754348618917-o8dmwbokz"
-            ]
-        ]
-    },
-    {
-        "id": "flow-1754348618917-o8dmwbokz",
-        "type": "debug",
-        "z": "2d273a5e4318abc3",
-        "name": "显示结果",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
         "x": 550,

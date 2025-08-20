@@ -1196,13 +1196,20 @@
             // 构建工具参数
             var toolArgs = {
                 flowJson: jsonData.jsonString, // 使用原始JSON字符串
-                label: jsonData.parsedJson.label || '新流程',
                 description: jsonData.parsedJson.description || ''
             };
             
-            // 如果是在当前流程中创建，添加流程ID
+            // 根据操作类型设置标签
             if (action === 'create-current' && selectedFlow && selectedFlow.id) {
+                // 在当前流程中创建时，不设置标签，让后端保持原有标签
                 toolArgs.flowId = selectedFlow.id;
+                // 只有当JSON中明确指定了标签时才使用
+                if (jsonData.parsedJson.label) {
+                    toolArgs.label = jsonData.parsedJson.label;
+                }
+            } else {
+                // 创建新流程时使用默认标签
+                toolArgs.label = jsonData.parsedJson.label || '新流程';
             }
             
             console.log('执行create-flow工具:', toolArgs);
