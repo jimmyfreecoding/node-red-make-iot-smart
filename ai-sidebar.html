@@ -1885,8 +1885,8 @@
             e.preventDefault();
             var content = $(this).data('content');
             if (content) {
-                // 将内容填入输入框
-                $('#augment-input').val(content).focus();
+                // 回显和召回历史聊天记录
+                recallChatHistory(content);
                 // 关闭下拉菜单
                 $('#chat-history-dropdown-menu').hide();
                 $('#chat-history-dropdown-btn .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
@@ -1924,10 +1924,10 @@
             
             var menuHtml = '';
             
-            // 按角色分组显示最近的消息
-            var userMessages = history.filter(h => h.role === 'user').slice(-10);
+            // 显示最近的对话记录（包括用户和助手消息）
+            var recentMessages = history.slice(-15); // 显示最近15条消息
             
-            if (userMessages.length > 0) {
+            if (recentMessages.length > 0) {
                 menuHtml += `
                     <div class="chat-history-section" style="
                         padding: 8px 0;
@@ -1940,33 +1940,50 @@
                             color: #6b7280;
                             text-transform: uppercase;
                             letter-spacing: 0.5px;
-                        ">最近提问</div>
+                        ">最近对话</div>
                 `;
                 
-                userMessages.reverse().forEach(function(msg, index) {
+                recentMessages.reverse().forEach(function(msg, index) {
+                    var roleIcon = msg.role === 'user' ? '👤' : (msg.role === 'assistant' ? '🤖' : '📋');
+                    var roleColor = msg.role === 'user' ? '#2563eb' : (msg.role === 'assistant' ? '#059669' : '#6b7280');
+                    
                     menuHtml += `
                         <div class="chat-history-item" data-content="${msg.content.replace(/"/g, '&quot;')}" style="
                             padding: 8px 12px;
                             cursor: pointer;
-                            border-bottom: ${index < userMessages.length - 1 ? '1px solid #f9fafb' : 'none'};
+                            border-bottom: ${index < recentMessages.length - 1 ? '1px solid #f9fafb' : 'none'};
                             transition: background-color 0.1s;
                             min-width: 0;
                         " onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
                             <div style="
+                                display: flex;
+                                align-items: center;
+                                gap: 6px;
+                                margin-bottom: 4px;
+                            ">
+                                <span style="font-size: 10px;">${roleIcon}</span>
+                                <span style="
+                                    font-size: 10px;
+                                    font-weight: 600;
+                                    color: ${roleColor};
+                                    text-transform: capitalize;
+                                ">${msg.role === 'user' ? '用户' : (msg.role === 'assistant' ? '助手' : '系统')}</span>
+                                <span style="
+                                    font-size: 9px;
+                                    color: #9ca3af;
+                                    margin-left: auto;
+                                ">${msg.timestamp}</span>
+                            </div>
+                            <div style="
                                 font-size: 12px;
                                 color: #374151;
                                 line-height: 1.4;
-                                margin-bottom: 2px;
                                 white-space: nowrap;
                                 overflow: hidden;
                                 text-overflow: ellipsis;
                                 max-width: 100%;
+                                padding-left: 16px;
                             ">${msg.preview}</div>
-                            <div style="
-                                font-size: 10px;
-                                color: #9ca3af;
-                                white-space: nowrap;
-                            ">${msg.timestamp}</div>
                         </div>
                     `;
                 });
@@ -1998,6 +2015,43 @@
             $menu.html(menuHtml);
         });
 
+    }
+    
+    // 回显和召回聊天历史记录
+    function recallChatHistory(selectedContent) {
+        console.log('开始回显聊天历史记录:', selectedContent);
+        
+        // 获取完整的聊天历史
+        getChatHistory(function(history) {
+            if (history.length === 0) {
+                console.log('没有找到聊天历史记录');
+                // 如果没有历史记录，只将选中的内容填入输入框
+                $('#augment-input').val(selectedContent).focus();
+                return;
+            }
+            
+            // 清空当前聊天区域
+            $('#augment-chat-messages').empty();
+            
+            // 添加系统提示消息
+            addMessageToChat('system', '📋 已召回聊天历史记录');
+            
+            // 重新显示历史对话
+            history.forEach(function(msg, index) {
+                var messageId = 'recalled-' + Date.now() + '-' + index;
+                addMessageToChat(msg.role, msg.content, messageId);
+            });
+            
+            // 将选中的内容填入输入框
+            $('#augment-input').val(selectedContent).focus();
+            
+            // 滚动到底部
+            setTimeout(function() {
+                forceScrollToBottom();
+            }, 100);
+            
+            console.log('聊天历史记录已成功回显，共', history.length, '条记录');
+        });
     }
     
     // 清空聊天历史
