@@ -361,6 +361,25 @@ module.exports = function (RED) {
             }
         }, 1000);
 
+        // 格式化工具结果
+        node.formatToolResult = function(toolResult) {
+            if (typeof toolResult === 'string') {
+                return toolResult;
+            }
+
+            if (toolResult && toolResult.content) {
+                if (Array.isArray(toolResult.content)) {
+                    return toolResult.content.map(item => 
+                        typeof item === 'string' ? item : JSON.stringify(item, null, 2)
+                    ).join('\n');
+                }
+                return typeof toolResult.content === 'string' ? 
+                    toolResult.content : JSON.stringify(toolResult.content, null, 2);
+            }
+            
+            return JSON.stringify(toolResult, null, 2);
+        };
+
         // 节点关闭时清理资源
         node.on('close', function(done) {
             console.log('API配置节点关闭，清理资源...');
@@ -430,8 +449,12 @@ module.exports = function (RED) {
     // AI侧边栏端点
     RED.httpAdmin.post('/ai-sidebar/chat', async function(req, res) {
         try {
+            // 设置请求字符编码为UTF-8
+            req.setEncoding('utf8');
+            
             console.log('🌐 收到普通聊天请求:', req.body);
             console.log('🔥 普通聊天端点被调用！');
+            console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
             const { message, scenario, sessionId, selectedFlow, selectedNodes } = req.body;
             
             if (!message) {
@@ -520,11 +543,15 @@ module.exports = function (RED) {
     // 流式聊天端点
     RED.httpAdmin.post('/ai-sidebar/stream-chat', async function(req, res) {
         try {
+            // 设置请求和响应的字符编码为UTF-8
+            req.setEncoding('utf8');
+            
             console.log('🌐 收到流式聊天请求:', req.body);
             console.log('🔥 流式聊天端点被调用！');
             console.log('🔍 请求方法:', req.method);
             console.log('🔍 请求URL:', req.url);
             console.log('🔍 请求头:', req.headers);
+            console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
             
             const { message, scenario, sessionId, selectedFlow, selectedNodes } = req.body;
             
@@ -532,9 +559,9 @@ module.exports = function (RED) {
                 return res.status(400).json({ error: 'Message is required' });
             }
 
-            // 设置SSE头
+            // 设置SSE头，明确指定UTF-8编码
             res.writeHead(200, {
-                'Content-Type': 'text/event-stream',
+                'Content-Type': 'text/event-stream; charset=utf-8',
                 'Cache-Control': 'no-cache',
                 'Connection': 'keep-alive',
                 'Access-Control-Allow-Origin': '*',
@@ -753,28 +780,31 @@ module.exports = function (RED) {
         }
     });
 
-    // 执行工具端点
-    RED.httpAdmin.post('/ai-sidebar/execute-tool', async function(req, res) {
-        try {
-            const { toolName, parameters, nodeId } = req.body;
-            
-            if (!toolName) {
-                return res.status(400).json({ error: 'Tool name is required' });
-            }
+        // 执行工具端点
+        RED.httpAdmin.post('/ai-sidebar/execute-tool', async function(req, res) {
+            try {
+                const { toolName, parameters, nodeId } = req.body;
+                
+                if (!toolName) {
+                    return res.status(400).json({ error: 'Tool name is required' });
+                }
 
-            // 获取配置节点
-            const configNode = RED.nodes.getNode(nodeId);
-            if (!configNode || !configNode.langchainManager) {
-                return res.status(400).json({ error: 'Invalid configuration or LangChain manager not initialized' });
-            }
+                // 获取配置节点
+                const configNode = RED.nodes.getNode(nodeId);
+                if (!configNode || !configNode.langchainManager) {
+                    return res.status(400).json({ error: 'Invalid configuration or LangChain manager not initialized' });
+                }
 
-            // 执行工具
-            const result = await configNode.langchainManager.executeTool(toolName, parameters || {});
-            
-            res.json({ success: true, result });
-        } catch (error) {
-            console.error('Execute tool endpoint error:', error);
-            res.status(500).json({ error: error.message });
-        }
-    });
+                // 执行工具
+                const result = await configNode.langchainManager.executeTool(toolName, parameters || {});
+                
+                // 格式化工具结果
+                const formattedResult = configNode.formatToolResult(result);
+                
+                res.json({ success: true, result: formattedResult });
+            } catch (error) {
+                console.error('Execute tool endpoint error:', error);
+                res.status(500).json({ error: error.message });
+            }
+        });
 }
