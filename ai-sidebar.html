@@ -110,7 +110,7 @@
             console.log('切换到场景:', scenario);
             
             // 构建包含提示词按钮的消息内容
-            var messageContent = `🔄 已切换到 ${scenario.name} 模式\n\n${scenario.description}`;
+            var messageContent = `🔄 已切换到 ${scenario.name}\n\n${scenario.description}`;
             
             // 如果场景有提示词模板，添加按钮
             if (scenario.prompt && Array.isArray(scenario.prompt) && scenario.prompt.length > 0) {
@@ -128,11 +128,18 @@
         },
         
         updateUI: function() {
-            var scenario = this.scenarios[this.currentScenario];
-            if (!scenario) return;
+            // 获取实际的场景数据结构
+            var scenarios = this.scenarios.scenarios || this.scenarios;
+            var scenario = scenarios[this.currentScenario];
+            
+            if (!scenario) {
+                console.warn('未找到场景数据:', this.currentScenario);
+                console.log('可用场景:', Object.keys(scenarios));
+                return;
+            }
             
             // 更新输入框占位符
-            $("#augment-chat-input").attr('placeholder', `在${scenario.name}模式下输入您的问题...`);
+            $("#augment-chat-input").attr('placeholder', `在${scenario.name}下输入您的问题...`);
             
             // 更新选择器值
             $("#scenario-selector").val(this.currentScenario);
@@ -140,7 +147,7 @@
             // 更新当前场景显示
             $("#current-scenario-name").text(scenario.name);
             
-            console.log('UI已更新为场景:', this.currentScenario);
+            console.log('UI已更新为场景:', this.currentScenario, '场景名称:', scenario.name);
         },
         
         getCurrentScenario: function() {
@@ -1868,10 +1875,14 @@
             messageHtml += '<span style="font-weight: 600; color: #374151;">' + label + '</span>';
             
             // 添加场景信息，使用较小的字体
-            if (!isUser && ScenarioManager.isLoaded && ScenarioManager.scenarios[ScenarioManager.currentScenario]) {
+            if (!isUser && ScenarioManager.isLoaded) {
                 var currentScenario = ScenarioManager.getCurrentScenario();
-                var scenarioName = ScenarioManager.scenarios[currentScenario].name;
-                messageHtml += '<span style="color: #6b7280; font-size: 11px; font-weight: 400; margin-left: 4px;">- ' + scenarioName + ' 模式</span>';
+                // 获取实际的场景数据结构
+                var scenarios = ScenarioManager.scenarios.scenarios || ScenarioManager.scenarios;
+                if (scenarios[currentScenario]) {
+                    var scenarioName = scenarios[currentScenario].name;
+                    messageHtml += '<span style="color: #6b7280; font-size: 11px; font-weight: 400; margin-left: 4px;">- ' + scenarioName + '</span>';
+                }
             }
             
             messageHtml += '<span style="color: #9ca3af; font-size: 12px; margin-left: auto;">' + timestamp + '</span>';
@@ -3539,7 +3550,7 @@
                                 padding: 0 4px;
                                 line-height: 1;
                             ">
-                                场景:<span id="current-scenario-name" style="font-weight: 500;">对话</span>
+                                场景：<span id="current-scenario-name" style="font-weight: 500;">通用</span>
                             </span>
                         </button>
                     
