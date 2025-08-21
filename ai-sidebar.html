@@ -46,8 +46,7 @@
                 // 初始化默认场景
                 this.updateUI();
                 
-                // 显示欢迎对话框
-                this.showWelcomeDialog();
+                // 移除欢迎对话框显示
             }).catch(error => {
                 console.error('加载场景失败:', error);
                 // 使用默认场景数据作为降级方案
@@ -87,96 +86,7 @@
             });
         },
         
-        showWelcomeDialog: function() {
-            var scenario = this.scenarios[this.currentScenario];
-            if (!scenario) return;
-            
-            // 创建欢迎对话框内容
-            var welcomeContent = `
-                <div class="welcome-dialog" style="
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-                    z-index: 10000;
-                    max-width: 500px;
-                    width: 90%;
-                    max-height: 80vh;
-                    overflow-y: auto;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                ">
-                    <div style="padding: 24px;">
-                        <div style="text-align: center; margin-bottom: 20px;">
-                            <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 20px;">🎯 ${scenario.name}模式</h3>
-                            <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${scenario.description}</p>
-                        </div>
-                        
-                        ${scenario.prompt && scenario.prompt.length > 0 ? `
-                        <div style="margin-bottom: 20px;">
-                            <h4 style="margin: 0 0 12px 0; color: #374151; font-size: 16px;">💡 提示词模板</h4>
-                            <div class="prompt-templates" style="display: grid; gap: 8px;">
-                                ${scenario.prompt.map((prompt, index) => `
-                                    <button class="prompt-template-btn" data-prompt="${prompt.replace(/"/g, '&quot;')}" style="
-                                        padding: 12px 16px;
-                                        background: #f8fafc;
-                                        border: 1px solid #e2e8f0;
-                                        border-radius: 8px;
-                                        text-align: left;
-                                        cursor: pointer;
-                                        transition: all 0.2s;
-                                        font-size: 13px;
-                                        line-height: 1.4;
-                                        color: #374151;
-                                    " onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
-                                        ${prompt}
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
-                        
-                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                            <button id="welcome-close-btn" style="
-                                padding: 8px 16px;
-                                background: #6b7280;
-                                color: white;
-                                border: none;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 14px;
-                            ">关闭</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="welcome-overlay" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.5);
-                    z-index: 9999;
-                "></div>
-            `;
-            
-            // 添加到页面
-            $('body').append(welcomeContent);
-            
-            // 绑定事件
-            $('.prompt-template-btn').on('click', function() {
-                var promptText = $(this).data('prompt');
-                $('#augment-chat-input').val(promptText);
-                $('.welcome-dialog, .welcome-overlay').remove();
-                $('#augment-chat-input').focus();
-            });
-            
-            $('#welcome-close-btn, .welcome-overlay').on('click', function() {
-                $('.welcome-dialog, .welcome-overlay').remove();
-            });
-        },
+        // showWelcomeDialog函数已移除
         
         switchScenario: function(scenarioId) {
             console.log('切换场景:', scenarioId);
@@ -198,7 +108,20 @@
             // 发送场景切换消息（移除自动调用大模型的逻辑）
             var scenario = scenarios[scenarioId];
             console.log('切换到场景:', scenario);
-            addMessageToChat('system', `🔄 已切换到 ${scenario.name} 模式\n\n${scenario.description}`);
+            
+            // 构建包含提示词按钮的消息内容
+            var messageContent = `🔄 已切换到 ${scenario.name} 模式\n\n${scenario.description}`;
+            
+            // 如果场景有提示词模板，添加按钮
+            if (scenario.prompt && Array.isArray(scenario.prompt) && scenario.prompt.length > 0) {
+                messageContent += '\n\n**快速开始：**';
+                var promptButtons = scenario.prompt.map(function(prompt) {
+                    return `<button class="prompt-template-btn" data-prompt="${prompt.replace(/"/g, '&quot;')}" style="padding: 6px 12px; background: rgb(229, 231, 235); border: none; border-radius: 16px; text-align: center; cursor: pointer; transition: 0.2s; font-size: 11px; line-height: 1.2; color: rgb(55, 65, 81); display: inline-block; margin: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; transform: scale(1);" onmouseover="this.style.background='#d1d5db'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='#e5e7eb'; this.style.transform='scale(1)';" onclick="document.getElementById('augment-chat-input').value='${prompt.replace(/'/g, "\\'")}'">${prompt}</button>`;
+                }).join('');
+                messageContent += `\n<div class="prompt-template-container">${promptButtons}</div>`;
+            }
+            
+            addMessageToChat('system', messageContent);
             
             // 滚动到底部
             forceScrollToBottom();
@@ -3392,8 +3315,7 @@
                         // 初始化默认场景
                         ScenarioManager.updateUI();
                         
-                        // 显示欢迎对话框
-                        ScenarioManager.showWelcomeDialog();
+                        // 移除欢迎对话框显示
                         
                         // 添加欢迎消息
                         var currentScenario = ScenarioManager.scenarios[ScenarioManager.currentScenario];
