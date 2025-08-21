@@ -341,6 +341,7 @@
         addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
         
         // 使用fetch进行流式请求
+        console.log('🚀 准备发送流式聊天请求到:', '/ai-sidebar/stream-chat');
         fetch('/ai-sidebar/stream-chat', {
             method: 'POST',
             headers: {
@@ -358,7 +359,9 @@
             })
         })
         .then(response => {
+            console.log('✅ 收到流式聊天响应:', response.status, response.statusText);
             if (!response.ok) {
+                console.error('❌ HTTP错误:', response.status, response.statusText);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
@@ -373,12 +376,18 @@
                     }
                     
                     const chunk = decoder.decode(value);
+                    console.log('收到数据块:', chunk);
                     const lines = chunk.split('\n');
+                    console.log('分割后的行数:', lines.length);
                     
                     for (const line of lines) {
+                        console.log('处理行:', line);
                         if (line.startsWith('data: ')) {
                             try {
-                                const data = JSON.parse(line.slice(6));
+                                const jsonStr = line.slice(6);
+                                console.log('解析JSON:', jsonStr);
+                                const data = JSON.parse(jsonStr);
+                                console.log('解析后的数据:', data);
                                 handleStreamData(data, loadingMessageId);
                             } catch (e) {
                                 console.warn('解析SSE数据失败:', e, line);
@@ -393,7 +402,8 @@
             return readStream();
         })
         .catch(error => {
-            console.error('AI请求失败:', error);
+            console.error('🔥 流式聊天请求失败:', error);
+            console.error('🔥 错误详情:', error.message, error.stack);
             $("#" + loadingMessageId).remove();
             
             var errorMessage = "❌ AI请求失败: " + error.message;
@@ -423,6 +433,13 @@
                 // 追加文本内容
                 if (currentStreamMessageId) {
                     appendToMessage(currentStreamMessageId, data.content);
+                }
+                break;
+                
+            case 'text-delta':
+                // 处理流式文本增量
+                if (currentStreamMessageId) {
+                    appendToMessage(currentStreamMessageId, data.textDelta);
                 }
                 break;
                 
@@ -460,12 +477,16 @@
                 
             case 'done':
             case 'end':
+            case 'finish':
                 // 流式响应完成，最后检测一次动作标记
                 if (currentStreamMessageId) {
                     detectAndProcessActionMarkers(currentStreamMessageId);
+                    // 保存完整的聊天消息
+                    var messageElement = $("#" + currentStreamMessageId + " .message-content");
+                    var finalContent = messageElement.attr('data-raw-text') || messageElement.text() || "";
+                    saveChatMessage("assistant", finalContent);
                 }
                 currentStreamMessageId = null;
-                saveChatMessage("assistant", data.final_content || "");
                 break;
         }
     }

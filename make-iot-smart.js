@@ -14,6 +14,9 @@
  * limitations under the License.
  **/
 
+// 加载环境变量配置
+require('dotenv').config();
+
 const MCPClientHelper = require('./mcp/mcp-client');
 const MemoryManager = require('./lib/memory-manager');
 const LangChainManager = require('./lib/langchain-manager');
@@ -49,6 +52,9 @@ module.exports = function (RED) {
             enableMcp: node.enableMcp,
             mcpCommand: node.mcpCommand
         });
+        
+        // 设置全局变量以便其他地方访问
+        global.apiConfigNode = node;
         
         // 获取API密钥
         node.apiKey = this.credentials.apiKey;
@@ -208,32 +214,35 @@ module.exports = function (RED) {
 
         // 流式对话（兼容性方法）
         node.streamChat = async function(message, scenario = null, sessionId = null, dynamicData = {}, onChunk = null) {
-            // 对于流式响应，我们可以使用LangChain的流式功能
-            // 这里先实现基本版本，后续可以优化为真正的流式
             try {
-                const result = await node.executeChat(message, scenario, sessionId, dynamicData);
+                // 获取LLM配置
+                const llmConfig = node.getLLMConfig();
                 
-                if (onChunk && typeof onChunk === 'function') {
-                    // 模拟流式输出
-                    const chunks = result.response.split(' ');
-                    for (let i = 0; i < chunks.length; i++) {
-                        const chunk = chunks[i] + (i < chunks.length - 1 ? ' ' : '');
-                        onChunk({
-                            type: 'text-delta',
-                            textDelta: chunk
-                        });
-                        // 添加小延迟以模拟流式效果
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                    }
-                    
-                    onChunk({
-                        type: 'finish',
-                        finishReason: 'stop'
-                    });
+                // 检测场景
+                if (!scenario) {
+                    scenario = node.langchainManager.detectScenario(message);
                 }
+                
+                // 生成会话ID
+                if (!sessionId) {
+                    sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                }
+                
+                console.log('开始流式聊天:', { message, scenario, sessionId });
+                
+                // 使用LangChain的真正流式功能
+                const result = await node.langchainManager.executeScenarioChatStream(
+                    scenario, 
+                    message, 
+                    llmConfig, 
+                    sessionId, 
+                    dynamicData, 
+                    onChunk
+                );
                 
                 return result;
             } catch (error) {
+                console.error('Stream chat error:', error);
                 if (onChunk && typeof onChunk === 'function') {
                     onChunk({
                         type: 'error',
@@ -421,6 +430,8 @@ module.exports = function (RED) {
     // AI侧边栏端点
     RED.httpAdmin.post('/ai-sidebar/chat', async function(req, res) {
         try {
+            console.log('🌐 收到普通聊天请求:', req.body);
+            console.log('🔥 普通聊天端点被调用！');
             const { message, scenario, sessionId, selectedFlow, selectedNodes } = req.body;
             
             if (!message) {
@@ -428,16 +439,14 @@ module.exports = function (RED) {
             }
 
             // 获取API配置节点
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
-            
-            if (configNodeIds.length === 0) {
-                return res.status(400).json({ error: 'No API configuration found' });
+            let configNode = null;
+            // 使用全局变量获取配置节点
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
+            
             if (!configNode) {
-                return res.status(400).json({ error: 'API configuration node not found' });
+                return res.status(400).json({ error: 'No API configuration found' });
             }
 
             // 准备动态数据
@@ -465,9 +474,58 @@ module.exports = function (RED) {
         }
     });
 
+    // 简单AI测试端点
+    RED.httpAdmin.post('/ai-sidebar/test-ai', async function(req, res) {
+        try {
+            const { message } = req.body;
+            
+            // 获取配置节点
+            const { nodeId } = req.body;
+            let configNode = null;
+            
+            if (nodeId) {
+                configNode = RED.nodes.getNode(nodeId);
+            } else {
+                const configNodes = RED.nodes.getCredentials('api-config') || {};
+                const configNodeIds = Object.keys(configNodes);
+                
+                if (configNodeIds.length > 0) {
+                    configNode = RED.nodes.getNode(configNodeIds[0]);
+                }
+            }
+            
+            if (!configNode) {
+                return res.json({ error: 'No API configuration found' });
+            }
+            
+            const llmConfig = configNode.getLLMConfig();
+            console.log('测试AI调用，配置:', llmConfig);
+            
+            // 直接调用LLM
+            const llm = configNode.langchainManager.getLLM(llmConfig);
+            const result = await llm.invoke(message || 'Hello');
+            
+            console.log('AI响应:', result);
+            res.json({ 
+                success: true, 
+                response: result.content || result,
+                config: llmConfig
+            });
+        } catch (error) {
+            console.error('AI测试失败:', error);
+            res.json({ error: error.message, stack: error.stack });
+        }
+    });
+
     // 流式聊天端点
     RED.httpAdmin.post('/ai-sidebar/stream-chat', async function(req, res) {
         try {
+            console.log('🌐 收到流式聊天请求:', req.body);
+            console.log('🔥 流式聊天端点被调用！');
+            console.log('🔍 请求方法:', req.method);
+            console.log('🔍 请求URL:', req.url);
+            console.log('🔍 请求头:', req.headers);
+            
             const { message, scenario, sessionId, selectedFlow, selectedNodes } = req.body;
             
             if (!message) {
@@ -482,20 +540,32 @@ module.exports = function (RED) {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Cache-Control'
             });
+            console.log('✅ SSE头设置完成');
 
             // 获取API配置节点
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
+            const { nodeId } = req.body;
+            let configNode = null;
             
-            if (configNodeIds.length === 0) {
-                res.write(`data: ${JSON.stringify({ error: 'No API configuration found' })}\n\n`);
-                res.end();
-                return;
+            if (nodeId) {
+                // 如果提供了nodeId，直接获取该节点
+                configNode = RED.nodes.getNode(nodeId);
+            } else {
+                // 否则使用全局变量获取配置节点
+                console.log('🔍 开始查找api-config节点...');
+                if (global.apiConfigNode) {
+                    console.log('✅ 从全局变量找到api-config节点');
+                    configNode = global.apiConfigNode;
+                } else {
+                    console.log('❌ 全局变量中未找到api-config节点');
+                }
+                console.log('🔍 查找结果:', !!configNode);
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
+            
+            console.log('🔍 查找配置节点:', nodeId, !!configNode);
+            
             if (!configNode) {
-                res.write(`data: ${JSON.stringify({ error: 'API configuration node not found' })}\n\n`);
+                console.error('❌ 未找到配置节点');
+                res.write(`data: ${JSON.stringify({ error: 'No API configuration found' })}\n\n`);
                 res.end();
                 return;
             }
@@ -505,15 +575,24 @@ module.exports = function (RED) {
                 selectedFlow: selectedFlow,
                 selectedNodes: selectedNodes
             };
+            
+            console.log('📝 请求参数:', { message, scenario, sessionId, dynamicData });
+            console.log('🚀 开始流式聊天...');
+            
+            let chunkCount = 0;
 
             // 执行流式对话
             await configNode.streamChat(message, scenario, sessionId, dynamicData, (chunk) => {
+                chunkCount++;
+                console.log(`📤 发送SSE数据块 ${chunkCount}:`, JSON.stringify(chunk));
                 res.write(`data: ${JSON.stringify(chunk)}\n\n`);
             });
 
+            console.log(`✅ 流式聊天完成，共发送${chunkCount}个数据块`);
             res.end();
         } catch (error) {
-            console.error('Stream chat endpoint error:', error);
+            console.error('❌ 流式聊天端点错误:', error);
+            console.error('❌ 错误堆栈:', error.stack);
             res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
             res.end();
         }

@@ -57,6 +57,8 @@ npm install @jimmyfreecoding/node-red-make-iot-smart
 
 ## 配置
 
+### 基本配置
+
 1. 安装后，您将在Node-RED侧边栏中看到一个新的**MIS**选项卡。
 2. 点击配置按钮设置您的AI提供商。
 3. 从支持的提供商中选择：
@@ -65,6 +67,28 @@ npm install @jimmyfreecoding/node-red-make-iot-smart
    - **Anthropic**：具有Claude模型的高级推理能力。
 4. 输入您的API密钥并选择适当的模型。
 5. 开始与您的AI助手交互！
+
+### LangSmith调试配置（可选）
+
+为了更好地调试和监控LangChain执行过程，您可以配置LangSmith支持：
+
+1. 复制 `.env.example` 文件为 `.env`：
+   ```bash
+   cp .env.example .env
+   ```
+
+2. 编辑 `.env` 文件，填入您的LangSmith配置：
+   ```env
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_API_KEY=your_langsmith_api_key_here
+   LANGCHAIN_PROJECT=your_project_name
+   ```
+
+3. 重启Node-RED以应用配置。
+
+4. 访问 [LangSmith](https://smith.langchain.com/) 查看详细的执行跟踪和调试信息。
+
+**注意**：LangSmith配置是可选的，不配置也不会影响基本功能的使用。
 
 ## 使用方法
 
