@@ -628,19 +628,16 @@ module.exports = function (RED) {
     // 获取场景列表端点
     RED.httpAdmin.get('/ai-sidebar/scenarios', function(req, res) {
         try {
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
+            // 直接读取scenarios.json文件
+            const scenariosPath = path.join(__dirname, 'config', 'scenarios.json');
             
-            if (configNodeIds.length === 0) {
-                return res.status(400).json({ error: 'No API configuration found' });
+            if (!fs.existsSync(scenariosPath)) {
+                return res.status(404).json({ error: 'Scenarios configuration file not found' });
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
-            if (!configNode) {
-                return res.status(400).json({ error: 'API configuration node not found' });
-            }
-
-            const scenarios = configNode.getAvailableScenarios();
+            
+            const scenariosData = fs.readFileSync(scenariosPath, 'utf8');
+            const scenarios = JSON.parse(scenariosData);
+            
             res.json({ scenarios });
         } catch (error) {
             console.error('Scenarios endpoint error:', error);

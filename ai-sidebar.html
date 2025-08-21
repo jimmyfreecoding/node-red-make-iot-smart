@@ -13,84 +13,195 @@
 
 
 <script type="text/javascript">
+    // 全局错误处理器
+    console.log("进入AI-Sidebar页面")
+    window.addEventListener('error', function(e) {
+        console.error('=== 全局JavaScript错误 ===');
+        console.error('错误信息:', e.message);
+        console.error('错误文件:', e.filename);
+        console.error('错误行号:', e.lineno);
+        console.error('错误列号:', e.colno);
+        console.error('错误对象:', e.error);
+        console.error('错误堆栈:', e.error ? e.error.stack : 'no stack');
+    });
+    
     var currentStreamMessageId = null;
         // 场景管理器 - 移到最前面定义
     var ScenarioManager = {
         currentScenario: 'learning',
-        
-        scenarios: {
-            conversation: {
-                name: '对话',
-                description: '自由对话和通用问答',
-                placeholder: '请输入您的问题或指令...'
-            },
-            learning: {
-                name: '学习',
-                description: '学习Node-RED节点和流程概念',
-                placeholder: '请问关于Node-RED的问题，我会提供详细解释和示例流程...'
-            },
-            solution: {
-                name: '方案',
-                description: '获取IoT解决方案建议',
-                placeholder: '描述您的IoT需求，我会提供多种解决方案...'
-            },
-            integration: {
-                name: '集成',
-                description: '集成协议和系统',
-                placeholder: '告诉我需要集成的协议或系统，我会帮您生成配置...'
-            },
-            development: {
-                name: '开发',
-                description: '优化和开发流程',
-                placeholder: '分享您的流程或代码，我会帮您优化和改进...'
-            },
-            configuration: {
-                name: '配置',
-                description: '配置Node-RED环境',
-                placeholder: '询问Node-RED配置问题，我会提供详细指导...'
-            },
-            management: {
-                name: '管理',
-                description: '管理和部署应用',
-                placeholder: '询问部署、管理或运维问题，我会提供解决方案...'
-            }
-        },
+        scenarios: {},
+        isLoaded: false,
         
         init: function() {
             console.log('初始化场景管理器');
             
-            // 绑定场景选择事件
-            $("#scenario-selector").on("change", function() {
-                var selectedScenario = $(this).val();
-                ScenarioManager.switchScenario(selectedScenario);
+            // 从后端加载场景数据
+            return this.loadScenarios().then(() => {
+                // 绑定场景选择事件
+                $("#scenario-selector").on("change", function() {
+                    var selectedScenario = $(this).val();
+                    ScenarioManager.switchScenario(selectedScenario);
+                });
+                
+                // 初始化默认场景
+                this.updateUI();
+                
+                // 显示欢迎对话框
+                this.showWelcomeDialog();
+            }).catch(error => {
+                console.error('加载场景失败:', error);
+                // 使用默认场景数据作为降级方案
+                this.scenarios = {
+                    learning: {
+                        name: '学习',
+                        description: '学习Node-RED节点和流程概念',
+                        prompt: []
+                    }
+                };
+                this.isLoaded = true;
+                this.updateUI();
+            });
+        },
+        
+        loadScenarios: function() {
+            return new Promise((resolve, reject) => {
+                console.log('从后端加载场景数据...');
+                
+                fetch('/ai-sidebar/scenarios')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('场景数据加载成功:', data);
+                        this.scenarios = data;
+                        this.isLoaded = true;
+                        resolve(data);
+                    })
+                    .catch(error => {
+                        console.error('加载场景数据失败:', error);
+                        reject(error);
+                    });
+            });
+        },
+        
+        showWelcomeDialog: function() {
+            var scenario = this.scenarios[this.currentScenario];
+            if (!scenario) return;
+            
+            // 创建欢迎对话框内容
+            var welcomeContent = `
+                <div class="welcome-dialog" style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                    z-index: 10000;
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                ">
+                    <div style="padding: 24px;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 20px;">🎯 ${scenario.name}模式</h3>
+                            <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${scenario.description}</p>
+                        </div>
+                        
+                        ${scenario.prompt && scenario.prompt.length > 0 ? `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="margin: 0 0 12px 0; color: #374151; font-size: 16px;">💡 提示词模板</h4>
+                            <div class="prompt-templates" style="display: grid; gap: 8px;">
+                                ${scenario.prompt.map((prompt, index) => `
+                                    <button class="prompt-template-btn" data-prompt="${prompt.replace(/"/g, '&quot;')}" style="
+                                        padding: 12px 16px;
+                                        background: #f8fafc;
+                                        border: 1px solid #e2e8f0;
+                                        border-radius: 8px;
+                                        text-align: left;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                        font-size: 13px;
+                                        line-height: 1.4;
+                                        color: #374151;
+                                    " onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                                        ${prompt}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button id="welcome-close-btn" style="
+                                padding: 8px 16px;
+                                background: #6b7280;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">关闭</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="welcome-overlay" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    z-index: 9999;
+                "></div>
+            `;
+            
+            // 添加到页面
+            $('body').append(welcomeContent);
+            
+            // 绑定事件
+            $('.prompt-template-btn').on('click', function() {
+                var promptText = $(this).data('prompt');
+                $('#augment-chat-input').val(promptText);
+                $('.welcome-dialog, .welcome-overlay').remove();
+                $('#augment-chat-input').focus();
             });
             
-            // 初始化默认场景
-            this.updateUI();
+            $('#welcome-close-btn, .welcome-overlay').on('click', function() {
+                $('.welcome-dialog, .welcome-overlay').remove();
+            });
         },
         
         switchScenario: function(scenarioId) {
             console.log('切换场景:', scenarioId);
             
-            if (!this.scenarios[scenarioId]) {
+            // 获取实际的场景数据
+            var scenarios = this.scenarios.scenarios || this.scenarios;
+            console.log('场景数据结构:', scenarios);
+            console.log('查找场景ID:', scenarioId);
+            
+            if (!scenarios[scenarioId]) {
                 console.warn('未知场景:', scenarioId);
+                console.log('可用场景:', Object.keys(scenarios));
                 return;
             }
             
             this.currentScenario = scenarioId;
             this.updateUI();
             
-            // 发送场景切换消息
-            var scenario = this.scenarios[scenarioId];
+            // 发送场景切换消息（移除自动调用大模型的逻辑）
+            var scenario = scenarios[scenarioId];
+            console.log('切换到场景:', scenario);
             addMessageToChat('system', `🔄 已切换到 ${scenario.name} 模式\n\n${scenario.description}`);
             
             // 滚动到底部
             forceScrollToBottom();
-            
-            // 自动发送空消息到AI获取场景初始信息
-            setTimeout(function() {
-                sendToAI('', true); // 第二个参数表示是静默发送，不显示用户消息
-            }, 500);
         },
         
         updateUI: function() {
@@ -98,7 +209,7 @@
             if (!scenario) return;
             
             // 更新输入框占位符
-            $("#augment-chat-input").attr('placeholder', scenario.placeholder);
+            $("#augment-chat-input").attr('placeholder', `在${scenario.name}模式下输入您的问题...`);
             
             // 更新选择器值
             $("#scenario-selector").val(this.currentScenario);
@@ -194,11 +305,7 @@
             RED.notify("此功能正在开发中", "info");
         });
 
-           // @按钮点击事件 - 显示场景选择菜单
-        $("#augment-at-mention").on("click", function(e) {
-            e.preventDefault();
-            showScenarioMenu(e);
-        });
+        // 注意：@按钮的事件绑定移到了侧边栏初始化时进行
     }
     
     // 预处理ACTION_TYPE标记，转换为可执行按钮
@@ -1816,8 +1923,6 @@
             } else {
                 // AI消息显示当前厂商名称
                 var modelInfo = getCurrentModelInfo();
-                var currentScenario = ScenarioManager.getCurrentScenario();
-                var scenarioName = ScenarioManager.scenarios[currentScenario].name;
                 label = modelInfo.name;
                 avatarContent = modelInfo.firstLetter;
             }
@@ -1840,7 +1945,7 @@
             messageHtml += '<span style="font-weight: 600; color: #374151;">' + label + '</span>';
             
             // 添加场景信息，使用较小的字体
-            if (!isUser) {
+            if (!isUser && ScenarioManager.isLoaded && ScenarioManager.scenarios[ScenarioManager.currentScenario]) {
                 var currentScenario = ScenarioManager.getCurrentScenario();
                 var scenarioName = ScenarioManager.scenarios[currentScenario].name;
                 messageHtml += '<span style="color: #6b7280; font-size: 11px; font-weight: 400; margin-left: 4px;">- ' + scenarioName + ' 模式</span>';
@@ -2616,10 +2721,89 @@
 
     // 显示场景选择菜单
     function showScenarioMenu(e) {
+        console.log('=== showScenarioMenu 详细调试信息 ===');
+        console.log('1. 事件对象:', e);
+        console.log('2. 事件类型:', e ? e.type : 'undefined');
+        console.log('3. 事件目标:', e ? e.target : 'undefined');
+        console.log('4. ScenarioManager对象:', ScenarioManager);
+        console.log('5. ScenarioManager.isLoaded:', ScenarioManager.isLoaded);
+        console.log('6. ScenarioManager.scenarios:', ScenarioManager.scenarios);
+        console.log('7. 场景数量:', Object.keys(ScenarioManager.scenarios || {}).length);
+        console.log('8. 当前场景:', ScenarioManager.currentScenario);
+        console.log('9. jQuery版本:', $.fn.jquery);
+        console.log('10. #augment-chat-container元素:', $('#augment-chat-container').length);
+        
         // 移除已存在的菜单
         $('.scenario-menu').remove();
+        console.log('11. 已移除现有菜单');
+        
+        // 添加详细的调试信息
+        console.log('showScenarioMenu调用 - ScenarioManager状态:', {
+            isLoaded: ScenarioManager.isLoaded,
+            scenariosKeys: Object.keys(ScenarioManager.scenarios),
+            scenariosLength: Object.keys(ScenarioManager.scenarios).length,
+            currentScenario: ScenarioManager.currentScenario
+        });
+        
+        // 检查场景数据是否已加载
+        if (!ScenarioManager.isLoaded || Object.keys(ScenarioManager.scenarios).length === 0) {
+            console.warn('场景数据未加载，无法显示菜单');
+            
+            // 尝试重新加载场景数据
+            console.log('尝试重新加载场景数据...');
+            ScenarioManager.loadScenarios().then(() => {
+                console.log('场景数据重新加载成功，重新调用showScenarioMenu');
+                showScenarioMenu(e);
+            }).catch(error => {
+                console.error('重新加载场景数据失败:', error);
+                // 显示错误提示
+                addMessageToChat('error', '❌ 场景数据加载失败，请刷新页面重试');
+            });
+            return;
+        }
+        
+        // 场景图标映射
+        var scenarioIcons = {
+            'learning': '🎓',
+            'solution': '💡', 
+            'integration': '🔌',
+            'development': '💻',
+            'configuration': '⚙️',
+            'management': '🖥️',
+            'general': '💬'
+        };
+        
+        // 动态生成场景选项
+        var scenarioOptions = '';
+        // 获取实际的场景数据
+        var scenarios = ScenarioManager.scenarios.scenarios || ScenarioManager.scenarios;
+        console.log('实际场景数据:', scenarios);
+        
+        Object.keys(scenarios).forEach(function(scenarioId) {
+            var scenario = scenarios[scenarioId];
+            var icon = scenarioIcons[scenarioId] || '📋';
+            console.log('处理场景:', scenarioId, scenario);
+            
+            scenarioOptions += `
+                <div class="scenario-option" data-scenario="${scenarioId}" style="
+                    padding: 6px 12px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #374151;
+                    transition: background-color 0.1s;
+                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
+                    <span style="font-size: 14px;">${icon}</span>
+                    <span>${scenario.name}</span>
+                </div>
+            `;
+        });
         
         // 创建场景选择菜单
+        console.log('12. 开始创建菜单HTML');
+        console.log('13. scenarioOptions内容:', scenarioOptions);
+        
         var menuHtml = `
             <div class="scenario-menu" style="
                 position: absolute;
@@ -2635,110 +2819,43 @@
                 font-size: 13px;
                 padding: 4px 0;
             ">
-                <div class="scenario-option" data-scenario="conversation" style="
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #374151;
-                    transition: background-color 0.1s;
-                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                    <span style="font-size: 14px;">💬</span>
-                    <span>对话</span>
-                </div>
-                <div class="scenario-option" data-scenario="learning" style="
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #374151;
-                    transition: background-color 0.1s;
-                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                    <span style="font-size: 14px;">🎓</span>
-                    <span>学习</span>
-                </div>
-                <div class="scenario-option" data-scenario="solution" style="
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #374151;
-                    transition: background-color 0.1s;
-                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                    <span style="font-size: 14px;">💡</span>
-                    <span>方案</span>
-                </div>
-                <div class="scenario-option" data-scenario="integration" style="
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #374151;
-                    transition: background-color 0.1s;
-                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                    <span style="font-size: 14px;">🔌</span>
-                    <span>集成</span>
-                </div>
-                <div class="scenario-option" data-scenario="development" style="
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #374151;
-                    transition: background-color 0.1s;
-                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                    <span style="font-size: 14px;">💻</span>
-                    <span>开发</span>
-                </div>
-                <div class="scenario-option" data-scenario="configuration" style="
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #374151;
-                    transition: background-color 0.1s;
-                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                    <span style="font-size: 14px;">⚙️</span>
-                    <span>配置</span>
-                </div>
-                <div class="scenario-option" data-scenario="management" style="
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #374151;
-                    transition: background-color 0.1s;
-                " onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">
-                    <span style="font-size: 14px;">🖥️</span>
-                    <span>管理</span>
-                </div>
+                ${scenarioOptions}
             </div>
         `;
         
+        console.log('14. 菜单HTML已创建，长度:', menuHtml.length);
+        console.log('15. 菜单HTML内容:', menuHtml.substring(0, 200) + '...');
+        
         // 添加菜单到页面
+        console.log('16. 准备添加菜单到页面');
         $('#augment-chat-container').append(menuHtml);
+        console.log('17. 菜单已添加到页面');
+        console.log('18. 页面中的.scenario-menu元素数量:', $('.scenario-menu').length);
+        console.log('19. .scenario-menu元素是否可见:', $('.scenario-menu').is(':visible'));
         
         // 绑定场景选择事件
+        console.log('20. 开始绑定场景选择事件');
+        console.log('21. .scenario-option元素数量:', $('.scenario-option').length);
+        
         $('.scenario-option').on('click', function() {
+            console.log('22. 场景选项被点击');
             var scenarioId = $(this).data('scenario');
+            console.log('23. 选择的场景ID:', scenarioId);
             ScenarioManager.switchScenario(scenarioId);
             $('.scenario-menu').remove();
         });
         
         // 点击其他地方关闭菜单
+        console.log('24. 绑定文档点击事件');
         $(document).on('click.scenario-menu', function(e) {
             if (!$(e.target).closest('.scenario-menu, #augment-at-mention').length) {
+                console.log('25. 点击其他地方，关闭菜单');
                 $('.scenario-menu').remove();
                 $(document).off('click.scenario-menu');
             }
         });
+        
+        console.log('26. showScenarioMenu函数执行完成');
     }
 
     // 增强代码块显示 - 为JSON代码块添加工具栏
@@ -3210,21 +3327,79 @@
             disableOnEdit: false,
             iconClass: "fa fa-comment",
             onshow: function() {
-                console.log('侧边栏显示，初始化场景管理器...');
-                
-                // 延迟初始化以确保DOM元素已加载
-                setTimeout(() => {
-                    // 初始化场景管理器
-                    ScenarioManager.init();
-                    
+                console.log('侧边栏显示');
+            }
+        });
+        
+        // 立即初始化场景管理器，不依赖侧边栏显示
+        console.log('开始初始化场景管理器...');
+        
+        // 延迟初始化以确保DOM元素已加载
+        setTimeout(() => {
                     // 更新上下文信息
                     updateCurrentFlowName();
                     updateSelectedNodeInfo();
                     
-                    // 添加欢迎消息
-                    var welcomeMsg = `👋 欢迎使用 Make IoT Smart AI助手！
+                    // 初始化场景管理器，并在加载完成后显示欢迎消息
+                    ScenarioManager.loadScenarios().then(() => {
+                        // 绑定场景选择事件
+                        $("#scenario-selector").on("change", function() {
+                            var selectedScenario = $(this).val();
+                            ScenarioManager.switchScenario(selectedScenario);
+                        });
+                        
+                        // 绑定场景菜单按钮事件 - 在场景数据加载完成后
+                        console.log('开始绑定场景菜单按钮事件');
+                        console.log('按钮元素存在:', $("#augment-at-mention").length > 0);
+                        
+                        $("#augment-at-mention").off('click').on("click", function(e) {
+                            e.preventDefault();
+                            console.log('=== 场景菜单按钮被点击 ===');
+                            console.log('事件对象:', e);
+                            showScenarioMenu(e);
+                        });
+                        
+                        console.log('场景菜单按钮事件绑定完成');
+                        
+                        // 测试按钮可访问性和事件绑定
+                        setTimeout(() => {
+                            console.log('=== 测试按钮可访问性 ===');
+                            console.log('jQuery版本:', $.fn.jquery);
+                            console.log('按钮元素:', $("#augment-at-mention")[0]);
+                            console.log('按钮是否可见:', $("#augment-at-mention").is(':visible'));
+                            console.log('按钮是否禁用:', $("#augment-at-mention").prop('disabled'));
+                            
+                            // 检查事件绑定
+                            var events = $("#augment-at-mention")[0] ? $._data($("#augment-at-mention")[0], 'events') : null;
+                            console.log('按钮事件:', events);
+                            
+                            // 手动测试点击
+                            console.log('=== 手动触发点击测试 ===');
+                            $("#augment-at-mention").trigger('click');
+                            
+                            // 重新绑定事件作为备用方案
+                            console.log('=== 重新绑定事件 ===');
+                            $("#augment-at-mention").off('click').on('click', function(e) {
+                                e.preventDefault();
+                                console.log('=== 重新绑定的事件被触发 ===');
+                                console.log('事件对象:', e);
+                                showScenarioMenu(e);
+                            });
+                            
+                            console.log('重新绑定完成，请再次点击按钮测试');
+                        }, 2000);
+                        
+                        // 初始化默认场景
+                        ScenarioManager.updateUI();
+                        
+                        // 显示欢迎对话框
+                        ScenarioManager.showWelcomeDialog();
+                        
+                        // 添加欢迎消息
+                        var currentScenario = ScenarioManager.scenarios[ScenarioManager.currentScenario];
+                        var welcomeMsg = `👋 欢迎使用 Make IoT Smart AI助手！
 
-🎯 **当前场景**: ${ScenarioManager.scenarios[ScenarioManager.currentScenario].name}
+🎯 **当前场景**: ${currentScenario ? currentScenario.name : '学习'}
 
 请选择合适的场景并开始对话：
 • 🎓 **学习** - 了解Node-RED概念和节点
@@ -3233,11 +3408,30 @@
 • 💻 **开发** - 优化和开发流程
 • ⚙️ **配置** - 配置Node-RED环境
 • 🖥️ **管理** - 管理和部署应用`;
-                    
-                    addMessageToChat('assistant', welcomeMsg);
+                        
+                        addMessageToChat('assistant', welcomeMsg);
+                    }).catch(error => {
+                        console.error('加载场景失败:', error);
+                        // 使用默认场景数据作为降级方案
+                        ScenarioManager.scenarios = {
+                            learning: {
+                                name: '学习',
+                                description: '学习Node-RED节点和流程概念',
+                                prompt: []
+                            }
+                        };
+                        ScenarioManager.isLoaded = true;
+                        ScenarioManager.updateUI();
+                        
+                        // 显示降级欢迎消息
+                        var welcomeMsg = `👋 欢迎使用 Make IoT Smart AI助手！
+
+🎯 **当前场景**: 学习
+
+请开始对话，我将帮助您了解Node-RED的使用。`;
+                        addMessageToChat('assistant', welcomeMsg);
+                    });
                 }, 100);
-            }
-        });
 
         // 配置按钮事件处理
         $("#show-config-node-button").on("click", function() {
