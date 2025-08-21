@@ -377,24 +377,26 @@
         var aiMessageId = "ai-" + Date.now();
         addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
         
-        // 使用fetch进行流式请求
-        console.log('🚀 准备发送流式聊天请求到:', '/ai-sidebar/stream-chat');
-        fetch('/ai-sidebar/stream-chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-            },
-            body: JSON.stringify({
-                message: sendMessage,
-                scenario: currentScenario,  // 添加场景信息
-                nodeId: nodeId,
-                selectedFlow: selectedFlow,
-                selectedNodes: selectedNodes,
-                flowData: flowData,
-                history: getChatHistory(),
-                silent: silent  // 添加静默标记
+        // 异步获取聊天历史后发送请求
+        getChatHistory(function(history) {
+            console.log('🚀 准备发送流式聊天请求到:', '/ai-sidebar/stream-chat');
+            fetch('/ai-sidebar/stream-chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                },
+                body: JSON.stringify({
+                    message: sendMessage,
+                    scenario: currentScenario,  // 添加场景信息
+                    sessionId: getCurrentSessionId(),  // 添加会话ID
+                    nodeId: nodeId,
+                    selectedFlow: selectedFlow,
+                    selectedNodes: selectedNodes,
+                    flowData: flowData,
+                    history: history,  // 使用异步获取的历史记录
+                    silent: silent  // 添加静默标记
+                })
             })
-        })
         .then(response => {
             console.log('✅ 收到流式聊天响应:', response.status, response.statusText);
             if (!response.ok) {
@@ -454,6 +456,7 @@
                 RED.notify('AI服务连接失败，请检查网络连接和配置', 'error');
             }
         });
+        }); // 结束getChatHistory回调函数
     }
 
     function handleStreamData(data, loadingMessageId) {
@@ -1762,20 +1765,245 @@
         }
     }
 
-    function getChatHistory() {
-        // 从聊天记录中提取历史消息
-        var history = [];
-        $("#augment-chat-messages .augment-message-container").each(function() {
-            var role = $(this).hasClass("user-message") ? "user" : "assistant";
-            var content = $(this).find(".message-content").text().trim();
-            if (content && content !== "🤖 正在思考...") {
-                history.push({
-                    role: role,
-                    content: content
+    // 全局变量存储当前会话ID
+    var currentSessionId = null;
+    
+    // 获取或生成当前会话ID
+    function getCurrentSessionId() {
+        if (!currentSessionId) {
+            // 尝试从localStorage获取
+            currentSessionId = localStorage.getItem('node-red-ai-session-id');
+            if (!currentSessionId) {
+                // 生成新的会话ID
+                currentSessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('node-red-ai-session-id', currentSessionId);
+            }
+        }
+        return currentSessionId;
+    }
+    
+    function getChatHistory(callback) {
+        // 首先尝试从后端API获取SQLite数据库中的历史记录
+        var sessionId = getCurrentSessionId();
+        
+        $.ajax({
+            url: '/ai-sidebar/history/' + sessionId,
+            method: 'GET',
+            data: { limit: 20 },
+            success: function(response) {
+                console.log('从数据库获取到聊天历史:', response);
+                var history = [];
+                
+                if (response.history && response.history.length > 0) {
+                    // 处理数据库中的历史记录
+                    history = response.history.map(function(item) {
+                        var timestamp = new Date(item.timestamp).toLocaleString();
+                        return {
+                            role: item.role,
+                            content: item.content,
+                            timestamp: timestamp,
+                            preview: item.content.length > 30 ? item.content.substring(0, 30) + '...' : item.content
+                        };
+                    });
+                }
+                
+                // 如果数据库中没有历史记录，从DOM中获取当前会话的消息
+                if (history.length === 0) {
+                    console.log('数据库中无历史记录，从DOM获取当前会话消息');
+                    $("#augment-chat-messages .augment-message-container").each(function() {
+                        var role = $(this).hasClass("user-message") ? "user" : "assistant";
+                        var content = $(this).find(".message-content").text().trim();
+                        var timestamp = $(this).find(".message-timestamp").text() || new Date().toLocaleTimeString();
+                        if (content && content !== "🤖 正在思考...") {
+                            history.push({
+                                role: role,
+                                content: content,
+                                timestamp: timestamp,
+                                preview: content.length > 30 ? content.substring(0, 30) + '...' : content
+                            });
+                        }
+                    });
+                }
+                
+                if (callback) callback(history.slice(-20));
+            },
+            error: function(xhr, status, error) {
+                console.error('获取聊天历史失败:', error);
+                // 出错时从DOM获取当前会话消息作为备选方案
+                var history = [];
+                $("#augment-chat-messages .augment-message-container").each(function() {
+                    var role = $(this).hasClass("user-message") ? "user" : "assistant";
+                    var content = $(this).find(".message-content").text().trim();
+                    var timestamp = $(this).find(".message-timestamp").text() || new Date().toLocaleTimeString();
+                    if (content && content !== "🤖 正在思考...") {
+                        history.push({
+                            role: role,
+                            content: content,
+                            timestamp: timestamp,
+                            preview: content.length > 30 ? content.substring(0, 30) + '...' : content
+                        });
+                    }
                 });
+                if (callback) callback(history.slice(-20));
             }
         });
-        return history.slice(-10); // 只保留最近10条消息
+    }
+
+    // 聊天历史记录下拉菜单功能
+    function initChatHistoryDropdown() {
+        console.log('初始化聊天历史下拉菜单');
+        
+        // 点击下拉按钮
+        $(document).on('click', '#chat-history-dropdown-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var $menu = $('#chat-history-dropdown-menu');
+            var isVisible = $menu.is(':visible');
+            
+            if (isVisible) {
+                $menu.hide();
+                $(this).find('.fa-chevron-down, .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+            } else {
+                // 更新历史记录内容
+                updateChatHistoryMenu();
+                $menu.show();
+                $(this).find('.fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+            }
+        });
+        
+        // 点击其他地方关闭菜单
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.chat-history-dropdown-container').length) {
+                $('#chat-history-dropdown-menu').hide();
+                $('#chat-history-dropdown-btn .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+            }
+        });
+        
+        // 点击历史记录项
+        $(document).on('click', '.chat-history-item', function(e) {
+            e.preventDefault();
+            var content = $(this).data('content');
+            if (content) {
+                // 将内容填入输入框
+                $('#augment-input').val(content).focus();
+                // 关闭下拉菜单
+                $('#chat-history-dropdown-menu').hide();
+                $('#chat-history-dropdown-btn .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+            }
+        });
+    }
+    
+    // 更新聊天历史菜单内容
+    function updateChatHistoryMenu() {
+        var $menu = $('#chat-history-dropdown-menu');
+        
+        // 显示加载状态
+        $menu.html(`
+            <div class="chat-history-loading" style="
+                padding: 16px;
+                text-align: center;
+                color: #6b7280;
+                font-size: 12px;
+            ">正在加载聊天历史...</div>
+        `);
+        
+        // 异步获取聊天历史
+        getChatHistory(function(history) {
+            if (history.length === 0) {
+                $menu.html(`
+                    <div class="chat-history-empty" style="
+                        padding: 16px;
+                        text-align: center;
+                        color: #9ca3af;
+                        font-size: 12px;
+                    ">暂无聊天历史</div>
+                `);
+                return;
+            }
+            
+            var menuHtml = '';
+            
+            // 按角色分组显示最近的消息
+            var userMessages = history.filter(h => h.role === 'user').slice(-10);
+            
+            if (userMessages.length > 0) {
+                menuHtml += `
+                    <div class="chat-history-section" style="
+                        padding: 8px 0;
+                        border-bottom: 1px solid #f3f4f6;
+                    ">
+                        <div class="chat-history-section-title" style="
+                            padding: 4px 12px;
+                            font-size: 11px;
+                            font-weight: 600;
+                            color: #6b7280;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        ">最近提问</div>
+                `;
+                
+                userMessages.reverse().forEach(function(msg, index) {
+                    menuHtml += `
+                        <div class="chat-history-item" data-content="${msg.content.replace(/"/g, '&quot;')}" style="
+                            padding: 8px 12px;
+                            cursor: pointer;
+                            border-bottom: ${index < userMessages.length - 1 ? '1px solid #f9fafb' : 'none'};
+                            transition: background-color 0.1s;
+                            min-width: 0;
+                        " onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                            <div style="
+                                font-size: 12px;
+                                color: #374151;
+                                line-height: 1.4;
+                                margin-bottom: 2px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                max-width: 100%;
+                            ">${msg.preview}</div>
+                            <div style="
+                                font-size: 10px;
+                                color: #9ca3af;
+                                white-space: nowrap;
+                            ">${msg.timestamp}</div>
+                        </div>
+                    `;
+                });
+                
+                menuHtml += '</div>';
+            }
+            
+            // 添加清空历史按钮
+            menuHtml += `
+                <div class="chat-history-actions" style="
+                    padding: 8px;
+                    border-top: 1px solid #f3f4f6;
+                    background: #f9fafb;
+                ">
+                    <button onclick="clearChatHistory()" style="
+                        width: 100%;
+                        padding: 6px 12px;
+                        background: #ef4444;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        cursor: pointer;
+                        transition: background-color 0.1s;
+                    " onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">清空历史记录</button>
+                </div>
+            `;
+            
+            $menu.html(menuHtml);
+        });
+
+    }
+    
+    // 清空聊天历史
+    function clearChatHistory() {
+        $('#augment-chat-messages').empty();
+        console.log('聊天历史已清空');
     }
 
     function saveChatMessage(role, content) {
@@ -3400,6 +3628,9 @@
         // 初始化当前选中节点信息
         updateSelectedNodeInfo();
         
+        // 初始化聊天历史下拉菜单
+        initChatHistoryDropdown();
+        
         // 监听workspace选择变化
         RED.events.on('workspace:change', updateCurrentFlowName);
         
@@ -3414,12 +3645,56 @@
 
 <script type="text/x-red" data-template-name="make_iot_smart_sidebar">
     <div class="red-ui-sidebar-info">
-        <div class="red-ui-sidebar-header red-ui-info-toolbar">
+        <div class="red-ui-sidebar-header red-ui-info-toolbar" style="display: flex; align-items: center; gap: 8px;">
             <span class="button-group"><a id="show-config-node-button" class="red-ui-button red-ui-button-small selected" href="#">
-                <i class="fa fa-cog"></i></a></span><div class="red-ui-searchBox-container red-ui-searchBox-compact"><i class="fa fa-search"></i>
-                  <form class="red-ui-searchBox-form"><input type="text" data-i18n="[placeholder]sidebar.help.search" class="red-ui-searchBox-input" placeholder="搜索帮助"></form>
-                 <a class="red-ui-searchBox-clear" href="#"><i class="fa fa-times"></i></a>
-                <span class="red-ui-searchBox-resultCount hide"></span>
+                <i class="fa fa-cog"></i></a></span>
+            <div class="chat-history-dropdown-container" style="position: relative; flex: 1;">
+                <button id="chat-history-dropdown-btn" class="red-ui-button red-ui-button-small" style="
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 4px 8px;
+                    background: #f8f9fa;
+                    border: 1px solid #d1d5db;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    color: #6b7280;
+                    cursor: pointer;
+                ">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <i class="fa fa-history" style="font-size: 11px;"></i>
+                        <span id="chat-history-label">聊天历史</span>
+                    </span>
+                    <i class="fa fa-chevron-down" style="font-size: 10px;"></i>
+                </button>
+                <div id="chat-history-dropdown-menu" class="chat-history-menu" style="
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    z-index: 1000;
+                    max-height: 300px;
+                    overflow-y: auto;
+                    margin-top: 2px;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    min-width: 200px;
+                    max-width: 350px;
+                    width: auto;
+                    box-sizing: border-box;
+                ">
+                    <div class="chat-history-empty" style="
+                        padding: 16px;
+                        text-align: center;
+                        color: #9ca3af;
+                        font-size: 12px;
+                    ">暂无聊天历史</div>
+                </div>
             </div>
         </div>
 

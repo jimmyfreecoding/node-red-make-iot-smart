@@ -648,16 +648,14 @@ module.exports = function (RED) {
     // 获取记忆统计端点
     RED.httpAdmin.get('/ai-sidebar/memory-stats', function(req, res) {
         try {
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
-            
-            if (configNodeIds.length === 0) {
-                return res.status(400).json({ error: 'No API configuration found' });
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
+            
             if (!configNode) {
-                return res.status(400).json({ error: 'API configuration node not found' });
+                return res.status(400).json({ error: 'No API configuration found' });
             }
 
             const stats = configNode.getMemoryStats();
@@ -674,16 +672,14 @@ module.exports = function (RED) {
             const { sessionId } = req.params;
             const { limit = 50 } = req.query;
             
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
-            
-            if (configNodeIds.length === 0) {
-                return res.status(400).json({ error: 'No API configuration found' });
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
+            
             if (!configNode) {
-                return res.status(400).json({ error: 'API configuration node not found' });
+                return res.status(400).json({ error: 'No API configuration found' });
             }
 
             const history = configNode.getConversationHistory(sessionId, parseInt(limit));
@@ -703,16 +699,14 @@ module.exports = function (RED) {
                 return res.status(400).json({ error: 'Query is required' });
             }
             
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
-            
-            if (configNodeIds.length === 0) {
-                return res.status(400).json({ error: 'No API configuration found' });
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
+            
             if (!configNode) {
-                return res.status(400).json({ error: 'API configuration node not found' });
+                return res.status(400).json({ error: 'No API configuration found' });
             }
 
             const results = configNode.searchConversations(query, scenario, limit);
@@ -728,16 +722,14 @@ module.exports = function (RED) {
         try {
             const { scenario, limit = 20 } = req.query;
             
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
-            
-            if (configNodeIds.length === 0) {
-                return res.status(400).json({ error: 'No API configuration found' });
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
+            
             if (!configNode) {
-                return res.status(400).json({ error: 'API configuration node not found' });
+                return res.status(400).json({ error: 'No API configuration found' });
             }
 
             const templates = configNode.getFlowTemplates(scenario, parseInt(limit));
@@ -757,16 +749,14 @@ module.exports = function (RED) {
                 return res.status(400).json({ error: 'Name and flowJson are required' });
             }
             
-            const configNodes = RED.nodes.getCredentials('api-config') || {};
-            const configNodeIds = Object.keys(configNodes);
-            
-            if (configNodeIds.length === 0) {
-                return res.status(400).json({ error: 'No API configuration found' });
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
             }
-
-            const configNode = RED.nodes.getNode(configNodeIds[0]);
+            
             if (!configNode) {
-                return res.status(400).json({ error: 'API configuration node not found' });
+                return res.status(400).json({ error: 'No API configuration found' });
             }
 
             const templateId = configNode.saveFlowTemplate(name, description, flowJson, scenario, tags);
