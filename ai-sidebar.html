@@ -1950,7 +1950,12 @@
                     `;
                     
                     sessions.forEach(function(session, index) {
-                        var sessionTitle = session.title || `会话 ${session.id.substring(0, 8)}`;
+                        // 使用第一条用户消息作为标题，如果没有则使用默认标题
+                        var sessionTitle = session.first_user_message 
+                            ? (session.first_user_message.length > 30 
+                                ? session.first_user_message.substring(0, 30) + '...' 
+                                : session.first_user_message)
+                            : (session.title || `会话 ${session.id.substring(0, 8)}`);
                         var lastMessageTime = session.last_message_time ? new Date(session.last_message_time).toLocaleString() : '未知时间';
                         var messageCount = session.message_count || 0;
                         var scenarioIcon = session.scenario === 'learning' ? '📚' : (session.scenario === 'solution' ? '🔧' : '💡');
