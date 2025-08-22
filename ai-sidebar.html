@@ -553,9 +553,48 @@
                 break;
                 
             case 'tool_result':
-                // 显示简洁的工具执行成功信息
+                // 显示工具执行结果
                 if (currentStreamMessageId) {
                     var resultInfo = `✅ 工具执行成功\n\n`;
+                    
+                    // 如果有具体的结果数据，显示格式化后的结果
+                    if (data.result) {
+                        try {
+                            // 尝试解析工具结果
+                            var toolResult = data.result;
+                            if (typeof toolResult === 'string') {
+                                try {
+                                    toolResult = JSON.parse(toolResult);
+                                } catch (e) {
+                                    // 如果不是JSON，直接使用字符串
+                                }
+                            }
+                            
+                            // 如果结果包含content数组（MCP工具返回格式）
+                            if (toolResult && toolResult.content && Array.isArray(toolResult.content)) {
+                                for (var i = 0; i < toolResult.content.length; i++) {
+                                    var contentItem = toolResult.content[i];
+                                    if (contentItem.type === 'text' && contentItem.text) {
+                                        try {
+                                            // 尝试解析嵌套的JSON配置
+                                            var configData = JSON.parse(contentItem.text);
+                                            resultInfo += '**Node-RED 配置信息：**\n\n```json\n' + JSON.stringify(configData, null, 2) + '\n```\n\n';
+                                        } catch (e) {
+                                            // 如果不是JSON，直接显示文本
+                                            resultInfo += contentItem.text + '\n\n';
+                                        }
+                                    }
+                                }
+                            } else {
+                                // 其他格式的结果，直接显示
+                                resultInfo += '**结果：**\n\n```\n' + (typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult, null, 2)) + '\n```\n\n';
+                            }
+                        } catch (e) {
+                            console.warn('解析工具结果失败:', e);
+                            resultInfo += '**结果：**\n\n```\n' + data.result + '\n```\n\n';
+                        }
+                    }
+                    
                     appendToMessage(currentStreamMessageId, resultInfo);
                 }
                 break;
