@@ -237,7 +237,7 @@
       "configurationNeeds",
       "mcpTools"
     ],
-    "tools": ["get-settings", "update-settings", "install-node", "get-node-info"]
+    "tools": ["get-settings", "update-settings", "install-node", "get-node-info", "get_diagnostics"]
   },
   "management": {
     "name": "管理模式",
