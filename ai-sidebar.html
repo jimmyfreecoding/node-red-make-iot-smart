@@ -363,11 +363,9 @@
             sendMessage = `请为${scenario.name}场景提供初始指导信息和建议。`;
         }
 
-        // 在开发场景下检测"解释当前流程"提示词
+        // 检测"当前流程"相关提示词（所有场景）
         var dynamicData = {};
-        if (currentScenario === 'development' && 
-            (sendMessage.includes('解释当前流程') || sendMessage.includes('分析当前流程') || 
-             sendMessage.includes('explain current flow') || sendMessage.includes('analyze current flow'))) {
+        if (sendMessage.includes('当前流程') || sendMessage.includes('current flow')) {
             
             // 如果有选中的流程，传递流程ID给get-flow工具
             if (selectedFlow && selectedFlow.id) {
@@ -382,12 +380,8 @@
             }
         }
         
-        // 在开发场景下检测"解释当前节点"提示词
-        if (currentScenario === 'development' && 
-            (sendMessage.includes('解释当前节点') || sendMessage.includes('分析当前节点') || 
-             sendMessage.includes('解释选中节点') || sendMessage.includes('分析选中节点') ||
-             sendMessage.includes('explain current node') || sendMessage.includes('analyze current node') ||
-             sendMessage.includes('explain selected node') || sendMessage.includes('analyze selected node'))) {
+        // 检测"当前节点"相关提示词（所有场景）
+        if (sendMessage.includes('当前节点') || sendMessage.includes('current node')) {
             
             // 如果有选中的节点，传递节点信息给get-node-info工具
             if (selectedNodes && selectedNodes.length > 0) {
@@ -404,6 +398,22 @@
                 // 没有选中节点时的提示
                 sendMessage = `${sendMessage}\n\n注意：当前没有选中具体的节点，请先在Node-RED编辑器中选择要分析的节点。`;
             }
+        }
+        
+        // 检测"当前配置"相关提示词（所有场景）
+        if (sendMessage.includes('当前配置') || sendMessage.includes('current config') || sendMessage.includes('current settings')) {
+            console.log('检测到配置分析请求');
+            
+            // 自动切换到配置场景，因为get-settings工具只在配置场景中可用
+            if (currentScenario !== 'configuration') {
+                console.log('自动切换到配置场景以使用get-settings工具');
+                currentScenario = 'configuration';
+                ScenarioManager.currentScenario = 'configuration';
+                ScenarioManager.updateUI();
+            }
+            
+            // 修改消息以包含工具调用指示（注意：MCP工具名中的连字符会被转换为下划线）
+            sendMessage = `请使用get_settings工具获取当前Node-RED的配置信息，然后分析和解释配置文件的各项设置、功能和作用。\n\n用户原始请求：${sendMessage}`;
         }
 
         console.log("发送AI请求:", {
