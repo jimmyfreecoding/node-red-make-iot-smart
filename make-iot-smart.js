@@ -690,6 +690,144 @@ module.exports = function (RED) {
         }
     });
 
+    // 获取会话列表端点
+    RED.httpAdmin.get('/ai-sidebar/sessions', function(req, res) {
+        try {
+            const { limit = 20 } = req.query;
+            
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
+            }
+            
+            if (!configNode) {
+                return res.status(400).json({ error: 'No API configuration found' });
+            }
+
+            const sessions = configNode.memoryManager.getSessions(parseInt(limit));
+            res.json({ sessions });
+        } catch (error) {
+            console.error('Sessions endpoint error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    // 创建新会话端点
+    RED.httpAdmin.post('/ai-sidebar/sessions', function(req, res) {
+        try {
+            const { sessionId, title, scenario } = req.body;
+            
+            if (!sessionId) {
+                return res.status(400).json({ error: 'Session ID is required' });
+            }
+            
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
+            }
+            
+            if (!configNode) {
+                return res.status(400).json({ error: 'No API configuration found' });
+            }
+
+            const success = configNode.memoryManager.createSession(sessionId, title, scenario);
+            if (success) {
+                const session = configNode.memoryManager.getSession(sessionId);
+                res.json({ session });
+            } else {
+                res.status(500).json({ error: 'Failed to create session' });
+            }
+        } catch (error) {
+            console.error('Create session endpoint error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    // 获取单个会话详情端点
+    RED.httpAdmin.get('/ai-sidebar/sessions/:sessionId', function(req, res) {
+        try {
+            const { sessionId } = req.params;
+            
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
+            }
+            
+            if (!configNode) {
+                return res.status(400).json({ error: 'No API configuration found' });
+            }
+
+            const session = configNode.memoryManager.getSession(sessionId);
+            if (session) {
+                res.json({ session });
+            } else {
+                res.status(404).json({ error: 'Session not found' });
+            }
+        } catch (error) {
+            console.error('Get session endpoint error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    // 更新会话端点
+    RED.httpAdmin.put('/ai-sidebar/sessions/:sessionId', function(req, res) {
+        try {
+            const { sessionId } = req.params;
+            const updates = req.body;
+            
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
+            }
+            
+            if (!configNode) {
+                return res.status(400).json({ error: 'No API configuration found' });
+            }
+
+            const success = configNode.memoryManager.updateSession(sessionId, updates);
+            if (success) {
+                const session = configNode.memoryManager.getSession(sessionId);
+                res.json({ session });
+            } else {
+                res.status(500).json({ error: 'Failed to update session' });
+            }
+        } catch (error) {
+            console.error('Update session endpoint error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    // 删除会话端点
+    RED.httpAdmin.delete('/ai-sidebar/sessions/:sessionId', function(req, res) {
+        try {
+            const { sessionId } = req.params;
+            
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
+            }
+            
+            if (!configNode) {
+                return res.status(400).json({ error: 'No API configuration found' });
+            }
+
+            const success = configNode.memoryManager.deleteSession(sessionId);
+            if (success) {
+                res.json({ success: true });
+            } else {
+                res.status(500).json({ error: 'Failed to delete session' });
+            }
+        } catch (error) {
+            console.error('Delete session endpoint error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     // 搜索对话端点
     RED.httpAdmin.post('/ai-sidebar/search', function(req, res) {
         try {

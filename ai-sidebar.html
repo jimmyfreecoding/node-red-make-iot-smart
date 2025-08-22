@@ -1883,10 +1883,10 @@
         // 点击历史记录项
         $(document).on('click', '.chat-history-item', function(e) {
             e.preventDefault();
-            var content = $(this).data('content');
-            if (content) {
-                // 回显和召回历史聊天记录
-                recallChatHistory(content);
+            var sessionId = $(this).data('session-id');
+            if (sessionId) {
+                // 切换到选中的会话
+                switchToSession(sessionId);
                 // 关闭下拉菜单
                 $('#chat-history-dropdown-menu').hide();
                 $('#chat-history-dropdown-btn .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
@@ -1905,91 +1905,99 @@
                 text-align: center;
                 color: #6b7280;
                 font-size: 12px;
-            ">正在加载聊天历史...</div>
+            ">正在加载会话历史...</div>
         `);
         
-        // 异步获取聊天历史
-        getChatHistory(function(history) {
-            if (history.length === 0) {
-                $menu.html(`
-                    <div class="chat-history-empty" style="
-                        padding: 16px;
-                        text-align: center;
-                        color: #9ca3af;
-                        font-size: 12px;
-                    ">暂无聊天历史</div>
-                `);
-                return;
-            }
-            
-            var menuHtml = '';
-            
-            // 显示最近的对话记录（包括用户和助手消息）
-            var recentMessages = history.slice(-15); // 显示最近15条消息
-            
-            if (recentMessages.length > 0) {
-                menuHtml += `
-                    <div class="chat-history-section" style="
-                        padding: 8px 0;
-                        border-bottom: 1px solid #f3f4f6;
-                    ">
-                        <div class="chat-history-section-title" style="
-                            padding: 4px 12px;
-                            font-size: 11px;
-                            font-weight: 600;
-                            color: #6b7280;
-                            text-transform: uppercase;
-                            letter-spacing: 0.5px;
-                        ">最近对话</div>
-                `;
+        // 获取会话列表
+        $.ajax({
+            url: '/ai-sidebar/sessions',
+            method: 'GET',
+            data: { limit: 20 },
+            success: function(response) {
+                console.log('获取到会话列表:', response);
                 
-                recentMessages.reverse().forEach(function(msg, index) {
-                    var roleIcon = msg.role === 'user' ? '👤' : (msg.role === 'assistant' ? '🤖' : '📋');
-                    var roleColor = msg.role === 'user' ? '#2563eb' : (msg.role === 'assistant' ? '#059669' : '#6b7280');
-                    
+                if (!response.sessions || response.sessions.length === 0) {
+                    $menu.html(`
+                        <div class="chat-history-empty" style="
+                            padding: 16px;
+                            text-align: center;
+                            color: #9ca3af;
+                            font-size: 12px;
+                        ">暂无会话历史</div>
+                    `);
+                    return;
+                }
+                
+                var menuHtml = '';
+                
+                // 显示会话列表
+                var sessions = response.sessions.slice(0, 15); // 显示最近15个会话
+            
+                if (sessions.length > 0) {
                     menuHtml += `
-                        <div class="chat-history-item" data-content="${msg.content.replace(/"/g, '&quot;')}" style="
-                            padding: 8px 12px;
-                            cursor: pointer;
-                            border-bottom: ${index < recentMessages.length - 1 ? '1px solid #f9fafb' : 'none'};
-                            transition: background-color 0.1s;
-                            min-width: 0;
-                        " onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-                            <div style="
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                                margin-bottom: 4px;
-                            ">
-                                <span style="font-size: 10px;">${roleIcon}</span>
-                                <span style="
-                                    font-size: 10px;
-                                    font-weight: 600;
-                                    color: ${roleColor};
-                                    text-transform: capitalize;
-                                ">${msg.role === 'user' ? '用户' : (msg.role === 'assistant' ? '助手' : '系统')}</span>
-                                <span style="
-                                    font-size: 9px;
-                                    color: #9ca3af;
-                                    margin-left: auto;
-                                ">${msg.timestamp}</span>
-                            </div>
-                            <div style="
-                                font-size: 12px;
-                                color: #374151;
-                                line-height: 1.4;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                max-width: 100%;
-                                padding-left: 16px;
-                            ">${msg.preview}</div>
-                        </div>
+                        <div class="chat-history-section" style="
+                            padding: 8px 0;
+                            border-bottom: 1px solid #f3f4f6;
+                        ">
+                            <div class="chat-history-section-title" style="
+                                padding: 4px 12px;
+                                font-size: 11px;
+                                font-weight: 600;
+                                color: #6b7280;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                            ">历史会话</div>
                     `;
-                });
-                
-                menuHtml += '</div>';
-            }
+                    
+                    sessions.forEach(function(session, index) {
+                        var sessionTitle = session.title || `会话 ${session.id.substring(0, 8)}`;
+                        var lastMessageTime = session.last_message_time ? new Date(session.last_message_time).toLocaleString() : '未知时间';
+                        var messageCount = session.message_count || 0;
+                        var scenarioIcon = session.scenario === 'learning' ? '📚' : (session.scenario === 'solution' ? '🔧' : '💡');
+                        
+                        menuHtml += `
+                            <div class="chat-history-item" data-session-id="${session.id}" style="
+                                padding: 8px 12px;
+                                cursor: pointer;
+                                border-bottom: ${index < sessions.length - 1 ? '1px solid #f9fafb' : 'none'};
+                                transition: background-color 0.1s;
+                                min-width: 0;
+                            " onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    margin-bottom: 4px;
+                                ">
+                                    <span style="font-size: 10px;">${scenarioIcon}</span>
+                                    <span style="
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        color: #374151;
+                                        flex: 1;
+                                        white-space: nowrap;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                    ">${sessionTitle}</span>
+                                    <span style="
+                                        font-size: 9px;
+                                        color: #9ca3af;
+                                        background: #f3f4f6;
+                                        padding: 2px 6px;
+                                        border-radius: 10px;
+                                    ">${messageCount}条</span>
+                                </div>
+                                <div style="
+                                    font-size: 10px;
+                                    color: #6b7280;
+                                    padding-left: 16px;
+                                ">${lastMessageTime}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    menuHtml += '</div>';
+                }
             
             // 添加清空历史按钮
             menuHtml += `
@@ -2012,9 +2020,70 @@
                 </div>
             `;
             
-            $menu.html(menuHtml);
+                $menu.html(menuHtml);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取会话列表失败:', error);
+                $menu.html(`
+                    <div class="chat-history-error" style="
+                        padding: 16px;
+                        text-align: center;
+                        color: #ef4444;
+                        font-size: 12px;
+                    ">加载会话失败，请重试</div>
+                `);
+            }
         });
 
+    }
+    
+    // 切换到指定会话
+    function switchToSession(sessionId) {
+        console.log('切换到会话:', sessionId);
+        
+        // 更新当前会话ID
+        currentSessionId = sessionId;
+        localStorage.setItem('node-red-ai-session-id', sessionId);
+        
+        // 获取该会话的对话历史
+        $.ajax({
+            url: '/ai-sidebar/history/' + sessionId,
+            method: 'GET',
+            data: { limit: 50 },
+            success: function(response) {
+                console.log('获取到会话历史:', response);
+                
+                // 清空当前聊天区域
+                $('#augment-chat-messages').empty();
+                
+                if (response.history && response.history.length > 0) {
+                    // 添加系统提示消息
+                    addMessageToChat('system', `📋 已切换到会话: ${sessionId.substring(0, 8)}`);
+                    
+                    // 重新显示历史对话
+                    response.history.forEach(function(msg, index) {
+                        var messageId = 'session-' + Date.now() + '-' + index;
+                        addMessageToChat(msg.role, msg.content, messageId);
+                    });
+                    
+                    console.log('会话历史已加载，共', response.history.length, '条记录');
+                } else {
+                    // 添加系统提示消息
+                    addMessageToChat('system', `📋 已切换到新会话: ${sessionId.substring(0, 8)}`);
+                }
+                
+                // 滚动到底部
+                setTimeout(function() {
+                    forceScrollToBottom();
+                }, 100);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取会话历史失败:', error);
+                // 即使失败也要切换会话ID
+                $('#augment-chat-messages').empty();
+                addMessageToChat('system', `⚠️ 切换到会话: ${sessionId.substring(0, 8)} (历史加载失败)`);
+            }
+        });
     }
     
     // 回显和召回聊天历史记录
