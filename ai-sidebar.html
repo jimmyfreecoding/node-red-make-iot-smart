@@ -381,6 +381,30 @@
                 sendMessage = `${sendMessage}\n\n注意：当前没有选中具体的流程，请先在Node-RED编辑器中选择要分析的流程标签页。`;
             }
         }
+        
+        // 在开发场景下检测"解释当前节点"提示词
+        if (currentScenario === 'development' && 
+            (sendMessage.includes('解释当前节点') || sendMessage.includes('分析当前节点') || 
+             sendMessage.includes('解释选中节点') || sendMessage.includes('分析选中节点') ||
+             sendMessage.includes('explain current node') || sendMessage.includes('analyze current node') ||
+             sendMessage.includes('explain selected node') || sendMessage.includes('analyze selected node'))) {
+            
+            // 如果有选中的节点，传递节点信息给get-node-info工具
+            if (selectedNodes && selectedNodes.length > 0) {
+                dynamicData.selectedNodes = selectedNodes;
+                console.log('检测到节点解释请求，传递选中节点:', selectedNodes.map(n => ({ id: n.id, type: n.type, name: n.name })));
+                
+                // 修改消息以包含工具调用指示
+                const nodeDescription = selectedNodes.length === 1 
+                    ? `节点"${selectedNodes[0].name || selectedNodes[0].type}"(类型: ${selectedNodes[0].type})`
+                    : `${selectedNodes.length}个选中节点`;
+                    
+                sendMessage = `请使用get-node-info工具获取选中节点的详细信息，然后分析和解释${nodeDescription}的功能、配置和作用。\n\n用户原始请求：${sendMessage}`;
+            } else {
+                // 没有选中节点时的提示
+                sendMessage = `${sendMessage}\n\n注意：当前没有选中具体的节点，请先在Node-RED编辑器中选择要分析的节点。`;
+            }
+        }
 
         console.log("发送AI请求:", {
             message: sendMessage,
