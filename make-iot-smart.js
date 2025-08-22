@@ -932,4 +932,50 @@ module.exports = function (RED) {
                 res.status(500).json({ error: error.message });
             }
         });
+
+        // 获取支持的LLM提供商和模型列表端点
+        RED.httpAdmin.get('/ai-sidebar/llm-providers', function(req, res) {
+            try {
+                // 定义支持的LLM提供商和模型
+                const providers = {
+                    openai: {
+                        name: 'OpenAI',
+                        models: [
+                            { value: 'gpt-4o', label: 'GPT-4o' },
+                            { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+                            { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+                            { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
+                        ]
+                    },
+                    deepseek: {
+                        name: 'DeepSeek',
+                        models: [
+                            { value: 'deepseek-chat', label: 'DeepSeek Chat' },
+                            { value: 'deepseek-coder', label: 'DeepSeek Coder' }
+                        ]
+                    },
+                    anthropic: {
+                        name: 'Anthropic',
+                        models: [
+                            { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+                            { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
+                            { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' }
+                        ]
+                    },
+                    google: {
+                        name: 'Google',
+                        models: [
+                            { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+                            { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+                            { value: 'gemini-1.0-pro', label: 'Gemini 1.0 Pro' }
+                        ]
+                    }
+                };
+
+                res.json({ providers });
+            } catch (error) {
+                console.error('获取LLM提供商列表失败:', error);
+                res.status(500).json({ error: '获取LLM提供商列表失败' });
+            }
+        });
 }

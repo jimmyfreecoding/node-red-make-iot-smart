@@ -144,34 +144,121 @@
         oneditprepare: function() {
             var node = this;
             
-
-
+            // 存储提供商和模型数据
+            var providersData = {};
             
-            // 提供商模型映射
-            const providerModels = {
-                openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-                deepseek: ['deepseek-chat', 'deepseek-coder'],
-                anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
-                google: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro']
-            };
+            // 从后端获取LLM提供商和模型列表
+            function loadProvidersAndModels() {
+                return $.ajax({
+                    url: '/ai-sidebar/llm-providers',
+                    method: 'GET',
+                    dataType: 'json'
+                }).done(function(response) {
+                    if (response && response.providers) {
+                        providersData = response.providers;
+                        console.log('加载的提供商数据:', providersData);
+                        
+                        // 更新提供商选择器
+                        updateProviderOptions();
+                        
+                        // 初始化模型选项
+                        updateModelOptions($('#node-config-input-model'), node.provider);
+                        updateModelOptions($('#node-config-input-planningModel'), node.provider);
+                        updateModelOptions($('#node-config-input-executionModel'), node.provider);
+                    }
+                }).fail(function(xhr, status, error) {
+                    console.error('加载LLM提供商列表失败:', error);
+                    // 使用默认的硬编码数据作为后备
+                    providersData = {
+                        openai: {
+                            name: 'OpenAI',
+                            models: [
+                                { value: 'gpt-4o', label: 'GPT-4o' },
+                                { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+                                { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+                                { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }
+                            ]
+                        },
+                        deepseek: {
+                            name: 'DeepSeek',
+                            models: [
+                                { value: 'deepseek-chat', label: 'DeepSeek Chat' },
+                                { value: 'deepseek-coder', label: 'DeepSeek Coder' }
+                            ]
+                        },
+                        anthropic: {
+                            name: 'Anthropic',
+                            models: [
+                                { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+                                { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
+                                { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' }
+                            ]
+                        },
+                        google: {
+                            name: 'Google',
+                            models: [
+                                { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+                                { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+                                { value: 'gemini-1.0-pro', label: 'Gemini 1.0 Pro' }
+                            ]
+                        }
+                    };
+                    updateProviderOptions();
+                    updateModelOptions($('#node-config-input-model'), node.provider);
+                    updateModelOptions($('#node-config-input-planningModel'), node.provider);
+                    updateModelOptions($('#node-config-input-executionModel'), node.provider);
+                });
+            }
             
-            // 更新模型选项
-            function updateModelOptions(selectElement, provider) {
-                const models = providerModels[provider] || [];
-                selectElement.empty();
-                models.forEach(model => {
-                    selectElement.append($('<option></option>').attr('value', model).text(model));
+            // 更新提供商选择器选项
+            function updateProviderOptions() {
+                const $providerSelect = $('#node-config-input-provider');
+                $providerSelect.empty();
+                
+                Object.keys(providersData).forEach(function(providerId) {
+                    const provider = providersData[providerId];
+                    $providerSelect.append($('<option></option>')
+                        .attr('value', providerId)
+                        .text(provider.name)
+                    );
                 });
                 
-                if (models.length > 0) {
-                    selectElement.val(models[0]);
+                // 设置当前选中的提供商
+                if (node.provider && providersData[node.provider]) {
+                    $providerSelect.val(node.provider);
                 }
             }
             
-            // 初始化模型选项
-            updateModelOptions($('#node-config-input-model'), node.provider);
-            updateModelOptions($('#node-config-input-planningModel'), node.provider);
-            updateModelOptions($('#node-config-input-executionModel'), node.provider);
+            // 更新模型选项
+            function updateModelOptions(selectElement, providerId) {
+                const provider = providersData[providerId];
+                if (!provider || !provider.models) {
+                    selectElement.empty();
+                    return;
+                }
+                
+                selectElement.empty();
+                provider.models.forEach(function(model) {
+                    selectElement.append($('<option></option>')
+                        .attr('value', model.value)
+                        .text(model.label)
+                    );
+                });
+                
+                // 设置默认选中的模型
+                if (provider.models.length > 0) {
+                    // 如果当前节点有设置的模型，尝试选中它
+                    const currentModel = selectElement.attr('id') === 'node-config-input-model' ? node.model :
+                                       selectElement.attr('id') === 'node-config-input-planningModel' ? node.planningModel :
+                                       node.executionModel;
+                    
+                    if (currentModel && provider.models.find(m => m.value === currentModel)) {
+                        selectElement.val(currentModel);
+                    } else {
+                        selectElement.val(provider.models[0].value);
+                    }
+                }
+            }
             
             // 提供商变化时更新模型选项
             $('#node-config-input-provider').change(function() {
@@ -190,12 +277,13 @@
                 }
             });
             
-
-            
             // 初始化显示状态
             if (node.useDifferentModels) {
                 $('.different-models-config').show();
             }
+            
+            // 加载提供商和模型数据
+            loadProvidersAndModels();
             
 
             
