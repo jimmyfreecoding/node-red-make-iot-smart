@@ -429,7 +429,7 @@
             }
             
             // 修改消息以包含工具调用指示（注意：MCP工具名中的连字符会被转换为下划线）
-            sendMessage = `请使用get_diagnostics工具获取当前Node-RED的系统诊断信息，然后分析和解释系统状态、性能指标和潜在问题。\n\n用户原始请求：${sendMessage}`;
+            sendMessage = `请使用get_diagnostics工具获取当前Node-RED的系统诊断信息，然后用自然语言详细分析和解释系统状态、性能指标和潜在问题，请不要直接返回JSON格式，而是用易懂的中文进行说明。在回复最后用表格显示当前诊断的具体数据。\n\n用户原始请求：${sendMessage}`;
         }
 
         console.log("发送AI请求:", {
