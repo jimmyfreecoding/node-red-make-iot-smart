@@ -363,6 +363,25 @@
             sendMessage = `请为${scenario.name}场景提供初始指导信息和建议。`;
         }
 
+        // 在开发场景下检测"解释当前流程"提示词
+        var dynamicData = {};
+        if (currentScenario === 'development' && 
+            (sendMessage.includes('解释当前流程') || sendMessage.includes('分析当前流程') || 
+             sendMessage.includes('explain current flow') || sendMessage.includes('analyze current flow'))) {
+            
+            // 如果有选中的流程，传递流程ID给get-flow工具
+            if (selectedFlow && selectedFlow.id) {
+                dynamicData.flowId = selectedFlow.id;
+                console.log('检测到流程解释请求，传递流程ID:', selectedFlow.id);
+                
+                // 修改消息以包含工具调用指示
+                sendMessage = `请使用get-flow工具获取流程ID为"${selectedFlow.id}"的流程数据，然后分析和解释这个流程的功能、节点连接关系和工作原理。\n\n用户原始请求：${sendMessage}`;
+            } else {
+                // 没有选中流程时的提示
+                sendMessage = `${sendMessage}\n\n注意：当前没有选中具体的流程，请先在Node-RED编辑器中选择要分析的流程标签页。`;
+            }
+        }
+
         console.log("发送AI请求:", {
             message: sendMessage,
             scenario: currentScenario,
@@ -394,7 +413,8 @@
                     selectedNodes: selectedNodes,
                     flowData: flowData,
                     history: history,  // 使用异步获取的历史记录
-                    silent: silent  // 添加静默标记
+                    silent: silent,  // 添加静默标记
+                    dynamicData: dynamicData  // 添加动态数据
                 })
             })
         .then(response => {

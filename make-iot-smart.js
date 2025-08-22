@@ -455,7 +455,7 @@ module.exports = function (RED) {
             console.log('🌐 收到普通聊天请求:', req.body);
             console.log('🔥 普通聊天端点被调用！');
             console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
-            const { message, scenario, sessionId, selectedFlow, selectedNodes } = req.body;
+            const { message, scenario, sessionId, selectedFlow, selectedNodes, dynamicData: requestDynamicData } = req.body;
             
             if (!message) {
                 return res.status(400).json({ error: 'Message is required' });
@@ -474,9 +474,19 @@ module.exports = function (RED) {
 
             // 准备动态数据
             const dynamicData = {
+                ...(requestDynamicData || {}),  // 先合并前端传递的动态数据
                 selectedFlow: selectedFlow,
                 selectedNodes: selectedNodes
             };
+            
+            // 确保flowId正确传递
+            if (requestDynamicData && requestDynamicData.flowId) {
+                dynamicData.flowId = requestDynamicData.flowId;
+                console.log('✅ 从前端获取到flowId:', requestDynamicData.flowId);
+            } else if (selectedFlow && selectedFlow.id) {
+                dynamicData.flowId = selectedFlow.id;
+                console.log('✅ 从selectedFlow获取到flowId:', selectedFlow.id);
+            }
 
             // 执行对话
             const result = await configNode.executeChat(message, scenario, sessionId, dynamicData);
@@ -553,7 +563,7 @@ module.exports = function (RED) {
             console.log('🔍 请求头:', req.headers);
             console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
             
-            const { message, scenario, sessionId, selectedFlow, selectedNodes } = req.body;
+            const { message, scenario, sessionId, selectedFlow, selectedNodes, dynamicData: requestDynamicData } = req.body;
             
             if (!message) {
                 return res.status(400).json({ error: 'Message is required' });
@@ -600,7 +610,8 @@ module.exports = function (RED) {
             // 准备动态数据
             const dynamicData = {
                 selectedFlow: selectedFlow,
-                selectedNodes: selectedNodes
+                selectedNodes: selectedNodes,
+                ...(requestDynamicData || {})  // 合并前端传递的动态数据
             };
             
             console.log('📝 请求参数:', { message, scenario, sessionId, dynamicData });

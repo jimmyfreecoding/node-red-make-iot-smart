@@ -191,7 +191,7 @@
       "developmentTask",
       "mcpTools"
     ],
-    "tools": ["create-flow", "update-flow", "create-subflow", "get-node-info", "install-node"]
+    "tools": ["create-flow", "update-flow", "create-subflow", "get-node-info", "install-node", "get-flow"]
   },
   "configuration": {
     "name": "配置模式",
