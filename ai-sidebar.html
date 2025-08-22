@@ -3651,33 +3651,7 @@
                         
                         console.log('场景菜单按钮事件绑定完成');
                         
-                        // 测试按钮可访问性和事件绑定
-                        setTimeout(() => {
-                            console.log('=== 测试按钮可访问性 ===');
-                            console.log('jQuery版本:', $.fn.jquery);
-                            console.log('按钮元素:', $("#augment-at-mention")[0]);
-                            console.log('按钮是否可见:', $("#augment-at-mention").is(':visible'));
-                            console.log('按钮是否禁用:', $("#augment-at-mention").prop('disabled'));
-                            
-                            // 检查事件绑定
-                            var events = $("#augment-at-mention")[0] ? $._data($("#augment-at-mention")[0], 'events') : null;
-                            console.log('按钮事件:', events);
-                            
-                            // 手动测试点击
-                            console.log('=== 手动触发点击测试 ===');
-                            $("#augment-at-mention").trigger('click');
-                            
-                            // 重新绑定事件作为备用方案
-                            console.log('=== 重新绑定事件 ===');
-                            $("#augment-at-mention").off('click').on('click', function(e) {
-                                e.preventDefault();
-                                console.log('=== 重新绑定的事件被触发 ===');
-                                console.log('事件对象:', e);
-                                showScenarioMenu(e);
-                            });
-                            
-                            console.log('重新绑定完成，请再次点击按钮测试');
-                        }, 2000);
+                        // 移除了自动触发点击测试的代码，避免页面加载时自动弹出场景菜单
                         
                         // 初始化默认场景
                         ScenarioManager.updateUI();
