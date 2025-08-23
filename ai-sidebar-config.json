@@ -1,6 +1,6 @@
 {
   "ui": {
-    "placeholder": "Ask or instruct Augment",
+    "placeholder": "Ask or instruct AI assistant",
     "currentFlow": "当前流程",
     "currentNode": "当前节点",
     "noFlowSelected": "未选择流程",
@@ -9,7 +9,7 @@
     "nodeType": "类型",
     "timestamp": "07:51 PM",
     "userLabel": "You",
-    "assistantLabel": "Augment"
+    "assistantLabel": "AI assistant"
   },
   "messages": {
     "developmentInProgress": "此功能正在开发中",
