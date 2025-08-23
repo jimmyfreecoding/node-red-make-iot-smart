@@ -665,8 +665,22 @@
                     appendToMessage(currentStreamMessageId, `❌ 错误: ${data.message || data.content || data.error}`);
                 }
                 
-                // 显示RED.notify通知
-                RED.notify(data.message || data.content || data.error || '发生未知错误', 'error');
+                // 检查是否是API密钥认证失败错误
+                if (data.code === 'API_AUTH_FAILED' || 
+                    (data.message && data.message.includes('API密钥')) ||
+                    (data.content && data.content.includes('API密钥'))) {
+                    
+                    // 显示特定的API密钥错误通知
+                    RED.notify('API密钥未配置或认证失败，正在打开配置界面...', 'error');
+                    
+                    // 自动打开配置界面
+                    setTimeout(function() {
+                        openConfigInterface();
+                    }, 1000);
+                } else {
+                    // 显示普通错误通知
+                    RED.notify(data.message || data.content || data.error || '发生未知错误', 'error');
+                }
                 break;
                 
             case 'done':
@@ -1917,6 +1931,38 @@
         } catch (error) {
             console.error("创建默认配置节点失败:", error);
             return null;
+        }
+    }
+
+    // 自动打开配置界面函数
+    function openConfigInterface() {
+        console.log("自动打开API配置界面");
+        
+        try {
+            var apiConfigNodes = [];
+            RED.nodes.eachConfig(function(configNode) {
+                if (configNode.type === 'api-config') {
+                    apiConfigNodes.push(configNode);
+                }
+            });
+            
+            if (apiConfigNodes.length > 0) {
+                console.log("找到api-config节点，打开编辑界面");
+                RED.editor.editConfig("", "api-config", apiConfigNodes[0].id);
+            } else {
+                console.log("没有找到api-config节点，创建新的配置节点并打开编辑界面");
+                var newNodeId = createDefaultApiConfigNode();
+                if (newNodeId) {
+                    // createDefaultApiConfigNode已经会自动打开编辑界面
+                    console.log("新配置节点已创建并打开编辑界面");
+                } else {
+                    // 如果创建失败，直接打开新的配置对话框
+                    RED.editor.editConfig("", "api-config");
+                }
+            }
+        } catch (error) {
+            console.error("打开配置界面时发生错误:", error);
+            RED.notify("打开配置界面时出错: " + error.message, "error");
         }
     }
 

@@ -218,6 +218,16 @@ module.exports = function (RED) {
                 // 获取LLM配置
                 const llmConfig = node.getLLMConfig();
                 
+                // 打印LLM配置用于调试
+                console.log('🔧 LLM配置:', llmConfig);
+                
+                // 检查API密钥是否未配置
+                if (!llmConfig.apiKey || llmConfig.apiKey === '请配置API密钥' || llmConfig.apiKey.trim() === '') {
+                    const error = new Error('API密钥未配置，请在配置节点中设置API密钥');
+                    error.code = 'API_AUTH_FAILED';
+                    throw error;
+                }
+                
                 // 检测场景
                 if (!scenario) {
                     scenario = node.langchainManager.detectScenario(message);

@@ -58,13 +58,23 @@
         "id": "d1b65edb7885fb7b",
         "type": "api-config",
         "name": "Default AI Config",
-        "provider": "openai",
-        "model": "gpt-4o-mini",
+        "provider": "deepseek",
+        "model": "deepseek-chat",
         "useDifferentModels": false,
         "planningModel": "",
         "executionModel": "",
         "temperature": 0.1,
         "maxTokens": 2000
+    },
+    {
+        "id": "b5e8bb5bae1828fb",
+        "type": "make-iot-smart",
+        "z": "34ab4d95e517fb00",
+        "d": true,
+        "name": "AI助手",
+        "apiConfig": "d1b65edb7885fb7b",
+        "algorithm": "dagre_lr",
+        "settings": {}
     },
     {
         "id": "inject-node",
@@ -4273,18 +4283,5 @@
         "wires": [
             []
         ]
-    },
-    {
-        "id": "b5e8bb5bae1828fb",
-        "type": "make-iot-smart",
-        "name": "AI助手",
-        "apiConfig": "d1b65edb7885fb7b",
-        "algorithm": "dagre_lr",
-        "settings": {},
-        "valid": true,
-        "d": true,
-        "x": 100,
-        "y": 100,
-        "z": "34ab4d95e517fb00"
     }
 ]

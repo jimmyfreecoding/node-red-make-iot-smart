@@ -4273,5 +4273,18 @@
         "wires": [
             []
         ]
+    },
+    {
+        "id": "b5e8bb5bae1828fb",
+        "type": "make-iot-smart",
+        "name": "AI助手",
+        "apiConfig": "d1b65edb7885fb7b",
+        "algorithm": "dagre_lr",
+        "settings": {},
+        "valid": true,
+        "d": true,
+        "x": 100,
+        "y": 100,
+        "z": "34ab4d95e517fb00"
     }
 ]
