@@ -13,26 +13,14 @@
         "env": []
     },
     {
-        "id": "api-config-001",
-        "type": "api-config",
-        "name": "Default AI Config",
-        "provider": "deepseek",
-        "model": "deepseek-chat",
-        "useDifferentModels": false,
-        "planningModel": "",
-        "executionModel": "",
-        "temperature": 0.1,
-        "maxTokens": 2000
+        "id": "9459898094a79b01",
+        "type": "tab",
+        "label": "新流程"
     },
     {
-        "id": "a59f2fd7015912bc",
-        "type": "make-iot-smart",
-        "z": "34ab4d95e517fb00",
-        "d": true,
-        "name": "AI助手",
-        "apiConfig": "api-config-001",
-        "algorithm": "dagre_lr",
-        "settings": {}
+        "id": "adfefcfb027bb319",
+        "type": "tab",
+        "label": "新流程"
     },
     {
         "id": "26637148eca75ac1",
@@ -65,6 +53,18 @@
         "willMsg": {},
         "userProps": "",
         "sessionExpiry": ""
+    },
+    {
+        "id": "d1b65edb7885fb7b",
+        "type": "api-config",
+        "name": "Default AI Config",
+        "provider": "openai",
+        "model": "gpt-4o-mini",
+        "useDifferentModels": false,
+        "planningModel": "",
+        "executionModel": "",
+        "temperature": 0.1,
+        "maxTokens": 2000
     },
     {
         "id": "inject-node",
@@ -4133,13 +4133,9 @@
         "wires": []
     },
     {
-        "type": "tab",
-        "label": "新流程",
-        "id": "9459898094a79b01"
-    },
-    {
         "id": "ba736497f988ce1e",
         "type": "inject",
+        "z": "9459898094a79b01",
         "name": "定时触发",
         "props": [
             {
@@ -4164,12 +4160,12 @@
                 "ed195d89b0cec721",
                 "3f475f4a6b8acb83"
             ]
-        ],
-        "z": "9459898094a79b01"
+        ]
     },
     {
         "id": "ed195d89b0cec721",
         "type": "debug",
+        "z": "9459898094a79b01",
         "name": "显示原始消息",
         "active": true,
         "tosidebar": true,
@@ -4180,12 +4176,12 @@
         "statusType": "auto",
         "x": 400,
         "y": 60,
-        "wires": [],
-        "z": "9459898094a79b01"
+        "wires": []
     },
     {
         "id": "3f475f4a6b8acb83",
         "type": "function",
+        "z": "9459898094a79b01",
         "name": "处理消息",
         "func": "// 在消息中添加时间戳\nmsg.timestamp = new Date().toISOString();\nmsg.processed = true;\n\n// 返回修改后的消息\nreturn msg;",
         "outputs": 1,
@@ -4199,12 +4195,12 @@
             [
                 "6accc6e776b58da2"
             ]
-        ],
-        "z": "9459898094a79b01"
+        ]
     },
     {
         "id": "6accc6e776b58da2",
         "type": "debug",
+        "z": "9459898094a79b01",
         "name": "显示处理后的消息",
         "active": true,
         "tosidebar": true,
@@ -4215,7 +4211,80 @@
         "statusType": "auto",
         "x": 650,
         "y": 140,
-        "wires": [],
-        "z": "9459898094a79b01"
+        "wires": []
+    },
+    {
+        "id": "288dd196c45466fd",
+        "type": "debug",
+        "z": "adfefcfb027bb319",
+        "name": "调试输出",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "fe0ccb5e8b6ccbac",
+        "type": "function",
+        "z": "adfefcfb027bb319",
+        "name": "数据处理",
+        "func": "// 将Modbus原始数据转换为可读格式\nif (msg.payload && msg.payload.buffer) {\n    // 处理保持寄存器数据\n    const data = msg.payload.buffer;\n    const processedData = {\n        timestamp: new Date().toISOString(),\n        registerValues: Array.from(data),\n        temperature: data[0] / 10, // 假设第一个寄存器是温度值，除以10得到实际值\n        pressure: data[1] / 100,   // 假设第二个寄存器是压力值，除以100得到实际值\n        status: data[2]            // 假设第三个寄存器是状态值\n    };\n    \n    msg.payload = processedData;\n    msg.topic = \"processed_modbus_data\";\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b5d8d542b3ac5186",
+        "type": "inject",
+        "z": "adfefcfb027bb319",
+        "name": "手动触发读取",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "manual_read",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 150,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b5e8bb5bae1828fb",
+        "type": "make-iot-smart",
+        "name": "AI助手",
+        "apiConfig": "d1b65edb7885fb7b",
+        "algorithm": "dagre_lr",
+        "settings": {},
+        "valid": true,
+        "d": true,
+        "x": 100,
+        "y": 100,
+        "z": "34ab4d95e517fb00"
     }
 ]

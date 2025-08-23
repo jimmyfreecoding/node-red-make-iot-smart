@@ -25,6 +25,43 @@
         console.error('错误堆栈:', e.error ? e.error.stack : 'no stack');
     });
     
+    // 修复Node-RED调试消息处理中的undefined label错误
+    // 保存原始的handleDebugMessage函数（如果存在）
+    var originalHandleDebugMessage = window.handleDebugMessage;
+    
+    window.handleDebugMessage = function(data) {
+        try {
+            // 如果data是数组，处理每个元素
+            if (data && Array.isArray(data)) {
+                data = data.map(function(item) {
+                    // 确保每个项目都有label属性，如果没有则提供默认值
+                    if (item && typeof item === 'object' && !item.label) {
+                        item.label = item.name || item.id || item.type || 'Unknown';
+                    }
+                    return item;
+                });
+            }
+            
+            // 如果存在原始函数，调用它
+            if (originalHandleDebugMessage && typeof originalHandleDebugMessage === 'function') {
+                return originalHandleDebugMessage.call(this, data);
+            }
+            
+            return data;
+        } catch (error) {
+            console.warn('处理调试消息时出错:', error);
+            // 如果出错，尝试调用原始函数
+            if (originalHandleDebugMessage && typeof originalHandleDebugMessage === 'function') {
+                try {
+                    return originalHandleDebugMessage.call(this, data);
+                } catch (e) {
+                    console.warn('调用原始handleDebugMessage也失败:', e);
+                }
+            }
+            return data;
+        }
+    };
+    
     var currentStreamMessageId = null;
         // 场景管理器 - 移到最前面定义
     var ScenarioManager = {
@@ -1261,6 +1298,7 @@
                     <span>在新流程中创建</span>
                 </div>
                 <div class="menu-item" data-action="create-current" data-block-id="${blockId}" style="
+                    display:none;
                     padding: 10px 16px;
                     cursor: pointer;
                     display: flex;

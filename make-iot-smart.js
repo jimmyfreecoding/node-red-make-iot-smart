@@ -1052,4 +1052,159 @@ module.exports = function (RED) {
                 res.status(500).json({ error: '获取LLM提供商列表失败' });
             }
         });
+
+    // 自动创建AI助手节点的机制
+    function ensureAIHelperNode() {
+        try {
+            // 重新启用自动重建功能
+            const AUTO_REBUILD_ENABLED = true;
+            
+            // 检查是否存在AI助手节点
+            let hasAIHelper = false;
+            
+            RED.nodes.eachNode(function(node) {
+                if (node.type === 'make-iot-smart') {
+                    hasAIHelper = true;
+                    return false; // 停止遍历
+                }
+            });
+            
+            // 如果没有AI助手节点，通过HTTP API创建一个
+            if (!hasAIHelper) {
+                console.log('未找到AI助手节点，自动创建中...');
+                
+                // 查找第一个API配置节点
+                let apiConfigId = null;
+                
+                RED.nodes.eachNode(function(node) {
+                    if (node.type === 'api-config') {
+                        apiConfigId = node.id;
+                        return false; // 停止遍历
+                    }
+                });
+                
+                if (apiConfigId) {
+                    // 获取当前流程
+                    const http = require('http');
+                    const options = {
+                        hostname: 'localhost',
+                        port: 1880,
+                        path: '/flows',
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    };
+                    
+                    const req = http.request(options, (res) => {
+                        let data = '';
+                        res.on('data', (chunk) => {
+                            data += chunk;
+                        });
+                        res.on('end', () => {
+                            try {
+                                const flows = JSON.parse(data);
+                                
+                                // 查找第一个工作区
+                                let workspaceId = null;
+                                for (const flow of flows) {
+                                    if (flow.type === 'tab') {
+                                        workspaceId = flow.id;
+                                        break;
+                                    }
+                                }
+                                
+                                // 如果没有工作区，创建一个
+                                if (!workspaceId) {
+                                    workspaceId = RED.util.generateId();
+                                    flows.push({
+                                        id: workspaceId,
+                                        type: 'tab',
+                                        label: 'Flow 1',
+                                        disabled: false,
+                                        info: ''
+                                    });
+                                }
+                                
+                                // 添加AI助手节点（设置为有效状态但默认禁用）
+                                const newNodeId = RED.util.generateId();
+                                flows.push({
+                                    id: newNodeId,
+                                    type: 'make-iot-smart',
+                                    name: 'AI助手',
+                                    apiConfig: apiConfigId,
+                                    algorithm: 'dagre_lr',
+                                    settings: {},
+                                    valid: true,
+                                    d: true,
+                                    x: 100,
+                                    y: 100,
+                                    z: workspaceId
+                                });
+                                console.log('自动创建AI助手节点（设置为有效状态但默认禁用）:', newNodeId);
+                                
+                                // 更新流程
+                                const updateOptions = {
+                                    hostname: 'localhost',
+                                    port: 1880,
+                                    path: '/flows',
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    }
+                                };
+                                
+                                const updateReq = http.request(updateOptions, (updateRes) => {
+                                    if (updateRes.statusCode === 200 || updateRes.statusCode === 204) {
+                                        console.log('AI助手节点自动创建成功:', newNodeId);
+                                    } else {
+                                        console.error('更新流程失败，状态码:', updateRes.statusCode);
+                                    }
+                                });
+                                
+                                updateReq.on('error', (err) => {
+                                    console.error('更新流程请求失败:', err);
+                                });
+                                
+                                updateReq.write(JSON.stringify(flows));
+                                updateReq.end();
+                                
+                            } catch (parseError) {
+                                console.error('解析流程数据失败:', parseError);
+                            }
+                        });
+                    });
+                    
+                    req.on('error', (err) => {
+                        console.error('获取流程失败:', err);
+                    });
+                    
+                    req.end();
+                } else {
+                    console.log('未找到API配置节点，无法自动创建AI助手节点');
+                }
+            } else {
+                console.log('AI助手节点已存在，无需创建');
+            }
+        } catch (error) {
+            console.error('ensureAIHelperNode执行失败:', error);
+        }
+    }
+    
+    // 立即执行一次检查
+    console.log('设置setTimeout来调用ensureAIHelperNode...');
+    setTimeout(() => {
+        console.log('setTimeout触发，开始执行ensureAIHelperNode...');
+        ensureAIHelperNode();
+    }, 3000);
+    
+    // 监听节点删除事件，自动重新创建AI助手节点
+    RED.events.on('flows:stopped', function() {
+        setTimeout(ensureAIHelperNode, 1000);
+    });
+    
+    // 监听流部署事件
+    RED.events.on('flows:started', function() {
+        setTimeout(ensureAIHelperNode, 2000);
+    });
 }
