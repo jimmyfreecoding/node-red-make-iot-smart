@@ -1,0 +1,90 @@
+{
+    "make-iot-smart": {
+        "paletteLabel": "AIアシスタント",
+        "label": {
+            "name": "名前",
+            "apiConfig": "API設定",
+            "aiAssistant": "AIアシスタント",
+            "defaultName": "AIアシスタント"
+        },
+        "placeholder": {
+            "name": "AIアシスタント"
+        },
+        "tips": {
+            "autoHide": "このノードは自動的に非表示になり、AI設定の接続に使用されます。削除された場合、システムが自動的に再作成します。"
+        }
+    },
+    "common": {
+        "label": {
+            "tip": "ヒント:"
+        }
+    },
+    "api-config": {
+        "label": {
+            "name": "名前",
+            "provider": "APIプロバイダー",
+            "apiKey": "APIキー",
+            "model": "モデル",
+            "maxTokens": "最大トークン数",
+            "useDifferentModels": "PlanモードとActモードで異なるモデルを使用"
+        },
+        "placeholder": {
+            "name": "名前",
+            "apiKey": "APIキーを入力してください"
+        },
+        "tips": {
+            "apiKey": "このキーはローカルに保存され、この拡張機能からのAPIリクエストにのみ使用されます。",
+            "differentModels": "PlanモードとActモードを切り替えると、前のモードで使用されたAPIとモデルが保持されます。これは、強力な推論モデルを使用して計画を立て、その後より安価なコーディングモデルを使用して実行する場合に役立ちます。",
+            "capabilities": {
+                "noImage": "画像サポートなし",
+                "noBrowser": "ブラウザ使用サポートなし",
+                "promptCache": "プロンプトキャッシュをサポート",
+                "maxInput": "最大入力：8,000トークン",
+                "cacheWritePrice": "キャッシュ書き込み価格：$0.27/百万トークン",
+                "cacheReadPrice": "キャッシュ読み取り価格：$0.07/百万トークン",
+                "outputPrice": "出力価格：$1.10/百万トークン"
+            }
+        },
+        "help": {
+            "description": "API設定ノードは、AIサービスプロバイダーのAPIキーとモデル選択を保存するために使用されます。",
+            "providers": "サポートされているプロバイダーには、DeepSeek、OpenAI、Anthropicが含まれます。",
+            "usage": "異なる使用シナリオに対して異なるモデルを選択でき、PlanモードとActモードで異なるモデルを使用することを選択できます。"
+        },
+        "validation": {
+            "apiKeyFiltered": "不正な文字がフィルタリングされました。APIキーには数字、文字、記号のみを含めることができます"
+        }
+    },
+    "errors": {
+        "apiKeyMissing": "APIキーが設定されていません。設定ノードでAPIキーを設定してください",
+        "apiKeyAuthFailed": "APIキー認証に失敗しました。設定ノードのAPIキーが正しいかどうか確認してください",
+        "modelMissing": "モデル名が不足しています。設定ノードでモデルを選択してください",
+        "configNodeNotFound": "API設定ノードが見つかりません",
+        "networkError": "ネットワークエラー",
+        "executionFailed": "実行に失敗しました",
+        "toolExecutionFailed": "ツール実行に失敗しました",
+        "unknownError": "不明なエラーが発生しました"
+    },
+    "messages": {
+        "apiConfigInit": "API設定ノードの初期化",
+        "mcpNotEnabled": "MCPが有効になっていません - enableMcpがfalseです",
+        "mcpCommandNotConfigured": "MCPコマンドが設定されていません",
+        "mcpInitStart": "MCP接続の初期化を開始",
+        "mcpInitSuccess": "MCP初期化成功",
+        "mcpInitFailed": "MCP初期化失敗",
+        "aiHelperNodeExists": "AIアシスタントノードは既に存在します。作成する必要はありません",
+        "aiHelperNodeCreated": "AIアシスタントノードが自動的に正常に作成されました",
+        "aiHelperNodeCreating": "AIアシスタントノードが見つかりません。自動作成中...",
+        "flowCreationSuccess": "フロー作成成功！",
+        "toolExecutionSuccess": "適用済み",
+        "retry": "再試行",
+        "apiConfigNotFound": "API設定ノードが見つかりません。AIアシスタントノードを自動作成できません",
+        "initializingAIHelper": "ensureAIHelperNodeを呼び出すためのsetTimeoutを設定中...",
+        "aiHelperNodeChecking": "setTimeoutがトリガーされ、ensureAIHelperNodeの実行を開始..."
+    },
+    "status": {
+        "ready": "準備完了",
+        "connected": "接続済み",
+        "disconnected": "切断済み",
+        "error": "エラー"
+    }
+}

@@ -45,7 +45,8 @@
     "node-red": {
         "version": ">=2.0.0",
         "nodes": {
-            "api-config": "make-iot-smart.js"
+            "api-config": "api-config.js",
+            "make-iot-smart": "make-iot-smart.js"
         },
         "plugins": {
             "ai-sidebar": "ai-sidebar.html"

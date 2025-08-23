@@ -1,0 +1,90 @@
+{
+    "make-iot-smart": {
+        "paletteLabel": "AI Assistant",
+        "label": {
+            "name": "Name",
+            "apiConfig": "API Config",
+            "aiAssistant": "AI Assistant",
+            "defaultName": "AI Assistant"
+        },
+        "placeholder": {
+            "name": "AI Assistant"
+        },
+        "tips": {
+            "autoHide": "This node will be automatically hidden and used to connect AI configuration. If deleted, the system will automatically recreate it."
+        }
+    },
+    "common": {
+        "label": {
+            "tip": "Tip:"
+        }
+    },
+    "api-config": {
+        "label": {
+            "name": "Name",
+            "provider": "API Provider",
+            "apiKey": "API Key",
+            "model": "Model",
+            "maxTokens": "Max Tokens",
+            "useDifferentModels": "Use different models for Plan and Act modes"
+        },
+        "placeholder": {
+            "name": "Name",
+            "apiKey": "Please enter API key"
+        },
+        "tips": {
+            "apiKey": "This key is stored locally and is only used to make API requests from this extension.",
+            "differentModels": "Switching between Plan and Act modes will preserve the API and model used in the previous mode. This can be helpful when using a powerful reasoning model to make plans and then using a cheaper coding model to execute.",
+            "capabilities": {
+                "noImage": "No image support",
+                "noBrowser": "No browser usage support",
+                "promptCache": "Supports prompt caching",
+                "maxInput": "Max input: 8,000 tokens",
+                "cacheWritePrice": "Cache write price: $0.27/million tokens",
+                "cacheReadPrice": "Cache read price: $0.07/million tokens",
+                "outputPrice": "Output price: $1.10/million tokens"
+            }
+        },
+        "help": {
+            "description": "API configuration node is used to store API keys and model selection for AI service providers.",
+            "providers": "Supported providers include DeepSeek, OpenAI, and Anthropic.",
+            "usage": "You can select different models for different usage scenarios and choose to use different models for Plan and Act modes."
+        },
+        "validation": {
+            "apiKeyFiltered": "Illegal characters filtered, API key can only contain numbers, letters and symbols"
+        }
+    },
+    "errors": {
+        "apiKeyMissing": "API key not configured, please set API key in configuration node",
+        "apiKeyAuthFailed": "API key authentication failed, please check if the API key in the configuration node is correct",
+        "modelMissing": "Model name missing, please select a model in the configuration node",
+        "configNodeNotFound": "API configuration node not found",
+        "networkError": "Network error",
+        "executionFailed": "Execution failed",
+        "toolExecutionFailed": "Tool execution failed",
+        "unknownError": "An unknown error occurred"
+    },
+    "messages": {
+        "apiConfigInit": "API configuration node initialization",
+        "mcpNotEnabled": "MCP not enabled - enableMcp is false",
+        "mcpCommandNotConfigured": "MCP command not configured",
+        "mcpInitStart": "Starting MCP connection initialization",
+        "mcpInitSuccess": "MCP initialization successful",
+        "mcpInitFailed": "MCP initialization failed",
+        "aiHelperNodeExists": "AI assistant node already exists, no need to create",
+        "aiHelperNodeCreated": "AI assistant node automatically created successfully",
+        "aiHelperNodeCreating": "AI assistant node not found, creating automatically...",
+        "flowCreationSuccess": "Flow creation successful!",
+        "toolExecutionSuccess": "Applied",
+        "retry": "Retry",
+        "apiConfigNotFound": "API configuration node not found, unable to automatically create AI assistant node",
+        "initializingAIHelper": "Setting setTimeout to call ensureAIHelperNode...",
+        "aiHelperNodeChecking": "setTimeout triggered, starting to execute ensureAIHelperNode..."
+    },
+    "status": {
+        "ready": "Ready",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "error": "Error"
+    }
+}

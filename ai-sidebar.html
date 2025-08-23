@@ -13,8 +13,187 @@
 
 
 <script type="text/javascript">
+    // 国际化支持
+    let i18nMessages = {};
+    
+    // 加载语言文件
+    async function loadI18nMessages() {
+        // 使用RED.i18n.lang()获取当前语言
+        let lang = 'en-US'; // 默认语言
+        
+        console.log('=== AI侧边栏语言检测 ===');
+        
+        // 优先使用RED.i18n.lang()方法
+        if (RED.i18n && typeof RED.i18n.lang === 'function') {
+            lang = RED.i18n.lang();
+            console.log('通过RED.i18n.lang()获取的语言:', lang);
+        } else {
+            console.log('RED.i18n.lang()方法不可用，尝试其他方法');
+            
+            // 备用方法：RED.i18n.lang()
+            if (RED.settings && typeof RED.settings.get === 'function') {
+                lang = RED.i18n.lang() || lang;
+                console.log('通过RED.settings.get("lang")获取的语言:', lang);
+            }
+        }
+        
+        console.log('最终确定的语言:', lang);
+        console.log('RED.i18n对象:', RED.i18n || '不存在');
+        console.log('RED._函数:', typeof RED._ === 'function' ? 'exists' : '不存在');
+        console.log('浏览器语言:', navigator.language);
+        
+        // 支持多种语言格式
+        let langFile;
+        if (lang === 'en-US' || lang === 'en') {
+            langFile = 'en-US';
+        } else if (lang === 'ja' || lang === 'ja-JP') {
+            langFile = 'ja';
+        } else {
+            langFile = 'zh-CN';
+        }
+        
+        console.log('选择的语言文件:', langFile);
+        console.log('========================');
+        
+        // 直接通过fetch加载语言文件
+        const fetchUrl = `ai-sidebar/locales/${langFile}/ai-sidebar.json`;
+        console.log('尝试加载语言文件:', fetchUrl);
+        
+        try {
+            const response = await fetch(fetchUrl);
+            console.log('Fetch响应状态:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('成功加载语言数据:', data);
+            
+            // 提取ai-sidebar命名空间下的数据
+            if (data['ai-sidebar']) {
+                i18nMessages = data['ai-sidebar'];
+            } else {
+                i18nMessages = data;
+            }
+            
+            // 测试国际化函数是否正确工作
+            console.log('=== 国际化测试 ===');
+            console.log('当前语言文件:', langFile);
+            console.log('i18nMessages对象:', i18nMessages);
+            console.log('i18nMessages.sidebar:', i18nMessages.sidebar);
+            console.log('i18nMessages.sidebar.test:', i18nMessages.sidebar ? i18nMessages.sidebar.test : 'undefined');
+            console.log('测试文本翻译结果:', _('sidebar.test'));
+            console.log('标题翻译结果:', _('sidebar.title'));
+            console.log('欢迎消息翻译结果:', _('sidebar.welcome'));
+            console.log('==================');
+            
+            updateUITexts();
+        } catch (error) {
+            console.log('语言文件加载失败:', error.message);
+            // 使用默认的中文文本
+            i18nMessages = {
+                sidebar: {
+                    title: '智能助手',
+                    test: '测试文本',
+                    welcome: '欢迎使用AI助手！'
+                }
+            };
+            
+            // 测试国际化函数是否正确工作
+            console.log('=== 国际化测试（默认值）===');
+            console.log('当前语言文件:', langFile);
+            console.log('i18nMessages对象:', i18nMessages);
+            console.log('i18nMessages.sidebar:', i18nMessages.sidebar);
+            console.log('i18nMessages.sidebar.test:', i18nMessages.sidebar ? i18nMessages.sidebar.test : 'undefined');
+            console.log('测试文本翻译结果:', _('sidebar.test'));
+            console.log('标题翻译结果:', _('sidebar.title'));
+            console.log('欢迎消息翻译结果:', _('sidebar.welcome'));
+            console.log('==================');
+            
+            updateUITexts();
+        }
+    }
+    
+    // 国际化函数
+    function _(key) {
+        const keys = key.split('.');
+        let value = i18nMessages;
+        for (const k of keys) {
+            value = value && value[k];
+        }
+        return value || key;
+    }
+    
+    // 更新UI文本
+    function updateUITexts() {
+        // 延迟执行，确保DOM元素已加载
+        setTimeout(() => {
+            const showConfigBtn = document.querySelector('#show-config-node-button');
+            const sendBtn = document.querySelector('#send-button');
+            const clearBtn = document.querySelector('#clear-button');
+            const userInput = document.querySelector('#user-input');
+            const scenarioLabel = document.querySelector('#scenario-label');
+            const sendButtonText = document.querySelector('#send-button-text');
+            
+            if (showConfigBtn) showConfigBtn.textContent = _('sidebar.buttons.showConfig');
+            if (sendBtn) sendBtn.textContent = _('sidebar.buttons.send');
+            if (clearBtn) clearBtn.textContent = _('sidebar.buttons.clear');
+            if (userInput) userInput.placeholder = _('sidebar.placeholders.inputMessage');
+            if (scenarioLabel) scenarioLabel.textContent = _('sidebar.labels.scenario');
+            if (sendButtonText) sendButtonText.textContent = _('sidebar.buttons.send');
+        }, 100);
+    }
+    
     // 全局错误处理器
     console.log("进入AI-Sidebar页面")
+    
+    // 监听Node-RED语言变化
+    function watchLanguageChange() {
+        let currentLang = RED.i18n.lang() || 'zh-CN';
+        
+        console.log('=== AI侧边栏语言监听器启动 ===');
+        console.log('初始语言设置:', currentLang);
+        console.log('Node-RED版本:', RED.version || '未知');
+        console.log('浏览器语言:', navigator.language);
+        console.log('RED.i18n对象:', RED.i18n);
+        console.log('RED.i18n.lang函数:', typeof RED.i18n.lang);
+        console.log('RED.settings对象:', RED.settings);
+        console.log('当前时间:', new Date().toLocaleString());
+        console.log('================================');
+        
+        // 定期检查语言设置变化
+        setInterval(async () => {
+            const newLang = RED.i18n.lang() || 'zh-CN';
+            const settingsLang = RED.settings ? RED.settings.get('lang') : 'unknown';
+            
+            // 每次都输出当前状态用于调试
+            console.log('=== 语言状态检查 ===');
+            console.log('当前时间:', new Date().toLocaleString());
+            console.log('RED.i18n.lang():', newLang);
+            console.log('RED.settings.get("lang"):', settingsLang);
+            console.log('浏览器语言:', navigator.language);
+            console.log('上次记录的语言:', currentLang);
+            
+            if (newLang !== currentLang) {
+                console.log('🔄 检测到语言变化!');
+                console.log('语言变化:', currentLang, '->', newLang);
+                console.log('变化时间:', new Date().toLocaleString());
+                console.log('正在重新加载语言文件...');
+                currentLang = newLang;
+                await loadI18nMessages(); // 重新加载语言文件
+            } else {
+                console.log('✅ 语言未变化');
+            }
+            console.log('==================');
+        }, 2000); // 每2秒检查一次，增加调试信息
+    }
+    
+    // 页面加载完成后初始化国际化
+    $(document).ready(async function() {
+        await loadI18nMessages();
+        watchLanguageChange(); // 启动语言变化监听
+    })
     window.addEventListener('error', function(e) {
         console.error('=== 全局JavaScript错误 ===');
         console.error('错误信息:', e.message);
@@ -70,7 +249,7 @@
         isLoaded: false,
         
         init: function() {
-            console.log('初始化场景管理器');
+            console.log(_("sidebar.scenarios.init"));
             
             // 从后端加载场景数据
             return this.loadScenarios().then(() => {
@@ -89,8 +268,8 @@
                 // 使用默认场景数据作为降级方案
                 this.scenarios = {
                     learning: {
-                        name: '学习',
-                        description: '学习Node-RED节点和流程概念',
+                        name: _("sidebar.scenarios.learning.name"),
+                        description: _("sidebar.scenarios.learning.description"),
                         prompt: []
                     }
                 };
@@ -101,7 +280,7 @@
         
         loadScenarios: function() {
             return new Promise((resolve, reject) => {
-                console.log('从后端加载场景数据...');
+                console.log(_("sidebar.scenarios.loadingFromBackend"));
                 
                 fetch('/ai-sidebar/scenarios')
                     .then(response => {
@@ -111,13 +290,13 @@
                         return response.json();
                     })
                     .then(data => {
-                        console.log('场景数据加载成功:', data);
+                        console.log(_("sidebar.scenarios.loadSuccess"), data);
                         this.scenarios = data;
                         this.isLoaded = true;
                         resolve(data);
                     })
                     .catch(error => {
-                        console.error('加载场景数据失败:', error);
+                        console.error(_("sidebar.scenarios.loadFailed"), error);
                         reject(error);
                     });
             });
@@ -126,7 +305,7 @@
         // showWelcomeDialog函数已移除
         
         switchScenario: function(scenarioId) {
-            console.log('切换场景:', scenarioId);
+            console.log(_("sidebar.scenarios.switching"), scenarioId);
             
             // 获取实际的场景数据
             var scenarios = this.scenarios.scenarios || this.scenarios;
@@ -134,8 +313,8 @@
             console.log('查找场景ID:', scenarioId);
             
             if (!scenarios[scenarioId]) {
-                console.warn('未知场景:', scenarioId);
-                console.log('可用场景:', Object.keys(scenarios));
+                console.warn(_("sidebar.scenarios.unknownScenario"), scenarioId);
+                console.log(_("sidebar.scenarios.availableScenarios"), Object.keys(scenarios));
                 return;
             }
             
@@ -144,14 +323,14 @@
             
             // 发送场景切换消息（移除自动调用大模型的逻辑）
             var scenario = scenarios[scenarioId];
-            console.log('切换到场景:', scenario);
+            console.log(_("sidebar.scenarios.switching"), scenario);
             
             // 构建包含提示词按钮的消息内容
-            var messageContent = `🔄 已切换到 ${scenario.name}\n\n${scenario.description}`;
+            var messageContent = _("sidebar.messages.scenarioSwitched").replace("{scenarioName}", scenario.name).replace("{description}", scenario.description);
             
             // 如果场景有提示词模板，添加按钮
             if (scenario.prompt && Array.isArray(scenario.prompt) && scenario.prompt.length > 0) {
-                messageContent += '\n\n**快速开始：**';
+                messageContent += '\n\n' + _("sidebar.messages.quickStart");
                 var promptButtons = scenario.prompt.map(function(prompt) {
                     return `<button class="prompt-template-btn" data-prompt="${prompt.replace(/"/g, '&quot;')}" style="padding: 6px 12px; background: rgb(229, 231, 235); border: none; border-radius: 16px; text-align: center; cursor: pointer; transition: 0.2s; font-size: 11px; line-height: 1.2; color: rgb(55, 65, 81); display: inline-block; margin: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; transform: scale(1);" onmouseover="this.style.background='#d1d5db'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='#e5e7eb'; this.style.transform='scale(1)';" onclick="document.getElementById('augment-chat-input').value='${prompt.replace(/'/g, "\\'")}'">${prompt}</button>`;
                 }).join('');
@@ -170,13 +349,13 @@
             var scenario = scenarios[this.currentScenario];
             
             if (!scenario) {
-                console.warn('未找到场景数据:', this.currentScenario);
-                console.log('可用场景:', Object.keys(scenarios));
+                console.warn(_("sidebar.scenarios.unknownScenario"), this.currentScenario);
+                console.log(_("sidebar.scenarios.availableScenarios"), Object.keys(scenarios));
                 return;
             }
             
             // 更新输入框占位符
-            $("#augment-chat-input").attr('placeholder', `在${scenario.name}下输入您的问题...`);
+            $("#augment-chat-input").attr('placeholder', _("sidebar.placeholders.scenarioInput").replace("{scenarioName}", scenario.name));
             
             // 更新选择器值
             $("#scenario-selector").val(this.currentScenario);
@@ -184,7 +363,7 @@
             // 更新当前场景显示
             $("#current-scenario-name").text(scenario.name);
             
-            console.log('UI已更新为场景:', this.currentScenario, '场景名称:', scenario.name);
+            console.log(_("sidebar.scenarios.uiUpdated"), this.currentScenario, scenario.name);
         },
         
         getCurrentScenario: function() {
@@ -208,11 +387,11 @@
                     $("#current-flow-name").text("Flow " + activeWorkspace);
                 }
             } else {
-                $("#current-flow-name").text("未选择流程");
+                $("#current-flow-name").text(_("sidebar.labels.noFlowSelected"));
             }
         } catch (error) {
-            console.warn("更新流程名称失败:", error);
-            $("#current-flow-name").text("未知流程");
+            console.warn(_("sidebar.errors.updateFlowNameFailed"), error);
+            $("#current-flow-name").text(_("sidebar.labels.unknownFlow"));
         }
     }
 
@@ -222,11 +401,11 @@
             var selection = RED.view.selection();
             
             if (!selection || !selection.nodes || selection.nodes.length === 0) {
-                $("#current-selected-node").text("未选择节点");
+                $("#current-selected-node").text(_("sidebar.labels.noNodeSelected"));
                 $("#selected-node-type-container").hide();
             } else if (selection.nodes.length === 1) {
                 var node = selection.nodes[0];
-                var nodeInfo = node.name || node.type || "未知节点";
+                var nodeInfo = node.name || node.type || _("sidebar.labels.unknownNode");
                 $("#current-selected-node").text(nodeInfo);
                 
                 // 显示节点类型
@@ -237,12 +416,12 @@
                     $("#selected-node-type-container").hide();
                 }
             } else {
-                $("#current-selected-node").text("已选择 " + selection.nodes.length + " 个节点");
+                $("#current-selected-node").text(selection.nodes.length + " " + _("sidebar.labels.multipleNodesSelected"));
                 $("#selected-node-type-container").hide();
             }
         } catch (error) {
-            console.warn("更新节点信息失败:", error);
-            $("#current-selected-node").text("未知节点");
+            console.warn(_("sidebar.errors.updateNodeInfoFailed"), error);
+            $("#current-selected-node").text(_("sidebar.labels.unknownNode"));
             $("#selected-node-type-container").hide();
         }
     }
@@ -269,7 +448,7 @@
         
         // 工具按钮点击事件
         $("#augment-attach-file").on("click", function() {
-            RED.notify("此功能正在开发中", "info");
+            RED.notify(_("sidebar.messages.developing"), "info");
         });
 
         // 注意：@按钮的事件绑定移到了侧边栏初始化时进行
@@ -671,7 +850,7 @@
                     (data.content && data.content.includes('API密钥'))) {
                     
                     // 显示特定的API密钥错误通知
-                    RED.notify('API密钥未配置或认证失败，正在打开配置界面...', 'error');
+                    RED.notify(_('sidebar.messages.apiKeyError'), 'error');
                     
                     // 自动打开配置界面
                     setTimeout(function() {
@@ -1461,7 +1640,7 @@
                     }
                 } else {
                     // 执行失败
-                    addMessageToChat("error", "❌ 工具执行失败: " + data.error);
+                    addMessageToChat("error", "❌ " + _("sidebar.messages.toolExecutionFailed") + ": " + data.error);
                 }
             })
             .catch(error => {
@@ -1618,7 +1797,7 @@
                     .prop('disabled', true);
                 
                 // 显示成功消息
-                addMessageToChat("system", "✅ 流程创建成功！");
+                addMessageToChat("system", "✅ " + _("sidebar.messages.flowCreationSuccess"));
                 
                 // 刷新视图
                 if (typeof RED !== 'undefined' && RED.view) {
@@ -1630,7 +1809,7 @@
                     .css('background', '#dc3545')
                     .html('<i class="fa fa-exclamation" style="font-size: 9px;"></i> 失败');
                 
-                addMessageToChat("error", "❌ 工具执行失败: " + data.error);
+                addMessageToChat("error", "❌ " + _("sidebar.messages.toolExecutionFailed") + ": " + data.error);
                 
                 // 3秒后恢复按钮
                 setTimeout(() => {
@@ -2896,7 +3075,7 @@
                               'border-color': '#fecaca'
                           });
                     
-                    addMessageToChat("error", `❌ 执行失败: ${response.error}`);
+                    addMessageToChat("error", `❌ ${_("sidebar.messages.executionFailed")}: ${response.error}`);
                 }
             },
             error: function(xhr) {
@@ -2911,7 +3090,7 @@
                           'border-color': '#fecaca'
                       });
                 
-                addMessageToChat("error", `❌ 执行失败: ${error}`);
+                addMessageToChat("error", `❌ ${_("sidebar.messages.executionFailed")}: ${error}`);
             }
         });
     });
@@ -3083,7 +3262,7 @@
                     .prop('disabled', true);
                 
                 // 显示成功消息
-                addMessageToChat("system", "✅ 流程创建成功！");
+                addMessageToChat("system", "✅ " + _("sidebar.messages.flowCreationSuccess"));
                 
                 // 可选：刷新页面或更新流程列表
                 if (typeof RED !== 'undefined' && RED.view) {
@@ -3093,9 +3272,9 @@
                 // 执行失败
                 buttonElement.prop('disabled', false)
                     .css('background', '#ef4444')
-                    .text('执行失败');
+                    .text(_("sidebar.messages.executionFailed"));
                 
-                addMessageToChat("error", "❌ 工具执行失败: " + data.error);
+                addMessageToChat("error", "❌ " + _("sidebar.messages.toolExecutionFailed") + ": " + data.error);
                 
                 // 3秒后恢复按钮
                 setTimeout(() => {
@@ -3782,7 +3961,7 @@
 
         // Load markdown libraries for rendering and wait for completion
         loadMarkdownLibraries().then(() => {
-            console.log('Markdown库加载完成，可以开始渲染');
+            console.log('Markdown libraries loaded, ready to render');
             addMarkdownStyles();
         });
 
@@ -3793,18 +3972,18 @@
         RED.sidebar.addTab({
             id: "ai-sidebar",
             label: "MIS",
-            name: "AI助手",
+            name: _("sidebar.title"),
             content: content,
             closeable: true,
             disableOnEdit: false,
             iconClass: "fa fa-comment",
             onshow: function() {
-                console.log('侧边栏显示');
+                console.log('Sidebar shown');
             }
         });
         
         // 立即初始化场景管理器，不依赖侧边栏显示
-        console.log('开始初始化场景管理器...');
+        console.log(_("sidebar.scenarios.init"));
         
         // 延迟初始化以确保DOM元素已加载
         setTimeout(() => {
@@ -3821,17 +4000,17 @@
                         });
                         
                         // 绑定场景菜单按钮事件 - 在场景数据加载完成后
-                        console.log('开始绑定场景菜单按钮事件');
-                        console.log('按钮元素存在:', $("#augment-at-mention").length > 0);
+                        console.log('Starting to bind scenario menu button events');
+                        console.log('Button element exists:', $("#augment-at-mention").length > 0);
                         
                         $("#augment-at-mention").off('click').on("click", function(e) {
                             e.preventDefault();
-                            console.log('=== 场景菜单按钮被点击 ===');
-                            console.log('事件对象:', e);
+                            console.log('=== Scenario menu button clicked ===');
+                            console.log('Event object:', e);
                             showScenarioMenu(e);
                         });
                         
-                        console.log('场景菜单按钮事件绑定完成');
+                        console.log('Scenario menu button event binding completed');
                         
                         // 移除了自动触发点击测试的代码，避免页面加载时自动弹出场景菜单
                         
@@ -3842,26 +4021,16 @@
                         
                         // 添加欢迎消息
                         var currentScenario = ScenarioManager.scenarios[ScenarioManager.currentScenario];
-                        var welcomeMsg = `👋 欢迎使用 Make IoT Smart AI助手！
-
-🎯 **当前场景**: ${currentScenario ? currentScenario.name : '学习'}
-
-请选择合适的场景并开始对话：
-• 🎓 **学习** - 了解Node-RED概念和节点
-• 💡 **方案** - 获取IoT解决方案建议  
-• 🔌 **集成** - 集成协议和系统
-• 💻 **开发** - 优化和开发流程
-• ⚙️ **配置** - 配置Node-RED环境
-• 🖥️ **管理** - 管理和部署应用`;
+                        var welcomeMsg = _("sidebar.messages.welcome").replace("{scenarioName}", currentScenario ? currentScenario.name : _("sidebar.scenarios.learning.name"));
                         
                         addMessageToChat('assistant', welcomeMsg);
                     }).catch(error => {
-                        console.error('加载场景失败:', error);
+                        console.error(_("sidebar.scenarios.loadFailed"), error);
                         // 使用默认场景数据作为降级方案
                         ScenarioManager.scenarios = {
                             learning: {
-                                name: '学习',
-                                description: '学习Node-RED节点和流程概念',
+                                name: _("sidebar.scenarios.learning.name"),
+                                description: _("sidebar.scenarios.learning.description"),
                                 prompt: []
                             }
                         };
@@ -3869,11 +4038,7 @@
                         ScenarioManager.updateUI();
                         
                         // 显示降级欢迎消息
-                        var welcomeMsg = `👋 欢迎使用 Make IoT Smart AI助手！
-
-🎯 **当前场景**: 学习
-
-请开始对话，我将帮助您了解Node-RED的使用。`;
+                        var welcomeMsg = _("sidebar.messages.fallbackWelcome");
                         addMessageToChat('assistant', welcomeMsg);
                     });
                 }, 100);
@@ -4109,7 +4274,7 @@
                                 padding: 0 4px;
                                 line-height: 1;
                             ">
-                                场景：<span id="current-scenario-name" style="font-weight: 500;">通用</span>
+                                <span id="scenario-label">场景：</span><span id="current-scenario-name" style="font-weight: 500;">通用</span>
                             </span>
                         </button>
                     
@@ -4131,7 +4296,7 @@
                         gap: 6px;
                     " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
                         <i class="fa fa-paper-plane"></i>
-                        Send
+                        <span id="send-button-text">Send</span>
                     </button>
                 </div>
             </div>

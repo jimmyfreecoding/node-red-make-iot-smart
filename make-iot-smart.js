@@ -45,7 +45,7 @@ module.exports = function (RED) {
         node.mcpEnv = config.mcpEnv || 'NODE_RED_URL=http://localhost:1880';
         node.enableMcp = config.enableMcp !== false; // 默认启用MCP
         
-        console.log('API配置节点初始化:', {
+        console.log(RED._('messages.apiConfigInit') + ':', {
             name: node.name,
             provider: node.provider,
             model: node.model,
@@ -100,17 +100,17 @@ module.exports = function (RED) {
             });
             
             if (!node.enableMcp) {
-                console.log('MCP未启用 - enableMcp为false');
+                console.log(RED._('messages.mcpNotEnabled'));
                 return false;
             }
             
             if (!node.mcpCommand) {
-                console.log('MCP命令未配置');
+                console.log(RED._('messages.mcpCommandNotConfigured'));
                 return false;
             }
 
             try {
-                console.log('开始初始化MCP连接:', {
+                console.log(RED._('messages.mcpInitStart') + ':', {
                     command: node.mcpCommand,
                     args: node.mcpArgs,
                     env: node.mcpEnv
@@ -131,7 +131,7 @@ module.exports = function (RED) {
 
                 const success = await node.mcpClient.connect(node.mcpCommand, args, env);
                 if (success) {
-                    console.log('MCP server connected successfully');
+                    console.log(RED._('messages.mcpInitSuccess'));
                     
                     // 重新初始化LangChain管理器以获取MCP工具
                     if (node.langchainManager) {
@@ -144,7 +144,7 @@ module.exports = function (RED) {
                     return false;
                 }
             } catch (error) {
-                console.error('MCP initialization failed:', error);
+                console.error(RED._('messages.mcpInitFailed') + ':', error);
                 return false;
             }
         };
@@ -222,8 +222,8 @@ module.exports = function (RED) {
                 console.log('🔧 LLM配置:', llmConfig);
                 
                 // 检查API密钥是否未配置
-                if (!llmConfig.apiKey || llmConfig.apiKey === '请配置API密钥' || llmConfig.apiKey.trim() === '') {
-                    const error = new Error('API密钥未配置，请在配置节点中设置API密钥');
+                if (!llmConfig.apiKey || llmConfig.apiKey === RED._('placeholder.apiKey') || llmConfig.apiKey.trim() === '') {
+                    const error = new Error(RED._('errors.apiKeyMissing'));
                     error.code = 'API_AUTH_FAILED';
                     throw error;
                 }
@@ -643,6 +643,46 @@ module.exports = function (RED) {
             console.error('❌ 错误堆栈:', error.stack);
             res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
             res.end();
+        }
+    });
+
+    // 静态文件服务 - 提供locales目录访问
+    RED.httpAdmin.get('/ai-sidebar/locales/:lang/:file', function(req, res) {
+        console.log('Locales route called:', req.path);
+        console.log('Route params:', req.params);
+        try {
+            const { lang, file } = req.params;
+            const filePath = path.join(__dirname, 'locales', lang, file);
+            console.log('Language:', lang, 'File:', file);
+            console.log('File path:', filePath);
+            
+            // 安全检查：确保请求的文件在locales目录内
+            const resolvedPath = path.resolve(filePath);
+            const localesDir = path.resolve(path.join(__dirname, 'locales'));
+            
+            if (!resolvedPath.startsWith(localesDir)) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+            
+            // 检查文件是否存在
+            if (!fs.existsSync(resolvedPath)) {
+                return res.status(404).json({ error: 'File not found' });
+            }
+            
+            // 只允许JSON文件
+            if (!resolvedPath.endsWith('.json')) {
+                return res.status(403).json({ error: 'Only JSON files are allowed' });
+            }
+            
+            // 读取并返回JSON文件
+            const fileContent = fs.readFileSync(resolvedPath, 'utf8');
+            const jsonData = JSON.parse(fileContent);
+            
+            res.setHeader('Content-Type', 'application/json');
+            res.json(jsonData);
+        } catch (error) {
+            console.error('Locales file serving error:', error);
+            res.status(500).json({ error: 'Internal server error' });
         }
     });
 
@@ -1081,7 +1121,7 @@ module.exports = function (RED) {
             
             // 如果没有AI助手节点，通过HTTP API创建一个
             if (!hasAIHelper) {
-                console.log('未找到AI助手节点，自动创建中...');
+                console.log(RED._('messages.aiHelperNodeCreating'));
                 
                 // 查找第一个API配置节点
                 let apiConfigId = null;
@@ -1166,45 +1206,45 @@ module.exports = function (RED) {
                                 
                                 const updateReq = http.request(updateOptions, (updateRes) => {
                                     if (updateRes.statusCode === 200 || updateRes.statusCode === 204) {
-                                        console.log('AI助手节点自动创建成功:', newNodeId);
+                                        console.log(RED._('messages.aiHelperNodeCreated') + ':', newNodeId);
                                     } else {
-                                        console.error('更新流程失败，状态码:', updateRes.statusCode);
+                                        console.error(RED._('errors.executionFailed') + ', ' + RED._('status.error') + ':', updateRes.statusCode);
                                     }
                                 });
                                 
                                 updateReq.on('error', (err) => {
-                                    console.error('更新流程请求失败:', err);
+                                    console.error(RED._('errors.executionFailed') + ':', err);
                                 });
                                 
                                 updateReq.write(JSON.stringify(flows));
                                 updateReq.end();
                                 
                             } catch (parseError) {
-                                console.error('解析流程数据失败:', parseError);
+                                console.error(RED._('errors.executionFailed') + ':', parseError);
                             }
                         });
                     });
                     
                     req.on('error', (err) => {
-                        console.error('获取流程失败:', err);
+                        console.error(RED._('errors.executionFailed') + ':', err);
                     });
                     
                     req.end();
                 } else {
-                    console.log('未找到API配置节点，无法自动创建AI助手节点');
+                    console.log(RED._('messages.apiConfigNotFound'));
                 }
             } else {
-                console.log('AI助手节点已存在，无需创建');
+                console.log(RED._('messages.aiHelperNodeExists'));
             }
         } catch (error) {
-            console.error('ensureAIHelperNode执行失败:', error);
+            console.error(RED._('errors.executionFailed') + ':', error);
         }
     }
     
     // 立即执行一次检查
-    console.log('设置setTimeout来调用ensureAIHelperNode...');
+    console.log(RED._('messages.initializingAIHelper'));
     setTimeout(() => {
-        console.log('setTimeout触发，开始执行ensureAIHelperNode...');
+        console.log(RED._('messages.aiHelperNodeChecking'));
         ensureAIHelperNode();
     }, 3000);
     

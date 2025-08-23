@@ -15,7 +15,7 @@
     RED.nodes.registerType('make-iot-smart', {
         category: 'config',
         defaults: {
-            name: { value: "AI助手" },
+            name: { value: "" },
             apiConfig: { value: "", type: "api-config", required: true },
             algorithm: { value: "dagre_lr" },
             settings: { value: {} },
@@ -24,9 +24,11 @@
         inputs: 0,
         outputs: 0,
         icon: "font-awesome/fa-magic",
-        paletteLabel: 'AI助手',
+        paletteLabel: function() {
+            return this._("make-iot-smart.paletteLabel") || "AI Assistant";
+        },
         label: function () {
-            return this.name || "AI助手";
+            return this.name || this._("make-iot-smart.label.defaultName") || "AI Assistant";
         },
         oneditprepare: function() {
             // 自动隐藏节点
@@ -47,15 +49,15 @@
 <!-- AI助手节点的HTML模板 -->
 <script type="text/x-red" data-template-name="make-iot-smart">
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> 名称</label>
-        <input type="text" id="node-input-name" placeholder="AI助手">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="make-iot-smart.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]make-iot-smart.placeholder.name">
     </div>
     <div class="form-row">
-        <label for="node-input-apiConfig"><i class="fa fa-cog"></i> API配置</label>
+        <label for="node-input-apiConfig"><i class="fa fa-cog"></i> <span data-i18n="make-iot-smart.label.apiConfig"></span></label>
         <input type="text" id="node-input-apiConfig">
     </div>
     <div class="form-tips">
-        <p>此节点会自动隐藏，用于连接AI配置。如果被删除，系统会自动重新创建。</p>
+        <p data-i18n="make-iot-smart.tips.autoHide"></p>
     </div>
 </script>
 
@@ -66,11 +68,11 @@
 <!-- API配置节点的HTML模板 -->
 <script type="text/x-red" data-template-name="api-config">
     <div class="form-row">
-        <label for="node-config-input-name"><i class="fa fa-tag"></i> 名称</label>
-        <input type="text" id="node-config-input-name" placeholder="名称">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="api-config.label.name"></span></label>
+        <input type="text" id="node-config-input-name" data-i18n="[placeholder]api-config.placeholder.name">
     </div>
     <div class="form-row">
-        <label for="node-config-input-provider"><i class="fa fa-server"></i> API提供商</label>
+        <label for="node-config-input-provider"><i class="fa fa-server"></i> <span data-i18n="api-config.label.provider"></span></label>
         <select id="node-config-input-provider">
             <option value="openai">OpenAI</option>
             <option value="deepseek">DeepSeek</option>
@@ -79,40 +81,40 @@
         </select>
     </div>
     <div class="form-row">
-        <label for="node-config-input-apiKey"><i class="fa fa-key"></i> API密钥</label>
-        <input type="password" id="node-config-input-apiKey" placeholder="请输入API密钥">
+        <label for="node-config-input-apiKey"><i class="fa fa-key"></i> <span data-i18n="api-config.label.apiKey"></span></label>
+        <input type="password" id="node-config-input-apiKey" data-i18n="[placeholder]api-config.placeholder.apiKey">
+        <div class="form-tips">
+            <p data-i18n="api-config.tips.apiKey"></p>
+        </div>
     </div>
     <div class="form-row">
-        <div class="form-tips">此密钥存储在本地，仅用于从此扩展发出API请求。</div>
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-model"><i class="fa fa-brain"></i> 模型</label>
+        <label for="node-config-input-model"><i class="fa fa-brain"></i> <span data-i18n="api-config.label.model"></span></label>
         <select id="node-config-input-model">
             <!-- 动态填充 -->
         </select>
     </div>
     <div class="form-row" id="model-capabilities">
         <div class="form-tips">
-            <div><i class="fa fa-times" style="color:red;"></i> 不支持图像</div>
-            <div><i class="fa fa-times" style="color:red;"></i> 不支持浏览器使用</div>
-            <div><i class="fa fa-check" style="color:green;"></i> 支持提示缓存</div>
-            <div>最大输入：8,000 tokens</div>
-            <div>缓存写入价格：$0.27/百万tokens</div>
-            <div>缓存读取价格：$0.07/百万tokens</div>
-            <div>输出价格：$1.10/百万tokens</div>
-        </div>
+                            <div><i class="fa fa-times" style="color:red;"></i> <span data-i18n="api-config.tips.capabilities.noImage"></span></div>
+                            <div><i class="fa fa-times" style="color:red;"></i> <span data-i18n="api-config.tips.capabilities.noBrowser"></span></div>
+                            <div><i class="fa fa-check" style="color:green;"></i> <span data-i18n="api-config.tips.capabilities.promptCache"></span></div>
+                            <div><span data-i18n="api-config.tips.capabilities.maxInput"></span></div>
+                            <div><span data-i18n="api-config.tips.capabilities.cacheWritePrice"></span></div>
+                            <div><span data-i18n="api-config.tips.capabilities.cacheReadPrice"></span></div>
+                            <div><span data-i18n="api-config.tips.capabilities.outputPrice"></span></div>
+                        </div>
     </div>
     <div class="form-row">
         <label for="node-config-input-useDifferentModels">
             <input type="checkbox" id="node-config-input-useDifferentModels" style="width:auto;">
-            为Plan和Act模式使用不同模型
+            <span data-i18n="api-config.label.useDifferentModels"></span>
         </label>
     </div>
     <div class="form-row">
-        <div class="form-tips">在Plan和Act模式之间切换将保留上一模式中使用的API和模型。这在使用强大的推理模型来制定计划，然后使用更便宜的编码模型来执行时可能会有所帮助。</div>
+        <div class="form-tips"><span data-i18n="api-config.tips.differentModels"></span></div>
     </div>
     <div class="form-row">
-        <label for="node-config-input-maxTokens"><i class="fa fa-sort-numeric-asc"></i> 最大令牌数</label>
+        <label for="node-config-input-maxTokens"><i class="fa fa-sort-numeric-asc"></i> <span data-i18n="api-config.label.maxTokens"></span></label>
         <input type="number" id="node-config-input-maxTokens" min="100" max="8000" step="100">
     </div>
     
@@ -296,7 +298,7 @@
                     $(this).val(filteredValue);
                     // 显示提示信息
                     if (!$('#apikey-warning').length) {
-                        $(this).after('<div id="apikey-warning" style="color: orange; font-size: 12px; margin-top: 2px;"><i class="fa fa-warning"></i> 已过滤非法字符，API密钥只能包含数字、字母和符号</div>');
+                        $(this).after('<div id="apikey-warning" style="color: orange; font-size: 12px; margin-top: 2px;"><i class="fa fa-warning"></i> <span data-i18n="api-config.validation.apiKeyFiltered"></span></div>');
                         setTimeout(function() {
                             $('#apikey-warning').fadeOut(function() {
                                 $(this).remove();
@@ -311,7 +313,7 @@
 
 <!-- API配置节点的帮助信息 -->
 <script type="text/x-red" data-help-name="api-config">
-    <p>API配置节点用于存储AI服务提供商的API密钥和模型选择。</p>
-    <p>支持的提供商包括DeepSeek、OpenAI和Anthropic。</p>
-    <p>您可以为不同的使用场景选择不同的模型，并可以选择为Plan和Act模式使用不同的模型。</p>
+    <p data-i18n="api-config.help.description"></p>
+    <p data-i18n="api-config.help.providers"></p>
+    <p data-i18n="api-config.help.usage"></p>
 </script>
