@@ -4131,5 +4131,91 @@
         "x": 1120,
         "y": 4400,
         "wires": []
+    },
+    {
+        "type": "tab",
+        "label": "新流程",
+        "id": "9459898094a79b01"
+    },
+    {
+        "id": "ba736497f988ce1e",
+        "type": "inject",
+        "name": "定时触发",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "Hello World",
+        "payload": "这是来自Node-RED的消息",
+        "payloadType": "str",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "ed195d89b0cec721",
+                "3f475f4a6b8acb83"
+            ]
+        ],
+        "z": "9459898094a79b01"
+    },
+    {
+        "id": "ed195d89b0cec721",
+        "type": "debug",
+        "name": "显示原始消息",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 400,
+        "y": 60,
+        "wires": [],
+        "z": "9459898094a79b01"
+    },
+    {
+        "id": "3f475f4a6b8acb83",
+        "type": "function",
+        "name": "处理消息",
+        "func": "// 在消息中添加时间戳\nmsg.timestamp = new Date().toISOString();\nmsg.processed = true;\n\n// 返回修改后的消息\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 140,
+        "wires": [
+            [
+                "6accc6e776b58da2"
+            ]
+        ],
+        "z": "9459898094a79b01"
+    },
+    {
+        "id": "6accc6e776b58da2",
+        "type": "debug",
+        "name": "显示处理后的消息",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 140,
+        "wires": [],
+        "z": "9459898094a79b01"
     }
 ]

@@ -919,7 +919,7 @@ module.exports = function (RED) {
         // 执行工具端点
         RED.httpAdmin.post('/ai-sidebar/execute-tool', async function(req, res) {
             try {
-                const { toolName, parameters, nodeId } = req.body;
+                const { toolName, parameters, nodeId, selectedFlow } = req.body;
                 
                 if (!toolName) {
                     return res.status(400).json({ error: 'Tool name is required' });
@@ -931,8 +931,71 @@ module.exports = function (RED) {
                     return res.status(400).json({ error: 'Invalid configuration or LangChain manager not initialized' });
                 }
 
+                let toolArgs = parameters || {};
+                
+                // 特殊处理create-flow和update-flow工具的flowJson参数
+                if ((toolName === 'create-flow' || toolName === 'update-flow') && toolArgs.flowJson) {
+                    console.log('API端点开始处理flowJson参数，工具:', toolName);
+                    let flowData;
+                    
+                    // 如果是字符串，尝试解析为JSON
+                    if (typeof toolArgs.flowJson === 'string') {
+                        try {
+                            flowData = JSON.parse(toolArgs.flowJson);
+                            console.log('API端点解析flowJson字符串为对象，类型:', Array.isArray(flowData) ? 'array' : 'object');
+                        } catch (error) {
+                            console.error('API端点解析flowJson失败:', error);
+                            return res.status(400).json({ error: 'Invalid flowJson format: ' + error.message });
+                        }
+                    } else {
+                        flowData = toolArgs.flowJson;
+                        console.log('API端点flowJson已是对象，类型:', Array.isArray(flowData) ? 'array' : 'object');
+                    }
+                    
+                    // 确保flowData是数组格式（Node-RED流程格式）
+                    if (Array.isArray(flowData)) {
+                        console.log('API端点进入数组处理分支，原始节点数:', flowData.length);
+                        
+                        if (toolName === 'create-flow') {
+                            // create-flow工具期望包含nodes属性的对象格式，但需要过滤掉tab节点
+                            const functionalNodes = flowData.filter(node => node.type !== 'tab');
+                            
+                            // 为每个节点生成唯一ID
+                            const nodesWithUniqueIds = functionalNodes.map(node => {
+                                const newNode = { ...node };
+                                newNode.id = RED.util.generateId();
+                                // 移除z属性，让Node-RED自动分配
+                                delete newNode.z;
+                                return newNode;
+                            });
+                            
+                            // 更新连线关系中的节点ID
+                            const idMapping = {};
+                            functionalNodes.forEach((oldNode, index) => {
+                                idMapping[oldNode.id] = nodesWithUniqueIds[index].id;
+                            });
+                            
+                            nodesWithUniqueIds.forEach(node => {
+                                if (node.wires && Array.isArray(node.wires)) {
+                                    node.wires = node.wires.map(wireArray => 
+                                        wireArray.map(wireId => idMapping[wireId] || wireId)
+                                    );
+                                }
+                            });
+                            
+                            const flowObject = {
+                                nodes: nodesWithUniqueIds,
+                                label: toolArgs.label || '新流程',
+                                description: toolArgs.description || ''
+                            };
+                            toolArgs.flowJson = JSON.stringify(flowObject);
+                            console.log('API端点create-flow处理完成，生成唯一ID，保留功能节点数:', nodesWithUniqueIds.length);
+                        }
+                    }
+                }
+
                 // 执行工具
-                const result = await configNode.langchainManager.executeTool(toolName, parameters || {});
+                const result = await configNode.langchainManager.executeTool(toolName, toolArgs);
                 
                 // 格式化工具结果
                 const formattedResult = configNode.formatToolResult(result);
