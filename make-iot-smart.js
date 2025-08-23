@@ -79,10 +79,39 @@ module.exports = function (RED) {
         };
         
         // 初始化LangChain管理器
+        // 获取当前Node-RED语言
+        node.getCurrentLanguage = function() {
+            let currentLanguage = 'zh-CN'; // 默认语言
+            try {
+                // 尝试多种方式获取语言设置
+                if (RED.i18n && typeof RED.i18n.lang === 'function') {
+                    currentLanguage = RED.i18n.lang() || 'zh-CN';
+                }
+                
+                // 尝试从RED.settings获取
+                if (RED.settings && RED.settings.lang) {
+                    currentLanguage = RED.settings.lang;
+                }
+                
+                // 尝试从用户设置获取
+                if (RED.user && RED.user.lang) {
+                    currentLanguage = RED.user.lang;
+                }
+                
+                console.log('Detected language:', currentLanguage);
+            } catch (langError) {
+                console.warn('Failed to get Node-RED language, using default:', langError.message);
+            }
+            return currentLanguage;
+        };
+
         node.initLangChainManager = function() {
             try {
-                node.langchainManager = new LangChainManager(node.memoryManager, node.mcpClient);
-                console.log('LangChain manager initialized successfully');
+                const currentLanguage = node.getCurrentLanguage();
+                console.log('Current Node-RED language:', currentLanguage);
+                
+                node.langchainManager = new LangChainManager(node.memoryManager, node.mcpClient, currentLanguage);
+                console.log('LangChain manager initialized successfully with language:', currentLanguage);
                 return true;
             } catch (error) {
                 console.error('Failed to initialize LangChain manager:', error);
@@ -90,6 +119,19 @@ module.exports = function (RED) {
                 return false;
             }
         };
+
+        // 更新语言设置（由前端调用时触发）
+        node.updateLanguageFromFrontend = function(language) {
+            if (language && node.langchainManager) {
+                const currentLanguage = node.langchainManager.currentLanguage || node.getCurrentLanguage();
+                if (language !== currentLanguage) {
+                    console.log(`Language changed from ${currentLanguage} to ${language}`);
+                    node.langchainManager.updateLanguage(language);
+                }
+            }
+        };
+
+
         
         // 初始化MCP连接
         node.initMCP = async function() {
@@ -365,6 +407,8 @@ module.exports = function (RED) {
                 }
 
                 console.log('API配置节点初始化完成');
+                
+                console.log('API配置节点初始化完成');
             } catch (error) {
                 console.error('API配置节点初始化失败:', error);
                 node.error('Initialization failed: ' + error.message);
@@ -404,6 +448,8 @@ module.exports = function (RED) {
                 if (node.memoryManager) {
                     node.memoryManager.close();
                 }
+                
+
                 
                 // 清理LangChain管理器
                 if (node.langchainManager) {
@@ -465,7 +511,7 @@ module.exports = function (RED) {
             console.log('🌐 收到普通聊天请求:', req.body);
             console.log('🔥 普通聊天端点被调用！');
             console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
-            const { message, scenario, sessionId, selectedFlow, selectedNodes, dynamicData: requestDynamicData } = req.body;
+            const { message, scenario, sessionId, selectedFlow, selectedNodes, dynamicData: requestDynamicData, language } = req.body;
             
             if (!message) {
                 return res.status(400).json({ error: 'Message is required' });
@@ -480,6 +526,12 @@ module.exports = function (RED) {
             
             if (!configNode) {
                 return res.status(400).json({ error: 'No API configuration found' });
+            }
+
+            // 如果前端传递了语言参数，更新LangChain管理器的语言
+            if (language) {
+                console.log('🌐 前端传递的语言:', language);
+                configNode.updateLanguageFromFrontend(language);
             }
 
             // 准备动态数据
@@ -573,7 +625,7 @@ module.exports = function (RED) {
             console.log('🔍 请求头:', req.headers);
             console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
             
-            const { message, scenario, sessionId, selectedFlow, selectedNodes, dynamicData: requestDynamicData } = req.body;
+            const { message, scenario, sessionId, selectedFlow, selectedNodes, dynamicData: requestDynamicData, language } = req.body;
             
             if (!message) {
                 return res.status(400).json({ error: 'Message is required' });
@@ -615,6 +667,12 @@ module.exports = function (RED) {
                 res.write(`data: ${JSON.stringify({ error: 'No API configuration found' })}\n\n`);
                 res.end();
                 return;
+            }
+
+            // 如果前端传递了语言参数，更新LangChain管理器的语言
+            if (language) {
+                console.log('🌐 前端传递的语言:', language);
+                configNode.updateLanguageFromFrontend(language);
             }
 
             // 准备动态数据

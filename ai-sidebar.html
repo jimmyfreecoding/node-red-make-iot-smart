@@ -16,6 +16,21 @@
     // 国际化支持
     let i18nMessages = {};
     
+    // 获取当前页面语言
+    function getCurrentLanguage() {
+        let lang = 'zh-CN'; // 默认语言
+        
+        // 优先使用RED.i18n.lang()方法
+        if (RED.i18n && typeof RED.i18n.lang === 'function') {
+            lang = RED.i18n.lang();
+        } else if (RED.settings && typeof RED.settings.get === 'function') {
+            lang = RED.settings.get('lang') || lang;
+        }
+        
+        console.log('getCurrentLanguage - 检测到的语言:', lang);
+        return lang;
+    }
+    
     // 加载语言文件
     async function loadI18nMessages() {
         // 使用RED.i18n.lang()获取当前语言
@@ -688,7 +703,8 @@
                     flowData: flowData,
                     history: history,  // 使用异步获取的历史记录
                     silent: silent,  // 添加静默标记
-                    dynamicData: dynamicData  // 添加动态数据
+                    dynamicData: dynamicData,  // 添加动态数据
+                    language: getCurrentLanguage()  // 添加当前页面语言
                 })
             })
         .then(response => {
