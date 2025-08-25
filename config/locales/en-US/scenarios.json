@@ -153,6 +153,13 @@
   "development": {
     "name": "Development Mode",
     "description": "Code development assistant, helping to write and optimize Node-RED flows",
+    "keywords": [
+      {
+        "key": ["create flow", "generate flow", "new flow", "build flow"],
+        "scenario": "development",
+        "newHumanPrompt": "Please reply in the following format:\n1. First generate complete Node-RED flow JSON code\n2. Then explain in detail the role and configuration of each node in the flow\n3. Finally end with \"Click Apply button to create\"\n\nUser original request: "
+      }
+    ],
     "prompt": [
       "Please help me write a Function node code that implements data filtering and format conversion",
       "How to create a custom node in Node-RED? Please provide complete development steps",
@@ -200,6 +207,18 @@
   "configuration": {
     "name": "Configuration Mode",
     "description": "System configuration expert, handling Node-RED environment and node configuration",
+    "keywords": [
+      {
+        "key": ["current config", "current settings", "system config", "configuration info"],
+        "scenario": "configuration",
+        "newHumanPrompt": "Please use get_settings tool to get current Node-RED configuration information, then analyze and explain the various settings, functions and roles of the configuration file.\n\nUser original request: "
+      },
+      {
+        "key": ["current diagnostics", "system diagnostics", "diagnostic info", "health check"],
+        "scenario": "configuration",
+        "newHumanPrompt": "Please use get_diagnostics tool to get current Node-RED system diagnostic information, then use natural language to analyze and explain system status, performance metrics and potential issues in detail. Please do not return JSON format directly, but use understandable English for explanation. Display specific diagnostic data in a table at the end of the reply.\n\nUser original request: "
+      }
+    ],
     "prompt": [
       "How to configure Node-RED security settings, including user authentication and HTTPS?",
       "Please help me optimize Node-RED performance configuration to improve system efficiency",

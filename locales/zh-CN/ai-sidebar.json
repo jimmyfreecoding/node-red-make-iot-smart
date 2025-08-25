@@ -6,6 +6,11 @@
             "labels": {
                 "chatHistory": "聊天历史",
                 "noChatHistory": "无聊天历史",
+                "historySessions": "历史会话",
+                "loadingHistory": "正在加载会话历史...",
+                "loadSessionFailed": "加载会话失败，请重试",
+                "noHistoryAvailable": "暂无聊天历史",
+                "scenarioPrefix": "场景：",
                 "noFlowSelected": "未选择流程",
                 "noNodeSelected": "未选择节点",
                 "unknownFlow": "未知流程",
@@ -17,7 +22,8 @@
                 "availableScenarios": "可用场景",
                 "unknownScenario": "未知场景",
                 "switchedTo": "已切换到",
-                "quickStart": "快速开始"
+                "quickStart": "快速开始",
+                "loadSession": "加载会话"
             },
             "buttons": {
                 "showConfig": "显示配置",
@@ -41,6 +47,7 @@
                 "loading": "加载中...",
                 "error": "发生错误",
                 "noResponse": "未收到响应",
+                "scenarioSwitched": "🔄 已切换到 **{scenarioName}** 场景\n\n📝 **场景描述**: {description}",
                 "welcome": "👋 欢迎使用Make IoT Smart AI助手！\n\n🎯 **当前场景**: {scenarioName}\n\n请选择合适的场景并开始对话：\n• 🎓 **学习** - 理解Node-RED概念和节点\n• 💡 **解决方案** - 获取IoT解决方案建议\n• 🔌 **集成** - 集成协议和系统\n• 💻 **开发** - 优化和开发流程\n• ⚙️ **配置** - 配置Node-RED环境\n• 🖥️ **管理** - 管理和部署应用程序",
                 "fallbackWelcome": "👋 欢迎使用Make IoT Smart AI助手！\n\n🎯 **当前场景**: 学习\n\n请开始对话，我将帮助您了解如何使用Node-RED。"
             },

@@ -150,6 +150,16 @@
             const userInput = document.querySelector('#user-input');
             const scenarioLabel = document.querySelector('#scenario-label');
             const sendButtonText = document.querySelector('#send-button-text');
+            const chatHistoryLabel = document.querySelector('#chat-history-label');
+            
+            // 处理所有带有data-i18n属性的元素
+            const i18nElements = document.querySelectorAll('[data-i18n]');
+            i18nElements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (key) {
+                    element.textContent = _(key);
+                }
+            });
             
             if (showConfigBtn) showConfigBtn.textContent = _('sidebar.buttons.showConfig');
             if (sendBtn) sendBtn.textContent = _('sidebar.buttons.send');
@@ -157,6 +167,7 @@
             if (userInput) userInput.placeholder = _('sidebar.placeholders.inputMessage');
             if (scenarioLabel) scenarioLabel.textContent = _('sidebar.labels.scenario');
             if (sendButtonText) sendButtonText.textContent = _('sidebar.buttons.send');
+            if (chatHistoryLabel) chatHistoryLabel.textContent = _('sidebar.labels.chatHistory');
         }, 100);
     }
     
@@ -297,7 +308,11 @@
             return new Promise((resolve, reject) => {
                 console.log(_("sidebar.scenarios.loadingFromBackend"));
                 
-                fetch('/ai-sidebar/scenarios')
+                // 获取当前语言并传递给后端
+                const currentLang = getCurrentLanguage();
+                const url = `/ai-sidebar/scenarios?lang=${encodeURIComponent(currentLang)}`;
+                
+                fetch(url)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -500,7 +515,7 @@
             }
         });
     }
-    function sendMessage() {
+    async function sendMessage() {
         var message = $("#augment-chat-input").val().trim();
         if (message) {
             console.log("发送消息:", message);
@@ -510,11 +525,105 @@
             $("#augment-chat-input").css("height", "72px");
             
             // 发送到AI后台
-            sendToAI(message, false); // 明确指定不是静默发送
+            await sendToAI(message, false); // 明确指定不是静默发送
         }
     }
 
-    function sendToAI(message, silent = false) {
+    // 从配置文件检测关键词
+    async function detectKeywords(message) {
+        console.log('🔍 开始关键词检测，输入消息:', message);
+        try {
+            const currentLang = getCurrentLanguage();
+            console.log('📍 当前语言:', currentLang);
+            
+            const configUrl = `/ai-sidebar/scenarios?lang=${encodeURIComponent(currentLang)}`;
+            console.log('📂 尝试加载配置文件:', configUrl);
+            
+            const response = await fetch(configUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log('✅ 配置文件加载成功，原始数据:', data);
+            
+            // 检查数据结构，如果有scenarios包装层则解包
+            const scenarios = data.scenarios || data;
+            console.log('📋 场景数据:', scenarios);
+            console.log('📊 场景数量:', Object.keys(scenarios).length);
+            console.log('📋 可用场景:', Object.keys(scenarios));
+            
+            const lowerMessage = message.toLowerCase();
+            console.log('🔤 转换为小写的消息:', lowerMessage);
+            
+            // 遍历所有场景的关键词配置
+            for (const [scenarioKey, scenarioConfig] of Object.entries(scenarios)) {
+                console.log(`🔍 检查场景 ${scenarioKey}:`, scenarioConfig.name || scenarioKey);
+                if (scenarioConfig.keywords) {
+                    console.log(`  📝 该场景有 ${scenarioConfig.keywords.length} 个关键词组`);
+                    for (let i = 0; i < scenarioConfig.keywords.length; i++) {
+                        const keywordConfig = scenarioConfig.keywords[i];
+                        console.log(`    🔑 关键词组 ${i + 1}:`, keywordConfig.key);
+                        // 检查是否匹配任何关键词
+                        for (const keyword of keywordConfig.key) {
+                            const lowerKeyword = keyword.toLowerCase();
+                            console.log(`      🎯 检查关键词 "${keyword}" (小写: "${lowerKeyword}")`);
+                            if (lowerMessage.includes(lowerKeyword)) {
+                                console.log(`🎉 匹配成功！关键词: "${keyword}", 目标场景: ${keywordConfig.scenario}`);
+                                return {
+                                    scenario: keywordConfig.scenario,
+                                    newHumanPrompt: keywordConfig.newHumanPrompt,
+                                    matchedKeyword: keyword
+                                };
+                            }
+                        }
+                    }
+                } else {
+                    console.log(`  ⚠️ 场景 ${scenarioKey} 没有关键词配置`);
+                }
+            }
+            
+            console.log('❌ 没有找到匹配的关键词');
+            return null; // 没有匹配的关键词
+        } catch (error) {
+            console.error('❌ 关键词检测失败:', error);
+            // 如果获取失败，尝试默认的英文配置
+            try {
+                console.log('🔄 尝试加载英文配置文件作为备选');
+                const response = await fetch('/ai-sidebar/scenarios?lang=en-US');
+                const data = await response.json();
+                console.log('✅ 英文配置文件加载成功，原始数据:', data);
+                
+                // 检查数据结构，如果有scenarios包装层则解包
+                const scenarios = data.scenarios || data;
+                console.log('📋 英文场景数据:', scenarios);
+                const lowerMessage = message.toLowerCase();
+                
+                for (const [scenarioKey, scenarioConfig] of Object.entries(scenarios)) {
+                    if (scenarioConfig.keywords) {
+                        for (const keywordConfig of scenarioConfig.keywords) {
+                            for (const keyword of keywordConfig.key) {
+                                if (lowerMessage.includes(keyword.toLowerCase())) {
+                                    console.log(`🎉 在英文配置中匹配成功！关键词: "${keyword}", 目标场景: ${keywordConfig.scenario}`);
+                                    return {
+                                        scenario: keywordConfig.scenario,
+                                        newHumanPrompt: keywordConfig.newHumanPrompt,
+                                        matchedKeyword: keyword
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+                console.log('❌ 在英文配置中也没有找到匹配的关键词');
+                return null;
+            } catch (fallbackError) {
+                console.error('❌ 获取默认场景配置也失败:', fallbackError);
+                return null;
+            }
+        }
+    }
+
+    async function sendToAI(message, silent = false) {
         var nodeId = getSelectedConfigNodeId();
         if (!nodeId) {
             if (!silent) {
@@ -648,44 +757,39 @@
             }
         }
         
-        // 检测"当前配置"相关提示词（所有场景）
-        if (sendMessage.includes('当前配置') || sendMessage.includes('current config') || sendMessage.includes('current settings')) {
-            console.log('检测到配置分析请求');
+        // 从配置文件检测关键词并处理场景切换
+        console.log('🔍 开始执行关键词检测...');
+        const keywordDetected = await detectKeywords(sendMessage);
+        console.log('🔍 关键词检测结果:', keywordDetected);
+        
+        if (keywordDetected) {
+            console.log('🎯 检测到关键词匹配:', {
+                matchedKeyword: keywordDetected.matchedKeyword,
+                targetScenario: keywordDetected.scenario,
+                currentScenario: currentScenario
+            });
             
-            // 自动切换到配置场景，因为get-settings工具只在配置场景中可用
-            if (currentScenario !== 'configuration') {
-                console.log('自动切换到配置场景以使用get-settings工具');
-                currentScenario = 'configuration';
-                ScenarioManager.currentScenario = 'configuration';
+            // 自动切换场景
+            if (currentScenario !== keywordDetected.scenario) {
+                console.log(`🔄 场景切换: ${currentScenario} -> ${keywordDetected.scenario}`);
+                currentScenario = keywordDetected.scenario;
+                ScenarioManager.currentScenario = keywordDetected.scenario;
                 ScenarioManager.updateUI();
+                console.log('✅ 场景切换完成，当前场景:', ScenarioManager.getCurrentScenario());
+            } else {
+                console.log('ℹ️ 目标场景与当前场景相同，无需切换');
             }
             
-            // 修改消息以包含工具调用指示（注意：MCP工具名中的连字符会被转换为下划线）
-            sendMessage = `请使用get_settings工具获取当前Node-RED的配置信息，然后分析和解释配置文件的各项设置、功能和作用。\n\n用户原始请求：${sendMessage}`;
-        }
-        
-        // 检测"当前诊断"相关提示词（所有场景）
-        if (sendMessage.includes('当前诊断') || sendMessage.includes('current diagnostics') || sendMessage.includes('系统诊断')) {
-            console.log('检测到诊断分析请求');
-            
-            // 自动切换到配置场景，因为get_diagnostics工具只在配置场景中可用
-            if (currentScenario !== 'configuration') {
-                console.log('自动切换到配置场景以使用get_diagnostics工具');
-                currentScenario = 'configuration';
-                ScenarioManager.currentScenario = 'configuration';
-                ScenarioManager.updateUI();
-            }
-            
-            // 修改消息以包含工具调用指示（注意：MCP工具名中的连字符会被转换为下划线）
-            sendMessage = `请使用get_diagnostics工具获取当前Node-RED的系统诊断信息，然后用自然语言详细分析和解释系统状态、性能指标和潜在问题，请不要直接返回JSON格式，而是用易懂的中文进行说明。在回复最后用表格显示当前诊断的具体数据。\n\n用户原始请求：${sendMessage}`;
-        }
-        
-        // 检测流程创建相关提示词（所有场景）
-        if (sendMessage.includes('创建流程') || sendMessage.includes('生成流程') || sendMessage.includes('创造流程') || sendMessage.includes('新建流程') || sendMessage.includes('create flow') || sendMessage.includes('generate flow') || sendMessage.includes('new flow')) {
-            console.log('检测到流程创建请求');
-            
-            // 修改消息以包含特定的格式要求
-            sendMessage = `${sendMessage}\n\n请按照以下格式回复：\n1. 首先生成完整的Node-RED流程JSON代码\n2. 然后详细解释流程中每个节点的作用和配置\n3. 最后以"点击Apply按钮进行创建"结束描述`;
+            // 使用配置文件中的新提示词
+            const originalMessage = sendMessage;
+            sendMessage = keywordDetected.newHumanPrompt + sendMessage;
+            console.log('📝 应用新提示词:', {
+                original: originalMessage,
+                newPrompt: keywordDetected.newHumanPrompt,
+                final: sendMessage
+            });
+        } else {
+            console.log('ℹ️ 没有检测到匹配的关键词，保持当前场景:', currentScenario);
         }
 
         console.log("发送AI请求:", {
@@ -2299,7 +2403,7 @@
                 text-align: center;
                 color: #6b7280;
                 font-size: 12px;
-            ">正在加载会话历史...</div>
+            " data-i18n="ai-sidebar.sidebar.labels.loadingHistory">正在加载会话历史...</div>
         `);
         
         // 获取会话列表
@@ -2340,7 +2444,7 @@
                                 color: #6b7280;
                                 text-transform: uppercase;
                                 letter-spacing: 0.5px;
-                            ">历史会话</div>
+                            " data-i18n="ai-sidebar.sidebar.labels.historySessions">历史会话</div>
                     `;
                     
                     sessions.forEach(function(session, index) {
@@ -2429,7 +2533,7 @@
                         text-align: center;
                         color: #ef4444;
                         font-size: 12px;
-                    ">加载会话失败，请重试</div>
+                    " data-i18n="ai-sidebar.sidebar.labels.loadSessionFailed">加载会话失败，请重试</div>
                 `);
             }
         });
@@ -4146,7 +4250,7 @@
                 ">
                     <span style="display: flex; align-items: center; gap: 6px;">
                         <i class="fa fa-history" style="font-size: 11px;"></i>
-                        <span id="chat-history-label">聊天历史</span>
+                        <span id="chat-history-label" data-i18n="ai-sidebar.sidebar.labels.chatHistory">聊天历史</span>
                     </span>
                     <i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </button>
@@ -4175,7 +4279,7 @@
                         text-align: center;
                         color: #9ca3af;
                         font-size: 12px;
-                    ">暂无聊天历史</div>
+                    " data-i18n="ai-sidebar.sidebar.labels.noHistoryAvailable">暂无聊天历史</div>
                 </div>
             </div>
         </div>
@@ -4307,7 +4411,7 @@
                                 padding: 0 4px;
                                 line-height: 1;
                             ">
-                                <span id="scenario-label">场景：</span><span id="current-scenario-name" style="font-weight: 500;">通用</span>
+                                <span id="scenario-label" data-i18n="ai-sidebar.sidebar.labels.scenarioPrefix">场景：</span><span id="current-scenario-name" style="font-weight: 500;">通用</span>
                             </span>
                         </button>
                     

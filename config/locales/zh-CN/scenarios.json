@@ -153,7 +153,16 @@
   "development": {
     "name": "开发模式",
     "description": "代码开发助手，协助编写和优化Node-RED流程",
+    "keywords": [
+      {
+        "key": ["创建流程", "生成流程", "创造流程", "新建流程"],
+        "scenario": "development",
+        "newHumanPrompt": "请按照以下格式回复：\n1. 首先生成完整的Node-RED流程JSON代码\n2. 然后详细解释流程中每个节点的作用和配置\n3. 最后以\"点击Apply按钮进行创建\"结束描述\n\n用户原始请求："
+      }
+    ],
     "prompt": [
+      "当前流程的详细解释和说明",
+      "当前节点的详细解释和说明",
       "请帮我编写一个Function节点代码，实现数据过滤和格式转换功能",
       "如何在Node-RED中创建一个自定义节点？请提供完整的开发步骤",
       "我的流程运行缓慢，请帮我分析性能瓶颈并提供优化建议",
@@ -200,7 +209,21 @@
   "configuration": {
     "name": "配置模式",
     "description": "系统配置专家，处理Node-RED环境和节点配置",
+    "keywords": [
+      {
+        "key": ["当前配置", "系统配置", "配置信息", "设置", "当前设置"],
+        "scenario": "configuration",
+        "newHumanPrompt": "请使用get_settings工具获取当前Node-RED的配置信息，然后用自然语言详细分析和解释配置文件的各项设置、功能和作用，最后使用表格来显示所有配置项内容。\n\n用户原始请求："
+      },
+      {
+        "key": ["当前诊断", "系统诊断", "诊断信息", "健康检查"],
+        "scenario": "configuration",
+        "newHumanPrompt": "请使用get_diagnostics工具获取当前Node-RED的系统诊断信息，然后用自然语言详细分析和解释系统状态、性能指标和潜在问题，请不要直接返回JSON格式，而是用易懂的中文进行说明。在回复最后用表格显示当前诊断的具体数据。\n\n用户原始请求："
+      }
+    ],
     "prompt": [
+      "NodeRed当前配置情况如何",
+      "NodeRed当前诊断情况如何",
       "如何配置Node-RED的安全设置，包括用户认证和HTTPS？",
       "请帮我优化Node-RED的性能配置，提高系统运行效率",
       "如何在Node-RED中安装和管理第三方节点包？",

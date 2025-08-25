@@ -750,11 +750,21 @@ module.exports = function (RED) {
     // 获取场景列表端点
     RED.httpAdmin.get('/ai-sidebar/scenarios', function(req, res) {
         try {
-            // 直接读取scenarios.json文件
-            const scenariosPath = path.join(__dirname, 'config', 'scenarios.json');
+            // 获取语言参数，默认为zh-CN
+            const lang = req.query.lang || 'zh-CN';
+            
+            // 读取多语言scenarios.json文件
+            const scenariosPath = path.join(__dirname, 'config', 'locales', lang, 'scenarios.json');
             
             if (!fs.existsSync(scenariosPath)) {
-                return res.status(404).json({ error: 'Scenarios configuration file not found' });
+                // 如果指定语言文件不存在，尝试使用默认的英文配置
+                const fallbackPath = path.join(__dirname, 'config', 'locales', 'en-US', 'scenarios.json');
+                if (!fs.existsSync(fallbackPath)) {
+                    return res.status(404).json({ error: 'Scenarios configuration file not found' });
+                }
+                const fallbackData = fs.readFileSync(fallbackPath, 'utf8');
+                const fallbackScenarios = JSON.parse(fallbackData);
+                return res.json({ scenarios: fallbackScenarios });
             }
             
             const scenariosData = fs.readFileSync(scenariosPath, 'utf8');
