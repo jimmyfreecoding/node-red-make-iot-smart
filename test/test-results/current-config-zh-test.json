@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-08-25T17:35:32.058Z",
+  "testName": "中文\"当前配置\"专项测试",
+  "language": "zh-CN",
+  "input": {
+    "message": "当前配置",
+    "humanPrompt": "当前配置"
+  },
+  "systemPrompt": "你是一个专业的Node-RED系统管理员和配置专家。你的任务是帮助用户配置和管理Node-RED环境、节点和系统设置。\n\n**重要：工具调用规则**\n当用户询问以下内容时，你必须首先调用相应的工具获取最新信息：\n- 询问\"当前配置\"、\"系统配置\"、\"设置\"、\"配置信息\"等时，必须先调用get_settings工具\n- 询问\"系统诊断\"、\"系统状态\"、\"性能\"等时，必须先调用get_diagnostics工具\n- 询问\"节点信息\"时，必须先调用get_node_info工具\n\n你应该：\n1. 提供系统配置和环境设置建议\n2. 协助节点安装和配置管理\n3. 优化性能和资源使用\n4. 处理安全配置和权限管理\n5. 提供故障排除和维护指导\n6. 分析系统诊断数据，用自然语言解释系统状态、性能指标和问题\n\n当分析诊断数据时，请：\n- 详细解释系统运行状态和健康度\n- 分析性能指标（内存使用、CPU使用率、事件循环延迟等）\n- 解释发现的问题和警告的具体含义\n- 提供针对性的优化建议和解决方案\n- 给出系统维护建议\n- 用易懂的中文自然语言回复，避免直接输出JSON格式\n\n**流程创建格式要求：**\n当用户请求创建、生成、创造或新建流程时，请严格按照以下格式回复：\n1. 首先生成完整的Node-RED流程JSON代码，使用```json代码块格式，即：```json\n{{流程json数据}}\n```\n2. 然后详细解释流程中每个节点的作用和配置\n3. 最后以\"点击Apply按钮进行创建\"结束描述\n\n当前环境信息：\n- Node-RED版本: \n- Node.js版本: \n- 当前时间: \n- 选中的流程: [object Object]\n- 选中的节点: [object Object]\n- 配置需求: \n\n可用的MCP工具: \n\nuse zh-CN to respond, unless the user specifically indicates what language to use.",
+  "aiResponse": "无AI回复内容",
+  "toolCalls": [],
+  "analysis": {
+    "systemPromptCaptured": true,
+    "getSettingsToolCalled": false,
+    "configExpertRoleDetected": true,
+    "configAnalysisPresent": false,
+    "responseLength": 0,
+    "toolCallCount": 0
+  },
+  "metadata": {
+    "settings": {
+      "httpAdminRoot": "/admin",
+      "httpNodeRoot": "/",
+      "userDir": "/home/nodered/.node-red",
+      "nodesDir": "/home/nodered/.node-red/nodes",
+      "uiHost": "0.0.0.0",
+      "uiPort": 1880,
+      "httpStatic": "/usr/src/node-red/public",
+      "httpStaticAuth": {
+        "user": "",
+        "pass": ""
+      },
+      "httpAuth": {
+        "user": "",
+        "pass": ""
+      },
+      "https": {
+        "enabled": false,
+        "key": "",
+        "cert": ""
+      },
+      "disableEditor": false,
+      "flowFile": "flows.json",
+      "flowFilePretty": true,
+      "credentialSecret": "false",
+      "httpNodeCors": {
+        "origin": "*",
+        "methods": "GET,PUT,POST,DELETE"
+      },
+      "httpNodeMiddleware": [],
+      "logging": {
+        "console": {
+          "level": "info",
+          "metrics": false,
+          "audit": false
+        }
+      },
+      "contextStorage": {
+        "default": "memory",
+        "memory": {}
+      },
+      "exportGlobalContextKeys": false,
+      "externalModules": {},
+      "editorTheme": {
+        "palette": {},
+        "projects": {
+          "enabled": false
+        },
+        "codeEditor": {
+          "lib": "monaco",
+          "options": {}
+        }
+      },
+      "functionExternalModules": true,
+      "functionGlobalContext": {},
+      "debugMaxLength": 1000,
+      "mqttReconnectTime": 15000,
+      "serialReconnectTime": 15000,
+      "socketReconnectTime": 15000,
+      "socketTimeout": 120000,
+      "maxMessageSize": 1048576,
+      "tcpTimeout": 120000,
+      "inactivityTimeout": 0,
+      "verbose": false
+    }
+  }
+}

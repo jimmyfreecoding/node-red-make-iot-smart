@@ -42,16 +42,18 @@ module.exports = function (RED) {
         // MCP配置 - 使用node-red-mcp-server
         node.mcpCommand = config.mcpCommand || 'npx node-red-mcp-server';
         node.mcpArgs = config.mcpArgs || '';
-        node.mcpEnv = config.mcpEnv || 'NODE_RED_URL=http://localhost:1880';
+        // 自动获取Node-RED当前运行的端口
+        const currentPort = RED.settings.uiPort || 1880;
+        node.mcpEnv = config.mcpEnv || `NODE_RED_URL=http://localhost:${currentPort}`;
         node.enableMcp = config.enableMcp !== false; // 默认启用MCP
         
-        console.log(RED._('messages.apiConfigInit') + ':', {
-            name: node.name,
-            provider: node.provider,
-            model: node.model,
-            enableMcp: node.enableMcp,
-            mcpCommand: node.mcpCommand
-        });
+        // console.log(RED._('messages.apiConfigInit') + ':', {
+        //     name: node.name,
+        //     provider: node.provider,
+        //     model: node.model,
+        //     enableMcp: node.enableMcp,
+        //     mcpCommand: node.mcpCommand
+        // });
         
         // 设置全局变量以便其他地方访问
         global.apiConfigNode = node;
@@ -69,10 +71,10 @@ module.exports = function (RED) {
             try {
                 const dbPath = path.join(__dirname, 'data', 'memory.db');
                 node.memoryManager = new MemoryManager(dbPath);
-                console.log('Memory manager initialized successfully');
+                // console.log('Memory manager initialized successfully');
                 return true;
             } catch (error) {
-                console.error('Failed to initialize memory manager:', error);
+                // console.error('Failed to initialize memory manager:', error);
                 node.error('Failed to initialize memory manager: ' + error.message);
                 return false;
             }
@@ -98,9 +100,9 @@ module.exports = function (RED) {
                     currentLanguage = RED.user.lang;
                 }
                 
-                console.log('Detected language:', currentLanguage);
+                // console.log('Detected language:', currentLanguage);
             } catch (langError) {
-                console.warn('Failed to get Node-RED language, using default:', langError.message);
+                // console.warn('Failed to get Node-RED language, using default:', langError.message);
             }
             return currentLanguage;
         };
@@ -108,13 +110,13 @@ module.exports = function (RED) {
         node.initLangChainManager = function() {
             try {
                 const currentLanguage = node.getCurrentLanguage();
-                console.log('Current Node-RED language:', currentLanguage);
+                // console.log('Current Node-RED language:', currentLanguage);
                 
                 node.langchainManager = new LangChainManager(node.memoryManager, node.mcpClient, currentLanguage);
-                console.log('LangChain manager initialized successfully with language:', currentLanguage);
+                // console.log('LangChain manager initialized successfully with language:', currentLanguage);
                 return true;
             } catch (error) {
-                console.error('Failed to initialize LangChain manager:', error);
+                // console.error('Failed to initialize LangChain manager:', error);
                 node.error('Failed to initialize LangChain manager: ' + error.message);
                 return false;
             }
@@ -125,7 +127,7 @@ module.exports = function (RED) {
             if (language && node.langchainManager) {
                 const currentLanguage = node.langchainManager.currentLanguage || node.getCurrentLanguage();
                 if (language !== currentLanguage) {
-                    console.log(`Language changed from ${currentLanguage} to ${language}`);
+                    // console.log(`Language changed from ${currentLanguage} to ${language}`);
                     node.langchainManager.updateLanguage(language);
                 }
             }
@@ -135,28 +137,28 @@ module.exports = function (RED) {
         
         // 初始化MCP连接
         node.initMCP = async function() {
-            console.log('initMCP 被调用，检查条件:', {
-                enableMcp: node.enableMcp,
-                mcpCommand: node.mcpCommand,
-                hasCommand: !!node.mcpCommand
-            });
+            // console.log('initMCP 被调用，检查条件:', {
+            //     enableMcp: node.enableMcp,
+            //     mcpCommand: node.mcpCommand,
+            //     hasCommand: !!node.mcpCommand
+            // });
             
             if (!node.enableMcp) {
-                console.log(RED._('messages.mcpNotEnabled'));
+                // console.log(RED._('messages.mcpNotEnabled'));
                 return false;
             }
             
             if (!node.mcpCommand) {
-                console.log(RED._('messages.mcpCommandNotConfigured'));
+                // console.log(RED._('messages.mcpCommandNotConfigured'));
                 return false;
             }
 
             try {
-                console.log(RED._('messages.mcpInitStart') + ':', {
-                    command: node.mcpCommand,
-                    args: node.mcpArgs,
-                    env: node.mcpEnv
-                });
+                // console.log(RED._('messages.mcpInitStart') + ':', {
+                //     command: node.mcpCommand,
+                //     args: node.mcpArgs,
+                //     env: node.mcpEnv
+                // });
                 
                 const args = node.mcpArgs ? node.mcpArgs.split(' ').filter(arg => arg.trim()) : [];
                 
@@ -173,7 +175,7 @@ module.exports = function (RED) {
 
                 const success = await node.mcpClient.connect(node.mcpCommand, args, env);
                 if (success) {
-                    console.log(RED._('messages.mcpInitSuccess'));
+                    // console.log(RED._('messages.mcpInitSuccess'));
                     
                     // 重新初始化LangChain管理器以获取MCP工具
                     if (node.langchainManager) {
@@ -182,11 +184,11 @@ module.exports = function (RED) {
                     
                     return true;
                 } else {
-                    console.warn('MCP server connection failed');
+                    // console.warn('MCP server connection failed');
                     return false;
                 }
             } catch (error) {
-                console.error(RED._('messages.mcpInitFailed') + ':', error);
+                // console.error(RED._('messages.mcpInitFailed') + ':', error);
                 return false;
             }
         };
@@ -249,7 +251,7 @@ module.exports = function (RED) {
 
                 return result;
             } catch (error) {
-                console.error('Chat execution failed:', error);
+                // console.error('Chat execution failed:', error);
                 throw error;
             }
         };
@@ -261,7 +263,7 @@ module.exports = function (RED) {
                 const llmConfig = node.getLLMConfig();
                 
                 // 打印LLM配置用于调试
-                console.log('🔧 LLM配置:', llmConfig);
+                // console.log('🔧 LLM配置:', llmConfig);
                 
                 // 检查API密钥是否未配置
                 if (!llmConfig.apiKey || llmConfig.apiKey === RED._('placeholder.apiKey') || llmConfig.apiKey.trim() === '') {
@@ -280,7 +282,7 @@ module.exports = function (RED) {
                     sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
                 }
                 
-                console.log('开始流式聊天:', { message, scenario, sessionId });
+                // console.log('开始流式聊天:', { message, scenario, sessionId });
                 
                 // 使用LangChain的真正流式功能
                 const result = await node.langchainManager.executeScenarioChatStream(
@@ -294,7 +296,7 @@ module.exports = function (RED) {
                 
                 return result;
             } catch (error) {
-                console.error('Stream chat error:', error);
+                // console.error('Stream chat error:', error);
                 if (onChunk && typeof onChunk === 'function') {
                     onChunk({
                         type: 'error',
@@ -406,11 +408,11 @@ module.exports = function (RED) {
                     }
                 }
 
-                console.log('API配置节点初始化完成');
+                // console.log('API配置节点初始化完成');
                 
-                console.log('API配置节点初始化完成');
+                // console.log('API配置节点初始化完成');
             } catch (error) {
-                console.error('API配置节点初始化失败:', error);
+                // console.error('API配置节点初始化失败:', error);
                 node.error('Initialization failed: ' + error.message);
             }
         }, 1000);
@@ -436,7 +438,7 @@ module.exports = function (RED) {
 
         // 节点关闭时清理资源
         node.on('close', function(done) {
-            console.log('API配置节点关闭，清理资源...');
+            // console.log('API配置节点关闭，清理资源...');
             
             try {
                 // 关闭MCP连接
@@ -456,9 +458,9 @@ module.exports = function (RED) {
                     node.langchainManager.cleanup();
                 }
                 
-                console.log('资源清理完成');
+                // console.log('资源清理完成');
             } catch (error) {
-                console.error('资源清理失败:', error);
+                // console.error('资源清理失败:', error);
             }
             
             done();
@@ -493,11 +495,11 @@ module.exports = function (RED) {
             return;
         }
         
-        console.log('AI助手节点初始化完成（设置为有效状态）:', {
-            name: node.name,
-            configNode: node.configNode ? node.configNode.name : 'none',
-            valid: node.valid
-        });
+        // console.log('AI助手节点初始化完成（设置为有效状态）:', {
+        //     name: node.name,
+        //     configNode: node.configNode ? node.configNode.name : 'none',
+        //     valid: node.valid
+        // });
     }
     
     RED.nodes.registerType('make-iot-smart', MakeIotSmartNode);
@@ -508,9 +510,9 @@ module.exports = function (RED) {
             // 设置请求字符编码为UTF-8
             req.setEncoding('utf8');
             
-            console.log('🌐 收到普通聊天请求:', req.body);
-            console.log('🔥 普通聊天端点被调用！');
-            console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
+            // console.log('🌐 收到普通聊天请求:', req.body);
+            // console.log('🔥 普通聊天端点被调用！');
+            // console.log('🔍 原始消息内容:', JSON.stringify(req.body.message));
             const { message, scenario, sessionId, selectedFlow, selectedNodes, dynamicData: requestDynamicData, language } = req.body;
             
             if (!message) {
@@ -530,7 +532,7 @@ module.exports = function (RED) {
 
             // 如果前端传递了语言参数，更新LangChain管理器的语言
             if (language) {
-                console.log('🌐 前端传递的语言:', language);
+                // console.log('🌐 前端传递的语言:', language);
                 configNode.updateLanguageFromFrontend(language);
             }
 
@@ -650,20 +652,20 @@ module.exports = function (RED) {
                 configNode = RED.nodes.getNode(nodeId);
             } else {
                 // 否则使用全局变量获取配置节点
-                console.log('🔍 开始查找api-config节点...');
+                // console.log('🔍 开始查找api-config节点...');
                 if (global.apiConfigNode) {
-                    console.log('✅ 从全局变量找到api-config节点');
+                    // console.log('✅ 从全局变量找到api-config节点');
                     configNode = global.apiConfigNode;
                 } else {
-                    console.log('❌ 全局变量中未找到api-config节点');
+                    // console.log('❌ 全局变量中未找到api-config节点');
                 }
-                console.log('🔍 查找结果:', !!configNode);
+                // console.log('🔍 查找结果:', !!configNode);
             }
             
-            console.log('🔍 查找配置节点:', nodeId, !!configNode);
+            // console.log('🔍 查找配置节点:', nodeId, !!configNode);
             
             if (!configNode) {
-                console.error('❌ 未找到配置节点');
+                // console.error('❌ 未找到配置节点');
                 res.write(`data: ${JSON.stringify({ error: 'No API configuration found' })}\n\n`);
                 res.end();
                 return;
@@ -678,6 +680,7 @@ module.exports = function (RED) {
             // 准备动态数据
             const dynamicData = {
                 selectedFlow: selectedFlow,
+                flowId: selectedFlow ? selectedFlow.id : null,  // 为get-flow工具提供flowId
                 selectedNodes: selectedNodes,
                 ...(requestDynamicData || {})  // 合并前端传递的动态数据
             };
@@ -711,8 +714,8 @@ module.exports = function (RED) {
         try {
             const { lang, file } = req.params;
             const filePath = path.join(__dirname, 'locales', lang, file);
-            console.log('Language:', lang, 'File:', file);
-            console.log('File path:', filePath);
+            // console.log('Language:', lang, 'File:', file);
+            // console.log('File path:', filePath);
             
             // 安全检查：确保请求的文件在locales目录内
             const resolvedPath = path.resolve(filePath);
@@ -739,7 +742,7 @@ module.exports = function (RED) {
             res.setHeader('Content-Type', 'application/json');
             res.json(jsonData);
         } catch (error) {
-            console.error('Locales file serving error:', error);
+            // console.error('Locales file serving error:', error);
             res.status(500).json({ error: 'Internal server error' });
         }
     });
@@ -804,7 +807,7 @@ module.exports = function (RED) {
             const history = configNode.getConversationHistory(sessionId, parseInt(limit));
             res.json({ history });
         } catch (error) {
-            console.error('History endpoint error:', error);
+            // console.error('History endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -827,7 +830,7 @@ module.exports = function (RED) {
             const sessions = configNode.memoryManager.getSessions(parseInt(limit));
             res.json({ sessions });
         } catch (error) {
-            console.error('Sessions endpoint error:', error);
+            // console.error('Sessions endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -859,7 +862,7 @@ module.exports = function (RED) {
                 res.status(500).json({ error: 'Failed to create session' });
             }
         } catch (error) {
-            console.error('Create session endpoint error:', error);
+            // console.error('Create session endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -886,7 +889,7 @@ module.exports = function (RED) {
                 res.status(404).json({ error: 'Session not found' });
             }
         } catch (error) {
-            console.error('Get session endpoint error:', error);
+            // console.error('Get session endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -915,7 +918,7 @@ module.exports = function (RED) {
                 res.status(500).json({ error: 'Failed to update session' });
             }
         } catch (error) {
-            console.error('Update session endpoint error:', error);
+            // console.error('Update session endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -942,7 +945,7 @@ module.exports = function (RED) {
                 res.status(500).json({ error: 'Failed to delete session' });
             }
         } catch (error) {
-            console.error('Delete session endpoint error:', error);
+            // console.error('Delete session endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -969,7 +972,7 @@ module.exports = function (RED) {
             const results = configNode.searchConversations(query, scenario, limit);
             res.json({ results });
         } catch (error) {
-            console.error('Search endpoint error:', error);
+            // console.error('Search endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -1110,7 +1113,7 @@ module.exports = function (RED) {
                 
                 res.json({ success: true, result: formattedResult });
             } catch (error) {
-                console.error('Execute tool endpoint error:', error);
+                // console.error('Execute tool endpoint error:', error);
                 res.status(500).json({ error: error.message });
             }
         });
@@ -1264,45 +1267,45 @@ module.exports = function (RED) {
                                 
                                 const updateReq = http.request(updateOptions, (updateRes) => {
                                     if (updateRes.statusCode === 200 || updateRes.statusCode === 204) {
-                                        console.log(RED._('messages.aiHelperNodeCreated') + ':', newNodeId);
+                                        // console.log(RED._('messages.aiHelperNodeCreated') + ':', newNodeId);
                                     } else {
-                                        console.error(RED._('errors.executionFailed') + ', ' + RED._('status.error') + ':', updateRes.statusCode);
+                                        // console.error(RED._('errors.executionFailed') + ', ' + RED._('status.error') + ':', updateRes.statusCode);
                                     }
                                 });
                                 
                                 updateReq.on('error', (err) => {
-                                    console.error(RED._('errors.executionFailed') + ':', err);
+                                    // console.error(RED._('errors.executionFailed') + ':', err);
                                 });
                                 
                                 updateReq.write(JSON.stringify(flows));
                                 updateReq.end();
                                 
                             } catch (parseError) {
-                                console.error(RED._('errors.executionFailed') + ':', parseError);
+                                // console.error(RED._('errors.executionFailed') + ':', parseError);
                             }
                         });
                     });
                     
                     req.on('error', (err) => {
-                        console.error(RED._('errors.executionFailed') + ':', err);
+                        // console.error(RED._('errors.executionFailed') + ':', err);
                     });
                     
                     req.end();
                 } else {
-                    console.log(RED._('messages.apiConfigNotFound'));
+                    // console.log(RED._('messages.apiConfigNotFound'));
                 }
             } else {
-                console.log(RED._('messages.aiHelperNodeExists'));
+                // console.log(RED._('messages.aiHelperNodeExists'));
             }
         } catch (error) {
-            console.error(RED._('errors.executionFailed') + ':', error);
+            // console.error(RED._('errors.executionFailed') + ':', error);
         }
     }
     
     // 立即执行一次检查
-    console.log(RED._('messages.initializingAIHelper'));
+    // console.log(RED._('messages.initializingAIHelper'));
     setTimeout(() => {
-        console.log(RED._('messages.aiHelperNodeChecking'));
+        // console.log(RED._('messages.aiHelperNodeChecking'));
         ensureAIHelperNode();
     }, 3000);
     

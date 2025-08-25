@@ -34,6 +34,7 @@
         "@langchain/google-genai": "^0.1.0",
         "@langchain/openai": "^0.3.0",
         "@modelcontextprotocol/sdk": "^1.0.4",
+        "axios": "^1.11.0",
         "better-sqlite3": "^11.0.0",
         "dotenv": "^16.4.5",
         "github-markdown-css": "^5.4.0",
@@ -45,7 +46,6 @@
     "node-red": {
         "version": ">=2.0.0",
         "nodes": {
-            "api-config": "api-config.js",
             "make-iot-smart": "make-iot-smart.js"
         },
         "plugins": {

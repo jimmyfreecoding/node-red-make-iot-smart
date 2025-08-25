@@ -27,7 +27,7 @@
             lang = RED.settings.get('lang') || lang;
         }
         
-        console.log('getCurrentLanguage - 检测到的语言:', lang);
+        // console.log('getCurrentLanguage - 检测到的语言:', lang);
         return lang;
     }
     
@@ -36,26 +36,26 @@
         // 使用RED.i18n.lang()获取当前语言
         let lang = 'en-US'; // 默认语言
         
-        console.log('=== AI侧边栏语言检测 ===');
+        // console.log('=== AI侧边栏语言检测 ===');
         
         // 优先使用RED.i18n.lang()方法
         if (RED.i18n && typeof RED.i18n.lang === 'function') {
             lang = RED.i18n.lang();
-            console.log('通过RED.i18n.lang()获取的语言:', lang);
+            // console.log('通过RED.i18n.lang()获取的语言:', lang);
         } else {
             console.log('RED.i18n.lang()方法不可用，尝试其他方法');
             
             // 备用方法：RED.i18n.lang()
             if (RED.settings && typeof RED.settings.get === 'function') {
                 lang = RED.i18n.lang() || lang;
-                console.log('通过RED.settings.get("lang")获取的语言:', lang);
+                // console.log('通过RED.settings.get("lang")获取的语言:', lang);
             }
         }
         
-        console.log('最终确定的语言:', lang);
+        // console.log('最终确定的语言:', lang);
         console.log('RED.i18n对象:', RED.i18n || '不存在');
         console.log('RED._函数:', typeof RED._ === 'function' ? 'exists' : '不存在');
-        console.log('浏览器语言:', navigator.language);
+        // console.log('浏览器语言:', navigator.language);
         
         // 支持多种语言格式
         let langFile;
@@ -67,12 +67,12 @@
             langFile = 'zh-CN';
         }
         
-        console.log('选择的语言文件:', langFile);
+        // console.log('选择的语言文件:', langFile);
         console.log('========================');
         
         // 直接通过fetch加载语言文件
         const fetchUrl = `ai-sidebar/locales/${langFile}/ai-sidebar.json`;
-        console.log('尝试加载语言文件:', fetchUrl);
+        // console.log('尝试加载语言文件:', fetchUrl);
         
         try {
             const response = await fetch(fetchUrl);
@@ -83,7 +83,7 @@
             }
             
             const data = await response.json();
-            console.log('成功加载语言数据:', data);
+            // console.log('成功加载语言数据:', data);
             
             // 提取ai-sidebar命名空间下的数据
             if (data['ai-sidebar']) {
@@ -94,7 +94,7 @@
             
             // 测试国际化函数是否正确工作
             console.log('=== 国际化测试 ===');
-            console.log('当前语言文件:', langFile);
+            // console.log('当前语言文件:', langFile);
             console.log('i18nMessages对象:', i18nMessages);
             console.log('i18nMessages.sidebar:', i18nMessages.sidebar);
             console.log('i18nMessages.sidebar.test:', i18nMessages.sidebar ? i18nMessages.sidebar.test : 'undefined');
@@ -105,7 +105,7 @@
             
             updateUITexts();
         } catch (error) {
-            console.log('语言文件加载失败:', error.message);
+            // console.log('语言文件加载失败:', error.message);
             // 使用默认的中文文本
             i18nMessages = {
                 sidebar: {
@@ -117,7 +117,7 @@
             
             // 测试国际化函数是否正确工作
             console.log('=== 国际化测试（默认值）===');
-            console.log('当前语言文件:', langFile);
+            // console.log('当前语言文件:', langFile);
             console.log('i18nMessages对象:', i18nMessages);
             console.log('i18nMessages.sidebar:', i18nMessages.sidebar);
             console.log('i18nMessages.sidebar.test:', i18nMessages.sidebar ? i18nMessages.sidebar.test : 'undefined');
@@ -167,10 +167,10 @@
     function watchLanguageChange() {
         let currentLang = RED.i18n.lang() || 'zh-CN';
         
-        console.log('=== AI侧边栏语言监听器启动 ===');
-        console.log('初始语言设置:', currentLang);
+        // console.log('=== AI侧边栏语言监听器启动 ===');
+        // console.log('初始语言设置:', currentLang);
         console.log('Node-RED版本:', RED.version || '未知');
-        console.log('浏览器语言:', navigator.language);
+        // console.log('浏览器语言:', navigator.language);
         console.log('RED.i18n对象:', RED.i18n);
         console.log('RED.i18n.lang函数:', typeof RED.i18n.lang);
         console.log('RED.settings对象:', RED.settings);
@@ -183,22 +183,22 @@
             const settingsLang = RED.settings ? RED.settings.get('lang') : 'unknown';
             
             // 每次都输出当前状态用于调试
-            console.log('=== 语言状态检查 ===');
+            // console.log('=== 语言状态检查 ===');
             console.log('当前时间:', new Date().toLocaleString());
             console.log('RED.i18n.lang():', newLang);
             console.log('RED.settings.get("lang"):', settingsLang);
-            console.log('浏览器语言:', navigator.language);
-            console.log('上次记录的语言:', currentLang);
+            // console.log('浏览器语言:', navigator.language);
+            // console.log('上次记录的语言:', currentLang);
             
             if (newLang !== currentLang) {
-                console.log('🔄 检测到语言变化!');
-                console.log('语言变化:', currentLang, '->', newLang);
+                // console.log('🔄 检测到语言变化!');
+                // console.log('语言变化:', currentLang, '->', newLang);
                 console.log('变化时间:', new Date().toLocaleString());
-                console.log('正在重新加载语言文件...');
+                // console.log('正在重新加载语言文件...');
                 currentLang = newLang;
                 await loadI18nMessages(); // 重新加载语言文件
             } else {
-                console.log('✅ 语言未变化');
+                // console.log('✅ 语言未变化');
             }
             console.log('==================');
         }, 2000); // 每2秒检查一次，增加调试信息
@@ -264,7 +264,7 @@
         isLoaded: false,
         
         init: function() {
-            console.log(_("sidebar.scenarios.init"));
+            // console.log(_("sidebar.scenarios.init"));
             
             // 从后端加载场景数据
             return this.loadScenarios().then(() => {
@@ -598,6 +598,14 @@
         var dynamicData = {};
         if (sendMessage.includes('当前流程') || sendMessage.includes('current flow')) {
             
+            // 自动切换到开发场景，因为get-flow工具只在开发场景中可用
+            if (currentScenario !== 'development') {
+                console.log('自动切换到开发场景以使用get-flow工具');
+                currentScenario = 'development';
+                ScenarioManager.currentScenario = 'development';
+                ScenarioManager.updateUI();
+            }
+            
             // 如果有选中的流程，传递流程ID给get-flow工具
             if (selectedFlow && selectedFlow.id) {
                 dynamicData.flowId = selectedFlow.id;
@@ -614,17 +622,26 @@
         // 检测"当前节点"相关提示词（所有场景）
         if (sendMessage.includes('当前节点') || sendMessage.includes('current node')) {
             
+            // 自动切换到开发场景，因为get-node-info工具只在开发场景中可用
+            if (currentScenario !== 'development') {
+                console.log('自动切换到开发场景以使用get-node-info工具');
+                currentScenario = 'development';
+                ScenarioManager.currentScenario = 'development';
+                ScenarioManager.updateUI();
+            }
+            
             // 如果有选中的节点，传递节点信息给get-node-info工具
             if (selectedNodes && selectedNodes.length > 0) {
                 dynamicData.selectedNodes = selectedNodes;
                 console.log('检测到节点解释请求，传递选中节点:', selectedNodes.map(n => ({ id: n.id, type: n.type, name: n.name })));
                 
-                // 修改消息以包含工具调用指示
+                // 修改消息以包含工具调用指示和明确的节点ID
+                const nodeIds = selectedNodes.map(n => n.id);
                 const nodeDescription = selectedNodes.length === 1 
                     ? `节点"${selectedNodes[0].name || selectedNodes[0].type}"(类型: ${selectedNodes[0].type})`
                     : `${selectedNodes.length}个选中节点`;
                     
-                sendMessage = `请使用get-node-info工具获取选中节点的详细信息，然后分析和解释${nodeDescription}的功能、配置和作用。\n\n用户原始请求：${sendMessage}`;
+                sendMessage = `请使用get-node-info工具获取节点ID为[${nodeIds.map(id => `"${id}"`).join(', ')}]的详细信息，然后分析和解释${nodeDescription}的功能、配置和作用。\n\n用户原始请求：${sendMessage}`;
             } else {
                 // 没有选中节点时的提示
                 sendMessage = `${sendMessage}\n\n注意：当前没有选中具体的节点，请先在Node-RED编辑器中选择要分析的节点。`;
@@ -687,7 +704,7 @@
         
         // 异步获取聊天历史后发送请求
         getChatHistory(function(history) {
-            console.log('🚀 准备发送流式聊天请求到:', '/ai-sidebar/stream-chat');
+            // console.log('🚀 准备发送流式聊天请求到:', '/ai-sidebar/stream-chat');
             fetch('/ai-sidebar/stream-chat', {
                 method: 'POST',
                 headers: {
@@ -725,21 +742,21 @@
                     }
                     
                     const chunk = decoder.decode(value);
-                    console.log('收到数据块:', chunk);
+                    // console.log('收到数据块:', chunk);
                     const lines = chunk.split('\n');
-                    console.log('分割后的行数:', lines.length);
+                    // console.log('分割后的行数:', lines.length);
                     
                     for (const line of lines) {
-                        console.log('处理行:', line);
+                        // console.log('处理行:', line);
                         if (line.startsWith('data: ')) {
                             try {
                                 const jsonStr = line.slice(6);
-                                console.log('解析JSON:', jsonStr);
+                                // console.log('解析JSON:', jsonStr);
                                 const data = JSON.parse(jsonStr);
-                                console.log('解析后的数据:', data);
+                                // console.log('解析后的数据:', data);
                                 handleStreamData(data, loadingMessageId);
                             } catch (e) {
-                                console.warn('解析SSE数据失败:', e, line);
+                                // console.warn('解析SSE数据失败:', e, line);
                             }
                         }
                     }
@@ -1527,7 +1544,7 @@
         var action = $(this).data('action');
         var blockId = $(this).data('block-id');
         
-        console.log('菜单项点击:', action, blockId);
+        // console.log('菜单项点击:', action, blockId);
         
         // 关闭菜单
         $('.code-dropdown-menu').remove();
@@ -1618,7 +1635,7 @@
                 toolArgs.label = jsonData.parsedJson.label || '新流程';
             }
             
-            console.log('执行create-flow工具:', toolArgs);
+            // console.log('执行create-flow工具:', toolArgs);
             
             // 显示执行中的消息
             var executingMsg = action === 'create-new' ? 
@@ -1641,7 +1658,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('工具执行结果:', data);
+                // console.log('工具执行结果:', data);
                 
                 if (data.success) {
                     // 显示成功消息
@@ -2501,14 +2518,14 @@
                 forceScrollToBottom();
             }, 100);
             
-            console.log('聊天历史记录已成功回显，共', history.length, '条记录');
+            // console.log('聊天历史记录已成功回显，共', history.length, '条记录');
         });
     }
     
     // 清空聊天历史
     function clearChatHistory() {
         $('#augment-chat-messages').empty();
-        console.log('聊天历史已清空');
+        // console.log('聊天历史已清空');
     }
 
     function saveChatMessage(role, content) {
@@ -2517,7 +2534,7 @@
             var context = RED.settings.get('contextStorage') || {};
             if (context.default && context.default.module === 'localfilesystem') {
                 // 如果配置了文件存储，可以保存聊天记录
-                console.log("保存聊天记录:", role, content);
+                // console.log("保存聊天记录:", role, content);
             }
         } catch (error) {
             console.warn("保存聊天记录失败:", error);
@@ -3221,7 +3238,7 @@
             });
             
             forceScrollToBottom();
-            console.log("JSON编辑器添加完成");
+            // console.log("JSON编辑器添加完成");
         } else {
             console.error("找不到消息元素:", messageId);
         }
@@ -3229,7 +3246,7 @@
     
     // 执行JSON编辑器的工具调用
     function executeJSONEditorTool(toolName, toolArgs, buttonElement) {
-        console.log("执行JSON编辑器工具调用:", toolName, toolArgs);
+        // console.log("执行JSON编辑器工具调用:", toolName, toolArgs);
         
         var nodeId = getSelectedConfigNodeId();
         if (!nodeId) {
@@ -3265,7 +3282,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            console.log("工具执行结果:", data);
+            // console.log("工具执行结果:", data);
             
             if (data.success) {
                 // 成功执行
@@ -3299,7 +3316,7 @@
             }
         })
         .catch(error => {
-            console.error("工具执行错误:", error);
+            // console.error("工具执行错误:", error);
             buttonElement.prop('disabled', false)
                       .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> 重试')
                       .css({
@@ -3326,7 +3343,7 @@
         }
         
         // 最后的降级方案
-        console.warn("ACE编辑器未找到，将使用普通文本显示");
+        // console.warn("ACE编辑器未找到，将使用普通文本显示");
         callback();
     }
 
@@ -3380,7 +3397,7 @@
             });
             
         } catch (error) {
-            console.error("初始化JSON编辑器失败:", error);
+            // console.error("初始化JSON编辑器失败:", error);
             // 降级显示为普通代码块
             document.getElementById(editorId).innerHTML = '<pre style="padding: 12px; margin: 0; background: #f8f9fa; color: #495057; white-space: pre-wrap; word-wrap: break-word;">' + jsonContent + '</pre>';
         }
@@ -3388,41 +3405,41 @@
 
     // 显示场景选择菜单
     function showScenarioMenu(e) {
-        console.log('=== showScenarioMenu 详细调试信息 ===');
-        console.log('1. 事件对象:', e);
-        console.log('2. 事件类型:', e ? e.type : 'undefined');
-        console.log('3. 事件目标:', e ? e.target : 'undefined');
-        console.log('4. ScenarioManager对象:', ScenarioManager);
-        console.log('5. ScenarioManager.isLoaded:', ScenarioManager.isLoaded);
-        console.log('6. ScenarioManager.scenarios:', ScenarioManager.scenarios);
-        console.log('7. 场景数量:', Object.keys(ScenarioManager.scenarios || {}).length);
-        console.log('8. 当前场景:', ScenarioManager.currentScenario);
-        console.log('9. jQuery版本:', $.fn.jquery);
-        console.log('10. #augment-chat-container元素:', $('#augment-chat-container').length);
+        // console.log('=== showScenarioMenu 详细调试信息 ===');
+        // console.log('1. 事件对象:', e);
+        // console.log('2. 事件类型:', e ? e.type : 'undefined');
+        // console.log('3. 事件目标:', e ? e.target : 'undefined');
+        // console.log('4. ScenarioManager对象:', ScenarioManager);
+        // console.log('5. ScenarioManager.isLoaded:', ScenarioManager.isLoaded);
+        // console.log('6. ScenarioManager.scenarios:', ScenarioManager.scenarios);
+        // console.log('7. 场景数量:', Object.keys(ScenarioManager.scenarios || {}).length);
+        // console.log('8. 当前场景:', ScenarioManager.currentScenario);
+        // console.log('9. jQuery版本:', $.fn.jquery);
+        // console.log('10. #augment-chat-container元素:', $('#augment-chat-container').length);
         
         // 移除已存在的菜单
         $('.scenario-menu').remove();
-        console.log('11. 已移除现有菜单');
+        // console.log('11. 已移除现有菜单');
         
         // 添加详细的调试信息
-        console.log('showScenarioMenu调用 - ScenarioManager状态:', {
-            isLoaded: ScenarioManager.isLoaded,
-            scenariosKeys: Object.keys(ScenarioManager.scenarios),
-            scenariosLength: Object.keys(ScenarioManager.scenarios).length,
-            currentScenario: ScenarioManager.currentScenario
-        });
+        // console.log('showScenarioMenu调用 - ScenarioManager状态:', {
+        //     isLoaded: ScenarioManager.isLoaded,
+        //     scenariosKeys: Object.keys(ScenarioManager.scenarios),
+        //     scenariosLength: Object.keys(ScenarioManager.scenarios).length,
+        //     currentScenario: ScenarioManager.currentScenario
+        // });
         
         // 检查场景数据是否已加载
         if (!ScenarioManager.isLoaded || Object.keys(ScenarioManager.scenarios).length === 0) {
-            console.warn('场景数据未加载，无法显示菜单');
+            // console.warn('场景数据未加载，无法显示菜单');
             
             // 尝试重新加载场景数据
-            console.log('尝试重新加载场景数据...');
+            // console.log('尝试重新加载场景数据...');
             ScenarioManager.loadScenarios().then(() => {
-                console.log('场景数据重新加载成功，重新调用showScenarioMenu');
+                // console.log('场景数据重新加载成功，重新调用showScenarioMenu');
                 showScenarioMenu(e);
             }).catch(error => {
-                console.error('重新加载场景数据失败:', error);
+                // console.error('重新加载场景数据失败:', error);
                 // 显示错误提示
                 addMessageToChat('error', '❌ 场景数据加载失败，请刷新页面重试');
             });
@@ -3468,8 +3485,8 @@
         });
         
         // 创建场景选择菜单
-        console.log('12. 开始创建菜单HTML');
-        console.log('13. scenarioOptions内容:', scenarioOptions);
+        // console.log('12. 开始创建菜单HTML');
+        // console.log('13. scenarioOptions内容:', scenarioOptions);
         
         var menuHtml = `
             <div class="scenario-menu" style="
@@ -3490,24 +3507,24 @@
             </div>
         `;
         
-        console.log('14. 菜单HTML已创建，长度:', menuHtml.length);
-        console.log('15. 菜单HTML内容:', menuHtml.substring(0, 200) + '...');
+        // console.log('14. 菜单HTML已创建，长度:', menuHtml.length);
+        // console.log('15. 菜单HTML内容:', menuHtml.substring(0, 200) + '...');
         
         // 添加菜单到页面
-        console.log('16. 准备添加菜单到页面');
+        // console.log('16. 准备添加菜单到页面');
         $('#augment-chat-container').append(menuHtml);
-        console.log('17. 菜单已添加到页面');
-        console.log('18. 页面中的.scenario-menu元素数量:', $('.scenario-menu').length);
-        console.log('19. .scenario-menu元素是否可见:', $('.scenario-menu').is(':visible'));
+        // console.log('17. 菜单已添加到页面');
+        // console.log('18. 页面中的.scenario-menu元素数量:', $('.scenario-menu').length);
+        // console.log('19. .scenario-menu元素是否可见:', $('.scenario-menu').is(':visible'));
         
         // 绑定场景选择事件
-        console.log('20. 开始绑定场景选择事件');
-        console.log('21. .scenario-option元素数量:', $('.scenario-option').length);
+        // console.log('20. 开始绑定场景选择事件');
+        // console.log('21. .scenario-option元素数量:', $('.scenario-option').length);
         
         $('.scenario-option').on('click', function() {
-            console.log('22. 场景选项被点击');
+            // console.log('22. 场景选项被点击');
             var scenarioId = $(this).data('scenario');
-            console.log('23. 选择的场景ID:', scenarioId);
+            // console.log('23. 选择的场景ID:', scenarioId);
             ScenarioManager.switchScenario(scenarioId);
             $('.scenario-menu').remove();
         });
@@ -3812,7 +3829,7 @@
             return content || '';
         }
         
-        console.log('开始渲染Markdown，内容长度:', content.length);
+        // console.log('开始渲染Markdown，内容长度:', content.length);
         
         // 预处理：处理Node-RED流程JSON中的function节点代码
         content = preprocessNodeRedFunctionCode(content);
@@ -3853,25 +3870,25 @@
                                     .replace(/&amp;/g, '&')
                                     .replace(/&#39;/g, "'");
                                 
-                                console.log('恢复按钮HTML:', decodedButton);
+                                // console.log('恢复按钮HTML:', decodedButton);
                                 return decodedButton;
                             });
                     
                     return '<code' + attrs + '>' + processedContent + '</code>';
                 });
                 
-                console.log('Showdown渲染成功，结果长度:', result.length);
-                console.log('Showdown渲染结果预览:', result.substring(0, 300));
+                // console.log('Showdown渲染成功，结果长度:', result.length);
+                // console.log('Showdown渲染结果预览:', result.substring(0, 300));
                 return result;
             } catch (error) {
                 console.error('Showdown渲染失败:', error);
             }
         } else {
-            console.log('Showdown未加载，使用降级方案');
+            // console.log('Showdown未加载，使用降级方案');
         }
         
         // Enhanced fallback with better regex patterns
-        console.log('使用降级Markdown渲染');
+        // console.log('使用降级Markdown渲染');
         
         // 首先处理换行符，确保正确的段落分隔
         var lines = content.split('\n');
@@ -3964,8 +3981,8 @@
         result = result.replace(/<\/p><p><\/p><p>/g, '</p><p>');
         result = result.replace(/<p><\/p>/g, '');
         
-        console.log('降级渲染完成，结果长度:', result.length);
-        console.log('降级渲染结果预览:', result.substring(0, 300));
+        // console.log('降级渲染完成，结果长度:', result.length);
+        // console.log('降级渲染结果预览:', result.substring(0, 300));
         return result;
     }
 // 主要的代码逻辑
@@ -3977,7 +3994,7 @@
 
         // Load markdown libraries for rendering and wait for completion
         loadMarkdownLibraries().then(() => {
-            console.log('Markdown libraries loaded, ready to render');
+            // console.log('Markdown libraries loaded, ready to render');
             addMarkdownStyles();
         });
 
@@ -3994,7 +4011,7 @@
             disableOnEdit: false,
             iconClass: "fa fa-comment",
             onshow: function() {
-                console.log('Sidebar shown');
+                // console.log('Sidebar shown');
             }
         });
         
@@ -4016,17 +4033,17 @@
                         });
                         
                         // 绑定场景菜单按钮事件 - 在场景数据加载完成后
-                        console.log('Starting to bind scenario menu button events');
-                        console.log('Button element exists:', $("#augment-at-mention").length > 0);
+                        // console.log('Starting to bind scenario menu button events');
+                        // console.log('Button element exists:', $("#augment-at-mention").length > 0);
                         
                         $("#augment-at-mention").off('click').on("click", function(e) {
                             e.preventDefault();
-                            console.log('=== Scenario menu button clicked ===');
-                            console.log('Event object:', e);
+                            // console.log('=== Scenario menu button clicked ===');
+                            // console.log('Event object:', e);
                             showScenarioMenu(e);
                         });
                         
-                        console.log('Scenario menu button event binding completed');
+                        // console.log('Scenario menu button event binding completed');
                         
                         // 移除了自动触发点击测试的代码，避免页面加载时自动弹出场景菜单
                         
@@ -4061,7 +4078,7 @@
 
         // 配置按钮事件处理
         $("#show-config-node-button").on("click", function() {
-            console.log("点击配置按钮");
+            // console.log("点击配置按钮");
             
             try {
                 var apiConfigNodes = [];
@@ -4072,10 +4089,10 @@
                 });
                 
                 if (apiConfigNodes.length > 0) {
-                    console.log("找到api-config节点，打开编辑界面");
+                    // console.log("找到api-config节点，打开编辑界面");
                     RED.editor.editConfig("", "api-config", apiConfigNodes[0].id);
                 } else {
-                    console.log("没有找到api-config节点，直接打开编辑对话框");
+                    // console.log("没有找到api-config节点，直接打开编辑对话框");
                     RED.editor.editConfig("", "api-config");
                 }
             } catch (error) {

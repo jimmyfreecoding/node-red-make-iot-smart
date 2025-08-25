@@ -22,11 +22,11 @@ const testMessages = [
     '普通消息，不是工具调用'
 ];
 
-console.log('测试detectToolTrigger方法:');
-console.log('='.repeat(50));
+// console.log('测试detectToolTrigger方法:');
+// console.log('='.repeat(50));
 
 testMessages.forEach((message, index) => {
     const result = manager.detectToolTrigger(message);
-    console.log(`\n测试 ${index + 1}: ${message}`);
-    console.log('结果:', JSON.stringify(result, null, 2));
+    // console.log(`\n测试 ${index + 1}: ${message}`);
+    // console.log('结果:', JSON.stringify(result, null, 2));
 });

@@ -47,7 +47,7 @@ class MCPClientHelper {
 
             return true;
         } catch (error) {
-            console.error('MCP connection failed:', error);
+            // console.error('MCP connection failed:', error);
             this.isConnected = false;
             return false;
         }

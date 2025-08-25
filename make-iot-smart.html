@@ -158,7 +158,7 @@
                 }).done(function(response) {
                     if (response && response.providers) {
                         providersData = response.providers;
-                        console.log('加载的提供商数据:', providersData);
+                        // console.log('加载的提供商数据:', providersData);
                         
                         // 更新提供商选择器
                         updateProviderOptions();
@@ -169,7 +169,7 @@
                         updateModelOptions($('#node-config-input-executionModel'), node.provider);
                     }
                 }).fail(function(xhr, status, error) {
-                    console.error('加载LLM提供商列表失败:', error);
+                    // console.error('加载LLM提供商列表失败:', error);
                     // 使用默认的硬编码数据作为后备
                     providersData = {
                         openai: {

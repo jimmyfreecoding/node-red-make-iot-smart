@@ -23,6 +23,11 @@
         "label": "新流程"
     },
     {
+        "id": "e7943fe4b539bc70",
+        "type": "tab",
+        "label": "新流程"
+    },
+    {
         "id": "26637148eca75ac1",
         "type": "mqtt-broker",
         "name": "",
@@ -4283,5 +4288,89 @@
         "wires": [
             []
         ]
+    },
+    {
+        "id": "6a5727903155ec98",
+        "type": "inject",
+        "z": "e7943fe4b539bc70",
+        "name": "Trigger every 5 seconds",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "Demo Message",
+        "payload": "Hello from Node-RED!",
+        "payloadType": "str",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "405c5abd9ff8710d",
+                "5d8c21f566025e09"
+            ]
+        ]
+    },
+    {
+        "id": "405c5abd9ff8710d",
+        "type": "function",
+        "z": "e7943fe4b539bc70",
+        "name": "Process Message",
+        "func": "// Add timestamp to the message\nmsg.payload = {\n    original: msg.payload,\n    timestamp: new Date().toISOString(),\n    processed: true\n};\n\n// Add a counter if it doesn't exist\nif (!context.get('counter')) {\n    context.set('counter', 0);\n}\nlet count = context.get('counter') + 1;\ncontext.set('counter', count);\nmsg.counter = count;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 280,
+        "wires": [
+            [
+                "c7f0a997e0bb75b4"
+            ]
+        ]
+    },
+    {
+        "id": "5d8c21f566025e09",
+        "type": "debug",
+        "z": "e7943fe4b539bc70",
+        "name": "Debug Original",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 350,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "c7f0a997e0bb75b4",
+        "type": "debug",
+        "z": "e7943fe4b539bc70",
+        "name": "Debug Processed",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 950,
+        "y": 160,
+        "wires": []
     }
 ]

@@ -1,0 +1,402 @@
+{
+  "timestamp": "2025-08-25T16:21:28.520Z",
+  "results": [
+    {
+      "language": "zh-CN",
+      "testName": "中文环境关键词识别测试",
+      "cases": [
+        {
+          "message": "介绍NodeRed",
+          "expectedKeyword": "NodeRed介绍",
+          "streamResult": {
+            "success": true,
+            "response": "好的！Node-RED 是一个基于 Node.js 构建的**可视化编程工具**，专门用于连接硬件设备、API 和在线服务。它采用**流程（Flow）** 的方式，让你通过拖放节点（Node）并连接它们来快速构建应用程序，而无需编写大量代码。\n\n---\n\n### 🧩 核心概念\n1. **节点（Node）**  \n   - 每个节点代表一个特定功能（如输入、处理、输出）。\n   - 例如：`inject` 节点可模拟事件触发，`http` 节点可处理网络请求。\n\n2. **流程（Flow）**  \n   - 由多个节点连接而成，形成数据处理链条。\n   - 数据从左侧流入，经过处理，最终从右侧输出。\n\n3. **消息（Message）**  \n   - 节点之间传递的数据对象，通常包含 `payload`（主体内容）和其他元数据。\n\n---\n\n### ✨ 主要特点\n- **低代码/无代码**：通过图形化界面减少编码需求。\n- **事件驱动**：响应外部事件（如 HTTP 请求、定时任务、MQTT 消息等）。\n- **轻量且跨平台**：可在树莓派、本地计算机或云端运行。\n- **扩展性强**：通过安装社区节点（如数据库、AI 功能节点）增强能力。\n\n---\n\n### 🚀 常见应用场景\n1. **物联网（IoT）**：连接传感器、执行器，处理设备数据。  \n2. **API 集成**：聚合多个 Web 服务（如天气数据 + 邮件通知）。  \n3. **自动化任务**：定时爬取网页、备份数据、发送提醒。  \n4. **数据处理**：清洗、转换或转发数据流（如 JSON 解析）。\n\n---\n\n### 📦 基本节点类型举例\n| 节点类型       | 作用                          |\n|----------------|-----------------------------|\n| `inject`       | 手动或定时触发流程            |\n| `debug`        | 在侧边栏查看消息内容          |\n| `function`     | 编写自定义 JavaScript 逻辑    |\n| `http`         | 处理 HTTP 请求或发送请求      |\n| `mqtt`         | 订阅/发布 MQTT 消息           |\n\n---\n\n### 🧪 简单示例：定时打印消息\n以下是一个基础流程，每 5 秒向调试窗口输出 \"Hello World\"：\n\n```json\n[\n    {\n        \"id\": \"inject_1\",\n        \"type\": \"inject\",\n        \"z\": \"flow_1\",\n        \"name\": \"每5秒触发\",\n        \"props\": [{\"p\": \"payload\"}, {\"p\": \"topic\", \"vt\": \"str\"}],\n        \"repeat\": \"5\",\n        \"crontab\": \"\",\n        \"once\": false,\n        \"onceDelay\": 0.1,\n        \"topic\": \"\",\n        \"payload\": \"Hello World\",\n        \"payloadType\": \"str\",\n        \"x\": 200,\n        \"y\": 160,\n        \"wires\": [[\"debug_1\"]]\n    },\n    {\n        \"id\": \"debug_1\",\n        \"type\": \"debug\",\n        \"z\": \"flow_1\",\n        \"name\": \"显示输出\",\n        \"active\": true,\n        \"tosidebar\": true,\n        \"console\": false,\n        \"tostatus\": false,\n        \"complete\": \"false\",\n        \"targetType\": \"full\",\n        \"statusVal\": \"\",\n        \"statusType\": \"auto\",\n        \"x\": 400,\n        \"y\": 160,\n        \"wires\": []\n    }\n]\n```\n\n#### 节点说明：\n- **inject 节点**：配置为每 5 秒发送一次，消息内容为 `Hello World`。\n- **debug 节点**：接收消息并输出到调试面板（右侧边栏）。\n\n点击 **Apply** 按钮部署流程，然后打开调试标签页即可看到输出结果。\n\n---\n\n### 📚 学习建议\n1. 打开 Node-RED 界面，从左侧面板拖拽节点尝试连接。\n2. 使用 **Debug** 节点实时观察数据流。\n3. 阅读官方文档（[nodered.org](https://nodered.org/)）探索更多节点功能。\n\n如果有具体场景或问题，可以告诉我，我会帮你设计流程！ 🎯",
+            "metadata": {}
+          }
+        },
+        {
+          "message": "当前流程",
+          "expectedKeyword": "当前流程",
+          "streamResult": {
+            "success": true,
+            "response": "我来帮您查看当前流程的信息。\n\n当前流程信息：\n- **流程ID**: 8d8b7d6c.2b6c58\n- **流程名称**: 示例流程\n- **节点数量**: 3个节点\n- **状态**: 已部署\n\n当前流程包含以下节点：\n1. **inject节点** (ID: 5a1b2c3d) - 定时触发器，每60秒触发一次\n2. **function节点** (ID: 7e8f9g0h) - 处理函数，生成当前时间信息\n3. **debug节点** (ID: i1j2k3l4) - 调试输出节点，显示处理结果\n\n这是一个简单的示例流程，主要功能是每隔60秒生成当前时间信息并在调试侧边栏中显示。\n\n如果您需要：\n- 查看流程的详细配置\n- 修改当前流程\n- 添加新的功能节点\n- 或者创建新的流程\n\n请告诉我您的具体需求，我会为您提供相应的帮助。",
+            "metadata": {
+              "flowData": {
+                "id": "34ab4d95e517fb00",
+                "type": "tab",
+                "label": "新流程"
+              },
+              "nodeData": {
+                "id": "debug-node",
+                "type": "debug",
+                "z": "34ab4d95e517fb00",
+                "name": "输出调试信息",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "false",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 550,
+                "y": 100,
+                "wires": []
+              }
+            }
+          }
+        },
+        {
+          "message": "当前节点",
+          "expectedKeyword": "当前节点",
+          "streamResult": {
+            "success": true,
+            "response": "当前选中的节点信息如下：\n\n```json\n{\n  \"id\": \"n1\",\n  \"type\": \"inject\",\n  \"name\": \"定时触发\",\n  \"props\": [\n    {\n      \"p\": \"payload\"\n    },\n    {\n      \"p\": \"topic\",\n      \"vt\": \"str\"\n    }\n  ],\n  \"repeat\": \"\",\n  \"crontab\": \"\",\n  \"once\": false,\n  \"onceDelay\": 0.1,\n  \"topic\": \"\",\n  \"payload\": \"\",\n  \"payloadType\": \"date\",\n  \"x\": 100,\n  \"y\": 100,\n  \"wires\": [\n    []\n  ]\n}\n```\n\n**节点详情：**\n- **节点类型**：inject（注入节点）\n- **节点名称**：定时触发\n- **节点ID**：n1\n- **配置说明**：\n  - 触发方式：手动点击（未设置定时重复或cron表达式）\n  - 输出内容：当前时间戳（payload类型为date）\n  - 输出格式：payload为时间戳，topic为空字符串\n  - 连线：当前未连接到其他节点（wires为空数组）\n\n这是一个基础的注入节点，通常用于手动触发流程或作为定时任务的起点。您可以通过点击节点左侧的按钮来触发消息流。",
+            "metadata": {
+              "flowData": {
+                "id": "34ab4d95e517fb00",
+                "type": "tab",
+                "label": "新流程"
+              },
+              "nodeData": {
+                "id": "debug-node",
+                "type": "debug",
+                "z": "34ab4d95e517fb00",
+                "name": "输出调试信息",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "false",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 550,
+                "y": 100,
+                "wires": []
+              }
+            }
+          }
+        },
+        {
+          "message": "当前诊断",
+          "expectedKeyword": "当前诊断",
+          "streamResult": {
+            "success": true,
+            "response": "您好！我是您的Node-RED AI助手。让我为您提供当前环境的诊断信息：\n\n## 环境诊断报告\n\n**Node-RED版本**: 未检测到具体版本号  \n**Node.js版本**: 未检测到具体版本号  \n**当前时间**: 2024年1月22日 14:30 (UTC+8)  \n**选中的流程**: 未检测到具体流程信息  \n**选中的节点**: 未检测到具体节点信息  \n\n## 状态分析\n- ✅ Node-RED服务运行正常\n- ⚠️ 版本信息需要进一步确认\n- ⚠️ 当前没有选中任何流程或节点\n\n## 建议操作\n1. 如果您需要查看详细的版本信息，可以在Node-RED编辑器的右上角点击菜单 → \"关于\"\n2. 要获取特定流程或节点的信息，请先选中相应的项目\n3. 我可以帮助您进行流程开发、问题排查或集成配置\n\n请告诉我您需要什么帮助，比如：\n- 创建新的流程\n- 解决特定的错误\n- 学习Node-RED的基础知识\n- 集成外部服务或设备\n\n您希望我从哪个方面为您提供协助？",
+            "metadata": {
+              "diagnosis": {
+                "status": "healthy",
+                "checks": [
+                  {
+                    "name": "memory_usage",
+                    "status": "ok",
+                    "value": "45%"
+                  },
+                  {
+                    "name": "cpu_usage",
+                    "status": "ok",
+                    "value": "12%"
+                  },
+                  {
+                    "name": "disk_space",
+                    "status": "warning",
+                    "value": "85%"
+                  }
+                ],
+                "timestamp": "2025-08-25T16:23:07.437Z"
+              }
+            }
+          }
+        },
+        {
+          "message": "当前设置",
+          "expectedKeyword": "当前设置",
+          "streamResult": {
+            "success": true,
+            "response": "以下是您当前Node-RED环境的详细信息：\n\n### 环境配置\n- **Node-RED版本**: 3.1.0\n- **Node.js版本**: 18.20.4\n- **当前时间**: 2025-03-28T08:15:30.000Z\n\n### 当前选中的流程\n- **流程名称**: [object Object]\n- **流程ID**: [object Object]\n\n### 当前选中的节点\n- **节点名称**: [object Object]\n- **节点ID**: [object Object]\n\n### 说明\n由于当前选中的流程和节点信息显示为 `[object Object]`，这表明：\n1. 可能没有选中任何流程或节点\n2. 或者选中的对象信息无法正常解析\n\n### 建议操作\n- 如果您需要查看特定流程或节点的详细信息，请先选中该流程或节点\n- 或者您可以告诉我您想要进行的操作，我可以为您提供相应的帮助\n\n您是否需要我协助您进行其他操作？比如创建新流程、查看节点信息或解决特定问题？",
+            "metadata": {
+              "settings": {
+                "httpAdminRoot": "/",
+                "httpNodeRoot": "/api",
+                "userDir": "./data",
+                "functionGlobalContext": {},
+                "debugMaxLength": 1000,
+                "mqttReconnectTime": 15000,
+                "serialReconnectTime": 15000
+              }
+            }
+          }
+        },
+        {
+          "message": "当前配置",
+          "expectedKeyword": "当前配置",
+          "streamResult": {
+            "success": true,
+            "response": "我来帮您查看当前的Node-RED配置信息。\n\n**当前环境配置信息：**\n\n- **Node-RED版本**: 3.1.0\n- **Node.js版本**: 18.20.2\n- **当前时间**: 2024-12-19 08:30:15 (UTC+8)\n- **选中的流程**: [object Object] (未指定具体流程)\n- **选中的节点**: [object Object] (未指定具体节点)\n\n**配置详情：**\n- 运行环境：Node.js\n- 用户目录：默认配置\n- 流程文件存储：通常位于用户目录下的 `.node-red` 文件夹中\n- 默认端口：1880 (HTTP) 和 1881 (HTTPS，如果配置了SSL)\n\n**查看完整配置的方法：**\n1. 在Node-RED编辑器中，点击右上角的菜单按钮 (☰)\n2. 选择 \"Settings\" → \"About\"\n3. 这里可以查看详细的版本信息和运行环境配置\n\n如果您需要查看特定的配置项（如安全设置、编辑器主题、节点设置等），请告诉我具体需要查看哪方面的配置，我可以为您提供更详细的信息。",
+            "metadata": {
+              "settings": {
+                "httpAdminRoot": "/",
+                "httpNodeRoot": "/api",
+                "userDir": "./data",
+                "functionGlobalContext": {},
+                "debugMaxLength": 1000,
+                "mqttReconnectTime": 15000,
+                "serialReconnectTime": 15000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "language": "en-US",
+      "testName": "英文环境关键词识别测试",
+      "cases": [
+        {
+          "message": "how about NodeRed",
+          "expectedKeyword": "NodeRed介绍",
+          "streamResult": {
+            "success": true,
+            "response": "Of course! I'd be happy to introduce you to Node-RED.\n\n**Node-RED** is a powerful, open-source, **flow-based programming tool** built on Node.js. It's designed to make it easy to wire together hardware devices, APIs, and online services in new and interesting ways.\n\nThink of it as a visual tool where you connect different \"nodes\" (little blocks of functionality) with wires to create an application or automation, without writing much traditional code.\n\n---\n\n### Key Concepts of Node-RED:\n\n1.  **Flow-Based Programming:** You build applications by creating \"flows\" – sequences of events where the output of one node becomes the input to another.\n2.  **Palette:** This is your toolbox. It contains all the available nodes you can use.\n3.  **Nodes:** These are the building blocks. Each node has a specific function. There are three main types:\n    *   **Input Nodes:** Inject data into a flow (e.g., an `inject` node to trigger a flow, or an `mqtt in` node to listen for messages).\n    *   **Processing Nodes:** Do something with the data (e.g., a `function` node to write JavaScript code, a `change` node to modify messages).\n    *   **Output Nodes:** Send data somewhere (e.g., an `http response` node, a `debug` node to show data in the sidebar, or an `email` node).\n4.  **Message (`msg` object):** Data passed between nodes is contained in a message object. The most important property is `msg.payload`, which usually carries the main data.\n\n---\n\n### Why is Node-RED so popular?\n\n*   **Visual & Intuitive:** It's much easier to understand the logic of a program when you can see it laid out visually.\n*   **Rapid Prototyping:** You can create complex integrations and automations in minutes rather than hours or days.\n*   **Vast Ecosystem:** A huge library of pre-built nodes is available for almost any service or device you can think of (e.g., MQTT, HTTP, Twitter, GPIO pins for Raspberry Pi, databases, etc.).\n*   **Built on Web Technologies:** It runs in a web browser, making it accessible from anywhere, and is built on the very popular Node.js runtime.\n*   **Great for IoT:** It's arguably the #1 tool for Internet of Things (IoT) projects, perfect for connecting sensors, dashboards, and cloud services.\n\n---\n\n### Simple Example: A Timed Hello World\n\nLet's create a classic \"Hello World\" flow that runs every 5 seconds.\n\n1.  **`inject` node:** This will be our trigger. Configure it to inject a timestamp `every 5 seconds`.\n2.  **`function` node:** This is where we write a tiny bit of code to create our message.\n3.  **`debug` node:** This will output our message to the \"Debug\" tab in the sidebar.\n\nHere is the JSON code for this flow. You can import this directly into your Node-RED editor.\n\n```json\n[\n    {\n        \"id\": \"hello-world-flow\",\n        \"type\": \"tab\",\n        \"label\": \"Hello World\",\n        \"disabled\": false,\n        \"info\": \"\"\n    },\n    {\n        \"id\": \"inject-node\",\n        \"type\": \"inject\",\n        \"z\": \"hello-world-flow\",\n        \"name\": \"Every 5 Seconds\",\n        \"props\": [],\n        \"repeat\": \"5\",\n        \"crontab\": \"\",\n        \"once\": true,\n        \"onceDelay\": 0.1,\n        \"topic\": \"\",\n        \"payload\": \"\",\n        \"payloadType\": \"date\",\n        \"x\": 190,\n        \"y\": 120,\n        \"wires\": [\n            [\n                \"function-node\"\n            ]\n        ]\n    },\n    {\n        \"id\": \"function-node\",\n        \"type\": \"function\",\n        \"z\": \"hello-world-flow\",\n        \"name\": \"Create Message\",\n        \"func\": \"// Create our message\\nmsg.payload = \\\"Hello World! The time is \\\" + new Date().toLocaleTimeString();\\n// Return the message to send it to the next node\\nreturn msg;\",\n        \"outputs\": 1,\n        \"timeout\": 0,\n        \"noerr\": 0,\n        \"initialize\": \"\",\n        \"finalize\": \"\",\n        \"libs\": [],\n        \"x\": 390,\n        \"y\": 120,\n        \"wires\": [\n            [\n                \"debug-node\"\n            ]\n        ]\n    },\n    {\n        \"id\": \"debug-node\",\n        \"type\": \"debug\",\n        \"z\": \"hello-world-flow\",\n        \"name\": \"Show in Debug Tab\",\n        \"active\": true,\n        \"tosidebar\": true,\n        \"console\": false,\n        \"tostatus\": false,\n        \"complete\": \"payload\",\n        \"targetType\": \"msg\",\n        \"statusVal\": \"\",\n        \"statusType\": \"auto\",\n        \"x\": 590,\n        \"y\": 120,\n        \"wires\": []\n    }\n]\n```\n\n**Explanation of the nodes:**\n\n*   **`inject` node (named \"Every 5 Seconds\"):** This is the starting point. It's configured to inject a message into the flow automatically every 5 seconds. The message it creates has a payload containing the current date/time.\n*   **`function` node (named \"Create Message\"):** This node receives the message from the inject node. The code inside it (`func` property) takes the incoming message, sets a new string to `msg.payload`, and returns the modified message. This is where the \"Hello World\" text is created.\n*   **`debug` node (named \"Show in Debug Tab\"):** This is the endpoint. It receives the message from the function node and displays the contents of `msg.payload` in the Debug sidebar on the right. This is your primary tool for seeing what's happening in your flow.\n\n**Click the \"Deploy\" button in the top-right corner to make the flow active.** Then, open the Debug tab (side panel icon looks like a bug 🐞), and you will see \"Hello World! The time is ...\" appear every 5 seconds.\n\n---\n\n### How to Get Started?\n\n1.  **Install Node.js** from [nodejs.org](https://nodejs.org)\n2.  **Install Node-RED** by opening a terminal/command prompt and typing:\n    ```bash\n    npm install -g --unsafe-perm node-red\n    ```\n3.  **Run Node-RED** by typing:\n    ```bash\n    node-red\n    ```\n4.  **Open your browser** and go to `http://localhost:1880`\n\nYou'll be greeted by the Node-RED editor, ready for you to start building!\n\nWould you like to know about a specific type of project (like reading a sensor, calling a web API, or building a dashboard), or do you have a question about a specific concept? I'm here to help you learn!",
+            "metadata": {}
+          }
+        },
+        {
+          "message": "current flow",
+          "expectedKeyword": "当前流程",
+          "streamResult": {
+            "success": true,
+            "response": "I can see you're asking about the current flow. However, I don't have access to view your current Node-RED flow configuration in this environment.\n\nTo check your current flow, you can:\n1. Open your Node-RED editor in your browser\n2. View the flow canvas to see all your nodes and connections\n3. Use the export function to see the JSON representation of your flow\n\nIf you'd like me to help you with a specific flow or create a new one, please let me know what you're trying to accomplish, and I'll be happy to assist you with creating or modifying flows!",
+            "metadata": {
+              "flowData": {
+                "id": "34ab4d95e517fb00",
+                "type": "tab",
+                "label": "新流程"
+              },
+              "nodeData": {
+                "id": "debug-node",
+                "type": "debug",
+                "z": "34ab4d95e517fb00",
+                "name": "输出调试信息",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "false",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 550,
+                "y": 100,
+                "wires": []
+              }
+            }
+          }
+        },
+        {
+          "message": "current node",
+          "expectedKeyword": "当前节点",
+          "streamResult": {
+            "success": true,
+            "response": "{\n  \"id\": \"node-red-chat-assistant\",\n  \"type\": \"chat\",\n  \"name\": \"AI Assistant\",\n  \"status\": \"active\"\n}\n\nThe current node is a chat interface node that serves as the AI assistant in this Node-RED environment. It's configured to:\n- Receive user messages and queries\n- Process requests using various tools and capabilities\n- Provide responses and assistance with Node-RED related tasks\n- Support flow creation, node operations, and general guidance\n\nThis node acts as the primary interaction point between users and the Node-RED AI assistance system, handling everything from basic questions to complex flow generation requests.\n\nIs there anything specific you'd like to know about this node or would you like assistance with something else?",
+            "metadata": {
+              "flowData": {
+                "id": "34ab4d95e517fb00",
+                "type": "tab",
+                "label": "新流程"
+              },
+              "nodeData": {
+                "id": "debug-node",
+                "type": "debug",
+                "z": "34ab4d95e517fb00",
+                "name": "输出调试信息",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "false",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 550,
+                "y": 100,
+                "wires": []
+              }
+            }
+          }
+        },
+        {
+          "message": "current diagnostics",
+          "expectedKeyword": "当前诊断",
+          "streamResult": {
+            "success": true,
+            "response": "{\n    \"id\": \"node-red-diagnostics\",\n    \"type\": \"tab\",\n    \"label\": \"System Diagnostics\",\n    \"disabled\": false,\n    \"info\": \"\"\n}\n\nHere's the current diagnostics information for your Node-RED environment:\n\n**Node-RED Version:** 3.1.0\n**Node.js Version:** 18.19.1\n**Current Time:** 2024-03-27T14:30:22.451Z\n**Selected Flow:** [object Object] (No specific flow selected)\n**Selected Nodes:** [object Object] (No specific nodes selected)\n\n**Environment Status:**\n- ✅ Node-RED is running normally\n- ✅ Node.js version is compatible (v18 LTS)\n- ✅ No flows/nodes currently selected for diagnostics\n- ℹ️  System appears to be in normal operating state\n\n**Available Diagnostic Options:**\n1. **Flow Analysis** - Examine specific flows for errors or optimization\n2. **Node Diagnostics** - Check configuration and status of individual nodes  \n3. **System Health** - Monitor memory usage, CPU, and performance metrics\n4. **Log Analysis** - Review recent error logs and warnings\n\nWould you like me to perform any specific diagnostic checks or help you examine particular flows or nodes?",
+            "metadata": {
+              "diagnosis": {
+                "status": "healthy",
+                "checks": [
+                  {
+                    "name": "memory_usage",
+                    "status": "ok",
+                    "value": "45%"
+                  },
+                  {
+                    "name": "cpu_usage",
+                    "status": "ok",
+                    "value": "12%"
+                  },
+                  {
+                    "name": "disk_space",
+                    "status": "warning",
+                    "value": "85%"
+                  }
+                ],
+                "timestamp": "2025-08-25T16:25:38.148Z"
+              }
+            }
+          }
+        },
+        {
+          "message": "current settings",
+          "expectedKeyword": "当前设置",
+          "streamResult": {
+            "success": true,
+            "response": "Here are your current Node-RED environment settings:\n\n**Environment Information:**\n- **Node-RED Version:** 3.1.0\n- **Node.js Version:** 18.19.1\n- **Current Time:** 2024-03-28T14:30:22.000Z\n- **Selected Flow:** None (no flow currently selected)\n- **Selected Nodes:** None (no nodes currently selected)\n\n**Available Flows:** Currently no flows are loaded or selected in the workspace.\n\nWould you like to:\n- Create a new flow?\n- Load an existing flow?\n- Check specific settings or configurations?\n- Or perform any other Node-RED operations?\n\nI'm ready to assist you with any Node-RED tasks you need!",
+            "metadata": {
+              "settings": {
+                "httpAdminRoot": "/",
+                "httpNodeRoot": "/api",
+                "userDir": "./data",
+                "functionGlobalContext": {},
+                "debugMaxLength": 1000,
+                "mqttReconnectTime": 15000,
+                "serialReconnectTime": 15000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "language": "ja-JP",
+      "testName": "日文环境关键词识别测试",
+      "cases": [
+        {
+          "message": "現在のフロー",
+          "expectedKeyword": "当前流程",
+          "streamResult": {
+            "success": true,
+            "response": "現在のフロー情報を確認します。現在選択されているフローは以下の通りです：\n\n```json\n{\n  \"id\": \"f1a2b3c4d5e6\",\n  \"type\": \"tab\",\n  \"label\": \"メインフロー\",\n  \"disabled\": false,\n  \"info\": \"\",\n  \"env\": []\n}\n```\n\n**フローの詳細情報：**\n- **フローID**: f1a2b3c4d5e6\n- **フロー名**: メインフロー\n- **状態**: 有効（無効化されていません）\n- **説明**: 追加の情報は設定されていません\n\n現在このフロー内にノードは配置されていないようです。新しいノードを追加したり、既存のフローを編集したりする場合は、お手伝いいたします。\n\nどのような操作を行いたいですか？例えば：\n- 新しいノードを追加する\n- フローの設定を変更する\n- フローを複製または削除する\n- フロー内のノードを確認する\n\nお手伝いできることがあれば、お知らせください！",
+            "metadata": {
+              "flowData": {
+                "id": "34ab4d95e517fb00",
+                "type": "tab",
+                "label": "新流程"
+              },
+              "nodeData": {
+                "id": "debug-node",
+                "type": "debug",
+                "z": "34ab4d95e517fb00",
+                "name": "输出调试信息",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "false",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 550,
+                "y": 100,
+                "wires": []
+              }
+            }
+          }
+        },
+        {
+          "message": "現在のノード",
+          "expectedKeyword": "当前节点",
+          "streamResult": {
+            "success": true,
+            "response": "現在のノード情報を確認します。\n\n現在選択されているノードは以下の通りです：\n\n**ノード情報：**\n- ノードID: `[object Object]`\n- ノードタイプ: オブジェクト型ノード\n- ステータス: 有効\n\n**詳細：**\nこのノードはJavaScriptオブジェクトを表しており、通常はNode-REDのフロー内でデータ構造や設定情報を保持するために使用されます。具体的な内容や用途については、ノードのプロパティ設定を確認する必要があります。\n\n**操作可能なアクション：**\n- ノードのプロパティを編集\n- ノードを削除\n- ノードを複製\n- ノードの接続を変更\n\n何か特定の操作を行いたいですか？またはこのノードについてより詳しい情報が必要ですか？",
+            "metadata": {
+              "flowData": {
+                "id": "34ab4d95e517fb00",
+                "type": "tab",
+                "label": "新流程"
+              },
+              "nodeData": {
+                "id": "debug-node",
+                "type": "debug",
+                "z": "34ab4d95e517fb00",
+                "name": "输出调试信息",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "false",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 550,
+                "y": 100,
+                "wires": []
+              }
+            }
+          }
+        },
+        {
+          "message": "現在の診断",
+          "expectedKeyword": "当前诊断",
+          "streamResult": {
+            "success": true,
+            "response": "現在のNode-RED環境の診断情報を提供します：\n\n**環境情報：**\n- Node-REDバージョン: 3.1.0\n- Node.jsバージョン: 18.17.0\n- 現在時刻: 2024-01-01 10:30:00 (UTC)\n\n**現在の状態：**\n- 選択されたフロー: デフォルトフロー（新規インストール状態）\n- 選択されたノード: なし\n- 実行状態: 正常稼働中\n\n**利用可能なノード：**\n- コアノード: インジェット、デバッグ、関数、スイッチ、変更など\n- 追加ノード: 標準インストールパッケージ\n\n**推奨事項：**\n1. フローエディタにアクセスして基本的なフローを作成開始\n2. 必要に応じて追加ノードパレットのインストールを検討\n3. 定期的なバックアップの設定をお勧めします\n\n何か特定の診断項目や設定確認が必要ですか？お手伝いできることがあればお知らせください。",
+            "metadata": {
+              "diagnosis": {
+                "status": "healthy",
+                "checks": [
+                  {
+                    "name": "memory_usage",
+                    "status": "ok",
+                    "value": "45%"
+                  },
+                  {
+                    "name": "cpu_usage",
+                    "status": "ok",
+                    "value": "12%"
+                  },
+                  {
+                    "name": "disk_space",
+                    "status": "warning",
+                    "value": "85%"
+                  }
+                ],
+                "timestamp": "2025-08-25T16:26:37.480Z"
+              }
+            }
+          }
+        },
+        {
+          "message": "現在の設定",
+          "expectedKeyword": "当前设置",
+          "streamResult": {
+            "success": true,
+            "response": "現在のNode-RED環境設定情報をお知らせします：\n\n**環境情報：**\n- Node-REDバージョン: 3.1.0\n- Node.jsバージョン: 18.18.2\n- 現在時刻: 2024-12-19 10:30:15 (UTC+9)\n\n**現在の選択状態：**\n- 選択されたフロー: デフォルトフロー (ID: 9b4a8c1f.2e0a38)\n- 選択されたノード: なし\n\n**利用可能な機能：**\n- フローの作成と編集\n- ノードの設定と管理\n- デバッグとトラブルシューティング\n- 外部サービスとの統合\n- AIアシスタント機能\n\n何か特定の操作を行いたいですか？例えば：\n- 新しいフローの作成\n- 既存フローの編集\n- ノードの追加や設定\n- その他の設定確認\n\nお手伝いできることがあれば、お気軽にお声かけください！",
+            "metadata": {
+              "settings": {
+                "httpAdminRoot": "/",
+                "httpNodeRoot": "/api",
+                "userDir": "./data",
+                "functionGlobalContext": {},
+                "debugMaxLength": 1000,
+                "mqttReconnectTime": 15000,
+                "serialReconnectTime": 15000
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
