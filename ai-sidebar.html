@@ -818,8 +818,8 @@
                 break;
                 
             case 'tool_call':
-                // 显示工具调用信息
-                if (currentStreamMessageId) {
+                // 显示工具调用信息（只有当工具名称有效时才显示）
+                if (currentStreamMessageId && data.tool_name && data.tool_name !== 'undefined') {
                     var toolInfo = `🔧 调用工具: ${data.tool_name}\n参数: ${JSON.stringify(data.arguments, null, 2)}\n`;
                     appendToMessage(currentStreamMessageId, toolInfo);
                 }
