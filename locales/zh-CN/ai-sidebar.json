@@ -28,6 +28,7 @@
             "buttons": {
                 "showConfig": "显示配置",
                 "send": "发送",
+                "stop": "停止",
                 "clear": "清空",
                 "retry": "重试"
             },
@@ -48,6 +49,7 @@
     "result": "结果：",
                 "networkError": "网络错误",
                 "applied": "已应用",
+                "responseStopped": "响应已停止",
                 "thinking": "思考中...",
                 "processing": "处理中...",
                 "loading": "加载中...",

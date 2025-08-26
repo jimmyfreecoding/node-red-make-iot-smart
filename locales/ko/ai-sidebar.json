@@ -28,6 +28,7 @@
             "buttons": {
                 "showConfig": "설정 표시",
                 "send": "전송",
+                "stop": "중지",
                 "clear": "지우기",
                 "retry": "다시 시도"
             },

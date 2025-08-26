@@ -28,6 +28,7 @@
             "buttons": {
                 "showConfig": "Settings",
                 "send": "Send",
+                "stop": "Stop",
                 "clear": "Clear",
                 "retry": "Retry"
             },
@@ -47,6 +48,7 @@
                 "networkError": "Network error",
                 "applied": "Applied",
                 "thinking": "Thinking...",
+                "responseStopped": "Response stopped",
                 "processing": "Processing...",
                 "loading": "Loading...",
                 "error": "An error occurred",

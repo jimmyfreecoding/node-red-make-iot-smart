@@ -689,16 +689,88 @@ module.exports = function (RED) {
             console.log('🚀 开始流式聊天...');
             
             let chunkCount = 0;
+            let isClientDisconnected = false;
+            let connectionEstablished = false;
+
+            // 延迟设置事件监听器，避免在连接建立前触发
+            setTimeout(() => {
+                connectionEstablished = true;
+                
+                // 监听客户端中止请求事件
+                req.on('aborted', () => {
+                    if (connectionEstablished) {
+                        console.log('🛑 后端收到客户端中止请求事件，停止LLM响应');
+                        isClientDisconnected = true;
+                    }
+                });
+
+                // 监听连接错误
+                req.on('error', (err) => {
+                    if (connectionEstablished) {
+                        console.log('🔌 后端收到连接错误，停止LLM响应:', err.message);
+                        isClientDisconnected = true;
+                    }
+                });
+                
+                // 监听连接关闭事件（更可靠的断开检测）
+                req.on('close', () => {
+                    if (connectionEstablished) {
+                        console.log('📡 后端收到连接关闭事件，停止LLM响应');
+                        isClientDisconnected = true;
+                    }
+                });
+                
+                // 添加响应对象的finish和close事件监听
+                res.on('close', () => {
+                    if (connectionEstablished) {
+                        console.log('📡 响应连接关闭，停止LLM响应');
+                        isClientDisconnected = true;
+                    }
+                });
+                
+                res.on('error', (err) => {
+                    if (connectionEstablished) {
+                        console.log('🔌 响应连接错误，停止LLM响应:', err.message);
+                        isClientDisconnected = true;
+                    }
+                });
+                
+                console.log('🔍 后端已设置事件监听器，连接已建立');
+            }, 100); // 延迟100ms设置事件监听器
 
             // 执行流式对话
             await configNode.streamChat(message, scenario, sessionId, dynamicData, (chunk) => {
+                // 检查客户端是否已断开连接
+                if (isClientDisconnected) {
+                    console.log('🛑 检测到客户端断开，停止发送数据');
+                    return false; // 返回false表示停止流式处理
+                }
+                
+                // 处理心跳检查事件（不发送给客户端，只用于检查连接状态）
+                if (chunk.type === 'heartbeat') {
+                    return !isClientDisconnected; // 返回连接状态
+                }
+                
                 chunkCount++;
                 console.log(`📤 发送SSE数据块 ${chunkCount}:`, JSON.stringify(chunk));
-                res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+                
+                try {
+                    res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+                } catch (writeError) {
+                    console.log('🔌 写入响应失败，客户端可能已断开:', writeError.message);
+                    isClientDisconnected = true;
+                    return false;
+                }
+                
+                return true; // 明确返回true表示继续处理
             });
 
-            console.log(`✅ 流式聊天完成，共发送${chunkCount}个数据块`);
-            res.end();
+            if (!isClientDisconnected) {
+                console.log(`✅ 流式聊天完成，共发送${chunkCount}个数据块`);
+                res.end();
+            } else {
+                console.log(`🛑 流式聊天被中断，已发送${chunkCount}个数据块`);
+            }
         } catch (error) {
             console.error('❌ 流式聊天端点错误:', error);
             console.error('❌ 错误堆栈:', error.stack);

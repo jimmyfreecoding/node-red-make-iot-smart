@@ -28,6 +28,7 @@
             "buttons": {
                 "showConfig": "Konfiguration anzeigen",
                 "send": "Senden",
+                "stop": "Stoppen",
                 "clear": "Löschen",
                 "retry": "Wiederholen"
             },

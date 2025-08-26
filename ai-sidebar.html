@@ -461,7 +461,16 @@
         
         // Send button click event
         $("#augment-send").on("click", function() {
-            sendMessage();
+            var sendButton = $(this);
+            
+            // Check if button is in loading state (AI is responding)
+            if (sendButton.attr('data-loading') === 'true') {
+                // Stop AI response
+                stopAIResponse();
+            } else {
+                // Normal send message
+                sendMessage();
+            }
         });
         
         // Send message on Enter key (Shift+Enter for line break)
@@ -514,15 +523,86 @@
     async function sendMessage() {
         var message = $("#augment-chat-input").val().trim();
         if (message) {
+            // Set send button to loading state
+            setSendButtonLoading(true);
 
             addMessageToChat("user", message);
             
             $("#augment-chat-input").val("");
             $("#augment-chat-input").css("height", "72px");
             
-            // Send to AI backend
-            await sendToAI(message, false); // Explicitly specify not silent send
+            try {
+                // Send to AI backend
+                await sendToAI(message, false); // Explicitly specify not silent send
+            } catch (error) {
+                // Only reset loading state on error, not on success
+                // Success case will be handled by handleStreamData when response completes
+                console.error('Error sending message:', error);
+                setSendButtonLoading(false);
+            }
         }
+    }
+    
+    // Function to set send button loading state
+    function setSendButtonLoading(isLoading) {
+        var sendButton = $("#augment-send");
+        var sendButtonText = $("#send-button-text");
+        var sendButtonIcon = sendButton.find("i");
+        
+        if (isLoading) {
+            // Store original state
+            window.originalSendButtonState = {
+                text: sendButtonText.text(),
+                icon: sendButtonIcon.attr('class'),
+                disabled: sendButton.prop('disabled')
+            };
+            
+            // Set loading state
+            sendButton.prop('disabled', false); // Keep enabled for stop functionality
+            sendButtonIcon.attr('class', 'fa fa-spinner fa-spin');
+            sendButtonText.text(_('sidebar.buttons.stop'));
+            sendButton.attr('data-loading', 'true');
+            
+            // Store current request for potential cancellation
+            window.isAIResponding = true;
+        } else {
+            // Restore original state
+            if (window.originalSendButtonState) {
+                sendButton.prop('disabled', window.originalSendButtonState.disabled);
+                sendButtonIcon.attr('class', window.originalSendButtonState.icon);
+                sendButtonText.text(window.originalSendButtonState.text);
+                sendButton.removeAttr('data-loading');
+                
+                window.originalSendButtonState = null;
+            }
+            window.isAIResponding = false;
+        }
+    }
+    
+    // Function to stop AI response
+    function stopAIResponse() {
+        console.log('🛑 前端停止AI响应被调用');
+        
+        if (window.currentAbortController) {
+            console.log('🛑 执行AbortController.abort()');
+            // Abort the current request
+            window.currentAbortController.abort();
+            window.currentAbortController = null;
+        } else {
+            console.log('⚠️ 没有找到currentAbortController');
+        }
+        
+        // Reset send button state
+        setSendButtonLoading(false);
+        
+        // Clear current stream message ID
+        if (window.currentStreamMessageId) {
+            // Add a stop indicator to the current message
+            appendToMessage(window.currentStreamMessageId, "\n\n⏹️ *" + _('sidebar.messages.responseStopped') + "*");
+            window.currentStreamMessageId = null;
+        }
+        
+        console.log('🛑 AI响应已停止');
     }
 
     // Detect keywords from configuration file
@@ -603,7 +683,7 @@
             if (!silent) {
                 addMessageToChat("error", "❌ Configuration node not found, please create and configure API key first");
             }
-            return;
+            throw new Error("Configuration node not found");
         }
 
         // Check if node is deployed
@@ -612,7 +692,7 @@
             if (!silent) {
                 addMessageToChat("error", "❌ 配置节点未部署，请点击部署按钮后重试");
             }
-            return;
+            throw new Error("Configuration node not deployed");
         }
 
         // Check if there are undeployed changes
@@ -620,7 +700,7 @@
             if (!silent) {
                 addMessageToChat("warning", "⚠️ 检测到未部署的更改，请先点击部署按钮");
             }
-            return;
+            throw new Error("Undeployed changes detected");
         }
 
         // Get current scenario
@@ -757,15 +837,41 @@
 
 
         
-        // Create loading message
+        // Create loading message with animation
         var loadingMessageId = "loading-" + Date.now();
         var aiMessageId = "ai-" + Date.now();
-        addMessageToChat("assistant", "🤖 思考中...", loadingMessageId);
+        var loadingContent = `
+            <div class="loading-container" style="display: flex; align-items: center; gap: 8px; color: #6b7280;">
+                <div class="loading-spinner" style="
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid #e5e7eb;
+                    border-top: 2px solid #3b82f6;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                "></div>
+                <span class="loading-text">" + _('sidebar.messages.thinking') + "</span>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+        addMessageToChat("assistant", loadingContent, loadingMessageId);
+        
+        // Store current loading message ID for later replacement
+        window.currentLoadingMessageId = loadingMessageId;
+        
+        // Create AbortController for request cancellation
+        window.currentAbortController = new AbortController();
         
         // Send request after asynchronously getting chat history
         getChatHistory(function(history) {
 
             fetch('/ai-sidebar/stream-chat', {
+                signal: window.currentAbortController.signal,
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json; charset=utf-8',
@@ -793,7 +899,21 @@
             const decoder = new TextDecoder('utf-8');
             
             function readStream() {
+                // 检查是否已被中止
+                if (window.currentAbortController && window.currentAbortController.signal.aborted) {
+                    console.log('🛑 检测到abort信号，停止读取流');
+                    reader.cancel();
+                    return Promise.resolve();
+                }
+                
                 return reader.read().then(({ done, value }) => {
+                    // 再次检查是否已被中止
+                    if (window.currentAbortController && window.currentAbortController.signal.aborted) {
+                        console.log('🛑 读取过程中检测到abort信号，停止读取流');
+                        reader.cancel();
+                        return Promise.resolve();
+                    }
+                    
                     if (done) {
                         return;
                     }
@@ -820,12 +940,25 @@
             return readStream();
         })
         .catch(error => {
+            // Check if request was aborted
+            if (error.name === 'AbortError') {
+                console.log('🛑 AI响应已被用户中断');
+                $("#" + loadingMessageId).remove();
+                addMessageToChat("system", "⏹️ " + _("sidebar.messages.responseStopped"));
+                // Reset loading state when aborted
+                setSendButtonLoading(false);
+                return;
+            }
+            
             console.error('🔥 流式聊天请求失败:', error);
             console.error('🔥 错误详情:', error.message, error.stack);
             $("#" + loadingMessageId).remove();
             
             var errorMessage = "❌ AI请求失败: " + error.message;
             addMessageToChat("error", errorMessage);
+            
+            // Reset loading state on error
+            setSendButtonLoading(false);
             
             // Check if network or authentication related error, show RED.notify notification
             if (error.message.includes('401') || error.message.includes('403') || 
@@ -958,6 +1091,14 @@
                     saveChatMessage("assistant", finalContent);
                 }
                 currentStreamMessageId = null;
+                
+                // Reset send button state when response is complete
+                setSendButtonLoading(false);
+                
+                // Clear abort controller
+                if (window.currentAbortController) {
+                    window.currentAbortController = null;
+                }
                 break;
         }
     }

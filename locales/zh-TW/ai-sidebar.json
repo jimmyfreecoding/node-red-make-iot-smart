@@ -28,6 +28,7 @@
             "buttons": {
                 "showConfig": "顯示配置",
                 "send": "發送",
+                "stop": "停止",
                 "clear": "清空",
                 "retry": "重試"
             },

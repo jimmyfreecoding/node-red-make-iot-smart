@@ -28,6 +28,7 @@
             "buttons": {
                 "showConfig": "Mostrar configuração",
                 "send": "Enviar",
+                "stop": "Parar",
                 "clear": "Limpar",
                 "retry": "Tentar novamente"
             },

@@ -27,6 +27,7 @@
             "buttons": {
                 "showConfig": "Show Config",
                 "send": "Send",
+                "stop": "Stop",
                 "clear": "Clear",
                 "retry": "Retry"
             },

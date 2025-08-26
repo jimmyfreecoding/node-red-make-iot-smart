@@ -28,6 +28,7 @@
             "buttons": {
                 "showConfig": "設定を表示",
                 "send": "送信",
+                "stop": "停止",
                 "clear": "クリア",
                 "retry": "再試行"
             },
