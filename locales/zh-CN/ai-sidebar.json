@@ -7,6 +7,8 @@
                 "chatHistory": "聊天历史",
                 "noChatHistory": "无聊天历史",
                 "historySessions": "历史会话",
+                "newSession": "新建会话",
+                "newSessionCreated": "新会话已创建",
                 "clearHistory": "清除历史",
                 "loadingHistory": "正在加载会话历史...",
                 "loadSessionFailed": "加载会话失败，请重试",

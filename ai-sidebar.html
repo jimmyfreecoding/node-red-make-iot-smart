@@ -2461,6 +2461,34 @@
                 
                 var menuHtml = '';
                 
+                // Add new session button at the top
+                menuHtml += `
+                    <div class="chat-history-section" style="
+                        padding: 8px;
+                        border-bottom: 1px solid #f3f4f6;
+                    ">
+                        <button onclick="createNewSession()" style="
+                            width: 100%;
+                            padding: 8px 12px;
+                            background: #10b981;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 12px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: background-color 0.1s;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 6px;
+                        " onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10b981'">
+                            <i class="fa fa-plus" style="font-size: 10px;"></i>
+                            ${_('sidebar.labels.newSession')}
+                        </button>
+                    </div>
+                `;
+                
                 // Show session list
                 var sessions = response.sessions.slice(0, 15); // Show recent 15 sessions
             
@@ -2593,7 +2621,7 @@
                     // Add system prompt message
                     addMessageToChat('system', `📋 Switched to session: ${sessionId.substring(0, 8)}`);
                     
-                    // Redisplay historical conversations
+                    // Redisplay historical conversations in chronological order (oldest first)
                     response.history.forEach(function(msg, index) {
                         var messageId = 'session-' + Date.now() + '-' + index;
                         addMessageToChat(msg.role, msg.content, messageId);
@@ -2825,6 +2853,32 @@
                 $(document).off('keydown.clearHistoryModal');
             }
         });
+    }
+    
+    // Create new session
+    function createNewSession() {
+        // Generate new session ID
+        var newSessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        
+        // Clear current chat area
+        $('#augment-chat-messages').empty();
+        
+        // Update current session ID
+        currentSessionId = newSessionId;
+        localStorage.setItem('node-red-ai-session-id', newSessionId);
+        
+        // Close dropdown menu
+        $('#chat-history-dropdown-menu').hide();
+        $('#chat-history-dropdown-btn .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        
+        // Add system prompt message
+        addMessageToChat('system', `🆕 ${_('sidebar.labels.newSessionCreated') || 'New session created'}: ${newSessionId.substring(0, 8)}`);
+        
+        // Show success notification
+        showNotification(_('sidebar.labels.newSessionCreated') || 'New session created successfully', 'success');
+        
+        // Focus on input
+        $('#augment-input').focus();
     }
     
     // 显示通知消息的辅助函数
