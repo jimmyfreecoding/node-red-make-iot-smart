@@ -1,0 +1,76 @@
+{
+    "ai-sidebar": {
+        "sidebar": {
+            "title": "Asistente IA",
+
+            "labels": {
+                "chatHistory": "Historial de chat",
+                "noChatHistory": "Sin historial de chat",
+                "historySessions": "Sesiones históricas",
+                "loadingHistory": "Cargando historial de sesiones...",
+                "loadSessionFailed": "Error al cargar la sesión, por favor inténtelo de nuevo",
+                "noHistoryAvailable": "No hay historial de chat disponible",
+                "scenarioPrefix": "Escenario:",
+                "noFlowSelected": "Ningún flujo seleccionado",
+                "noNodeSelected": "Ningún nodo seleccionado",
+                "unknownFlow": "Flujo desconocido",
+                "unknownNode": "Nodo desconocido",
+                "multipleNodesSelected": "nodos seleccionados",
+                "type": "Tipo",
+                "scenario": "Escenario",
+                "general": "General",
+                "availableScenarios": "Escenarios disponibles",
+                "unknownScenario": "Escenario desconocido",
+                "switchedTo": "Cambiado a",
+                "quickStart": "Inicio rápido",
+                "loadSession": "Cargar sesión"
+            },
+            "buttons": {
+                "showConfig": "Mostrar configuración",
+                "send": "Enviar",
+                "clear": "Limpiar",
+                "retry": "Reintentar"
+            },
+            "placeholders": {
+                "inputMessage": "Ingrese su mensaje..."
+            },
+            "messages": {
+                "developing": "Esta función está en desarrollo",
+                "apiKeyError": "Clave API no configurada o autenticación fallida, abriendo interfaz de configuración...",
+                "executionFailed": "Ejecución fallida",
+                "flowCreationSuccess": "¡Flujo creado exitosamente!",
+                "toolExecutionFailed": "Ejecución de herramienta fallida",
+                "networkError": "Error de red",
+                "applied": "Aplicado",
+                "thinking": "Pensando...",
+                "processing": "Procesando...",
+                "loading": "Cargando...",
+                "error": "Error ocurrido",
+                "noResponse": "No se recibió respuesta",
+                "scenarioSwitched": "🔄 Cambiado al escenario **{scenarioName}**\n\n📝 **Descripción del escenario**: {description}",
+                "welcome": "👋 ¡Bienvenido al Asistente IA de Make IoT Smart!\n\n🎯 **Escenario actual**: {scenarioName}\n\nPor favor seleccione un escenario apropiado y comience la conversación:\n• 🎓 **Aprendizaje** - Entender conceptos y nodos de Node-RED\n• 💡 **Soluciones** - Obtener sugerencias de soluciones IoT\n• 🔌 **Integración** - Integrar protocolos y sistemas\n• 💻 **Desarrollo** - Optimizar y desarrollar flujos\n• ⚙️ **Configuración** - Configurar entorno Node-RED\n• 🖥️ **Gestión** - Gestionar y desplegar aplicaciones",
+                "fallbackWelcome": "👋 ¡Bienvenido al Asistente IA de Make IoT Smart!\n\n🎯 **Escenario actual**: Aprendizaje\n\nPor favor comience la conversación, le ayudaré a entender cómo usar Node-RED."
+            },
+            "errors": {
+                "configRequired": "Por favor configure primero la clave API",
+                "messageRequired": "Por favor ingrese el contenido del mensaje",
+                "connectionFailed": "Conexión fallida",
+                "timeout": "Tiempo de espera agotado",
+                "loadFailed": "Carga fallida",
+                "updateFlowNameFailed": "Error al actualizar nombre del flujo:",
+                "updateNodeInfoFailed": "Error al actualizar información del nodo:",
+                "scenarioNotFound": "Datos del escenario no encontrados"
+            },
+            "scenarios": {
+                "init": "Inicializando gestor de escenarios",
+                "loadingData": "Cargando datos de escenarios desde el backend...",
+                "loadSuccess": "Datos de escenarios cargados exitosamente:",
+                "loadFailed": "Error al cargar datos de escenarios:",
+                "learning": {
+                    "name": "Aprendizaje",
+                    "description": "Aprender conceptos de nodos y flujos de Node-RED"
+                }
+            }
+        }
+    }
+}

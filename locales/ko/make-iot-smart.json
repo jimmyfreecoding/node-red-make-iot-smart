@@ -1,0 +1,90 @@
+{
+    "make-iot-smart": {
+        "paletteLabel": "AI 어시스턴트",
+        "label": {
+            "name": "이름",
+            "apiConfig": "API 구성",
+            "aiAssistant": "AI 어시스턴트",
+            "defaultName": "AI 어시스턴트"
+        },
+        "placeholder": {
+            "name": "노드 이름 입력"
+        },
+        "tips": {
+            "autoHide": "이 노드는 자동으로 숨겨지며 AI 어시스턴트 기능을 구성하는 데 사용됩니다"
+        }
+    },
+    "common": {
+        "label": {
+            "tip": "팁:"
+        }
+    },
+    "api-config": {
+        "label": {
+            "name": "이름",
+            "provider": "API 제공자",
+            "apiKey": "API 키",
+            "model": "모델",
+            "maxTokens": "최대 토큰 수",
+            "useDifferentModels": "Plan과 Act 모드에 다른 모델 사용"
+        },
+        "placeholder": {
+            "name": "이름",
+            "apiKey": "API 키를 입력해 주세요"
+        },
+        "tips": {
+            "apiKey": "이 키는 로컬에 저장되며 이 확장에서 API 요청을 위해서만 사용됩니다.",
+            "differentModels": "Plan과 Act 모드 간 전환 시 이전 모드에서 사용된 API와 모델이 유지됩니다. 강력한 추론 모델로 계획을 세우고 더 저렴한 코딩 모델로 실행할 때 유용할 수 있습니다.",
+            "capabilities": {
+                "noImage": "이미지 지원 안 함",
+                "noBrowser": "브라우저 사용 지원 안 함",
+                "promptCache": "프롬프트 캐시 지원",
+                "maxInput": "최대 입력: 8,000 토큰",
+                "cacheWritePrice": "캐시 쓰기 가격: $0.27/백만 토큰",
+                "cacheReadPrice": "캐시 읽기 가격: $0.07/백만 토큰",
+                "outputPrice": "출력 가격: $1.10/백만 토큰"
+            }
+        },
+        "help": {
+            "description": "API 구성 노드는 AI 서비스 제공자의 API 키와 모델 선택을 저장하는 데 사용됩니다.",
+            "providers": "지원되는 제공자에는 DeepSeek, OpenAI, Anthropic이 있습니다.",
+            "usage": "다양한 사용 시나리오에 대해 다른 모델을 선택할 수 있으며, Plan과 Act 모드에 다른 모델을 사용할 수도 있습니다."
+        },
+        "validation": {
+            "apiKeyFiltered": "불법 문자가 필터링되었습니다. API 키는 숫자, 문자, 기호만 포함할 수 있습니다"
+        }
+    },
+    "errors": {
+        "apiKeyMissing": "API 키가 구성되지 않았습니다. 구성 노드에서 API 키를 설정해 주세요",
+        "apiKeyAuthFailed": "API 키 인증 실패. 구성 노드의 API 키가 올바른지 확인해 주세요",
+        "modelMissing": "모델 이름이 누락되었습니다. 구성 노드에서 모델을 선택해 주세요",
+        "configNodeNotFound": "API 구성 노드를 찾을 수 없습니다",
+        "networkError": "네트워크 오류",
+        "executionFailed": "실행 실패",
+        "toolExecutionFailed": "도구 실행 실패",
+        "unknownError": "알 수 없는 오류가 발생했습니다"
+    },
+    "messages": {
+        "apiConfigInit": "API 구성 노드 초기화",
+        "mcpNotEnabled": "MCP가 활성화되지 않음 - enableMcp가 false",
+        "mcpCommandNotConfigured": "MCP 명령이 구성되지 않음",
+        "mcpInitStart": "MCP 연결 초기화 시작",
+        "mcpInitSuccess": "MCP 초기화 성공",
+        "mcpInitFailed": "MCP 초기화 실패",
+        "aiHelperNodeExists": "AI 어시스턴트 노드가 이미 존재합니다. 생성이 필요하지 않습니다",
+        "aiHelperNodeCreated": "AI 어시스턴트 노드가 자동으로 성공적으로 생성되었습니다",
+        "aiHelperNodeCreating": "AI 어시스턴트 노드를 찾을 수 없습니다. 자동 생성 중...",
+        "flowCreationSuccess": "플로우 생성 성공!",
+        "toolExecutionSuccess": "적용됨",
+        "retry": "다시 시도",
+        "apiConfigNotFound": "API 구성 노드를 찾을 수 없어 AI 어시스턴트 노드를 자동으로 생성할 수 없습니다",
+        "initializingAIHelper": "ensureAIHelperNode 호출을 위한 setTimeout 설정 중...",
+        "aiHelperNodeChecking": "setTimeout 트리거됨, ensureAIHelperNode 실행 시작..."
+    },
+    "status": {
+        "ready": "준비",
+        "connected": "연결됨",
+        "disconnected": "연결 해제됨",
+        "error": "오류"
+    }
+}

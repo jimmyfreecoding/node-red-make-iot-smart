@@ -1,0 +1,76 @@
+{
+    "ai-sidebar": {
+        "sidebar": {
+            "title": "Assistente IA",
+
+            "labels": {
+                "chatHistory": "Histórico do chat",
+                "noChatHistory": "Sem histórico de chat",
+                "historySessions": "Sessões históricas",
+                "loadingHistory": "Carregando histórico de sessões...",
+                "loadSessionFailed": "Falha ao carregar sessão, tente novamente",
+                "noHistoryAvailable": "Nenhum histórico de chat disponível",
+                "scenarioPrefix": "Cenário:",
+                "noFlowSelected": "Nenhum fluxo selecionado",
+                "noNodeSelected": "Nenhum nó selecionado",
+                "unknownFlow": "Fluxo desconhecido",
+                "unknownNode": "Nó desconhecido",
+                "multipleNodesSelected": "nós selecionados",
+                "type": "Tipo",
+                "scenario": "Cenário",
+                "general": "Geral",
+                "availableScenarios": "Cenários disponíveis",
+                "unknownScenario": "Cenário desconhecido",
+                "switchedTo": "Alternado para",
+                "quickStart": "Início rápido",
+                "loadSession": "Carregar sessão"
+            },
+            "buttons": {
+                "showConfig": "Mostrar configuração",
+                "send": "Enviar",
+                "clear": "Limpar",
+                "retry": "Tentar novamente"
+            },
+            "placeholders": {
+                "inputMessage": "Digite sua mensagem..."
+            },
+            "messages": {
+                "developing": "Esta funcionalidade está em desenvolvimento",
+                "apiKeyError": "Chave API não configurada ou autenticação falhou, abrindo interface de configuração...",
+                "executionFailed": "Execução falhou",
+                "flowCreationSuccess": "Fluxo criado com sucesso!",
+                "toolExecutionFailed": "Execução da ferramenta falhou",
+                "networkError": "Erro de rede",
+                "applied": "Aplicado",
+                "thinking": "Pensando...",
+                "processing": "Processando...",
+                "loading": "Carregando...",
+                "error": "Erro ocorreu",
+                "noResponse": "Nenhuma resposta recebida",
+                "scenarioSwitched": "🔄 Alternado para o cenário **{scenarioName}**\n\n📝 **Descrição do cenário**: {description}",
+                "welcome": "👋 Bem-vindo ao Assistente IA Make IoT Smart!\n\n🎯 **Cenário atual**: {scenarioName}\n\nPor favor, selecione um cenário apropriado e comece a conversa:\n• 🎓 **Aprendizado** - Entender conceitos e nós do Node-RED\n• 💡 **Soluções** - Obter sugestões de soluções IoT\n• 🔌 **Integração** - Integrar protocolos e sistemas\n• 💻 **Desenvolvimento** - Otimizar e desenvolver fluxos\n• ⚙️ **Configuração** - Configurar ambiente Node-RED\n• 🖥️ **Gerenciamento** - Gerenciar e implantar aplicações",
+                "fallbackWelcome": "👋 Bem-vindo ao Assistente IA Make IoT Smart!\n\n🎯 **Cenário atual**: Aprendizado\n\nPor favor, comece a conversa, eu ajudarei você a entender como usar o Node-RED."
+            },
+            "errors": {
+                "configRequired": "Por favor, configure primeiro a chave API",
+                "messageRequired": "Por favor, digite o conteúdo da mensagem",
+                "connectionFailed": "Falha na conexão",
+                "timeout": "Tempo limite da solicitação",
+                "loadFailed": "Falha no carregamento",
+                "updateFlowNameFailed": "Falha ao atualizar nome do fluxo:",
+                "updateNodeInfoFailed": "Falha ao atualizar informações do nó:",
+                "scenarioNotFound": "Dados do cenário não encontrados"
+            },
+            "scenarios": {
+                "init": "Inicializando gerenciador de cenários",
+                "loadingData": "Carregando dados de cenários do backend...",
+                "loadSuccess": "Dados de cenários carregados com sucesso:",
+                "loadFailed": "Falha ao carregar dados de cenários:",
+                "learning": {
+                    "name": "Aprendizado",
+                    "description": "Aprender conceitos de nós e fluxos do Node-RED"
+                }
+            }
+        }
+    }
+}

@@ -125,7 +125,7 @@ module.exports = function (RED) {
         // 更新语言设置（由前端调用时触发）
         node.updateLanguageFromFrontend = function(language) {
             if (language && node.langchainManager) {
-                const currentLanguage = node.langchainManager.currentLanguage || node.getCurrentLanguage();
+                const currentLanguage = node.langchainManager.language || node.getCurrentLanguage();
                 if (language !== currentLanguage) {
                     // console.log(`Language changed from ${currentLanguage} to ${language}`);
                     node.langchainManager.updateLanguage(language);
@@ -300,8 +300,8 @@ module.exports = function (RED) {
                 if (onChunk && typeof onChunk === 'function') {
                     onChunk({
                         type: 'error',
-                        error: error.message
-                    });
+                         error: error.message
+                     });
                 }
                 throw error;
             }
@@ -1128,6 +1128,43 @@ module.exports = function (RED) {
             }
         });
 
+        // 更新语言设置端点
+        RED.httpAdmin.post('/ai-sidebar/update-language', function(req, res) {
+            try {
+                const { language } = req.body;
+                
+                if (!language) {
+                    return res.status(400).json({ error: 'Language parameter is required' });
+                }
+                
+                // 查找配置节点
+                let configNode = null;
+                if (global.apiConfigNode) {
+                    configNode = global.apiConfigNode;
+                } else {
+                    // 如果全局变量中没有，尝试查找第一个配置节点
+                    const configNodes = RED.nodes.getNodesByType('api-config');
+                    if (configNodes.length > 0) {
+                        configNode = configNodes[0];
+                    }
+                }
+                
+                if (!configNode) {
+                    return res.status(404).json({ error: 'No API configuration found' });
+                }
+                
+                // 更新语言设置
+                configNode.updateLanguageFromFrontend(language);
+                
+                console.log('🌐 Language updated from frontend:', language);
+                res.json({ success: true, language: language });
+                
+            } catch (error) {
+                console.error('❌ Error updating language:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        });
+        
         // 获取支持的LLM提供商和模型列表端点
         RED.httpAdmin.get('/ai-sidebar/llm-providers', function(req, res) {
             try {
@@ -1322,6 +1359,12 @@ module.exports = function (RED) {
     // 监听节点删除事件，自动重新创建AI助手节点
     RED.events.on('flows:stopped', function() {
         setTimeout(ensureAIHelperNode, 1000);
+    });
+    
+    // 提供语言切换测试页面
+    RED.httpAdmin.get('/ai-sidebar/test-language-switch', function(req, res) {
+        const testPagePath = path.join(__dirname, 'test-language-switch.html');
+        res.sendFile(testPagePath);
     });
     
     // 监听流部署事件

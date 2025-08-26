@@ -1,0 +1,76 @@
+{
+    "ai-sidebar": {
+        "sidebar": {
+            "title": "KI-Assistent",
+
+            "labels": {
+                "chatHistory": "Chat-Verlauf",
+                "noChatHistory": "Kein Chat-Verlauf",
+                "historySessions": "Verlaufssitzungen",
+                "loadingHistory": "Lade Sitzungsverlauf...",
+                "loadSessionFailed": "Laden der Sitzung fehlgeschlagen, bitte erneut versuchen",
+                "noHistoryAvailable": "Kein Chat-Verlauf verfügbar",
+                "scenarioPrefix": "Szenario:",
+                "noFlowSelected": "Kein Flow ausgewählt",
+                "noNodeSelected": "Kein Knoten ausgewählt",
+                "unknownFlow": "Unbekannter Flow",
+                "unknownNode": "Unbekannter Knoten",
+                "multipleNodesSelected": "Knoten ausgewählt",
+                "type": "Typ",
+                "scenario": "Szenario",
+                "general": "Allgemein",
+                "availableScenarios": "Verfügbare Szenarien",
+                "unknownScenario": "Unbekanntes Szenario",
+                "switchedTo": "Gewechselt zu",
+                "quickStart": "Schnellstart",
+                "loadSession": "Sitzung laden"
+            },
+            "buttons": {
+                "showConfig": "Konfiguration anzeigen",
+                "send": "Senden",
+                "clear": "Löschen",
+                "retry": "Wiederholen"
+            },
+            "placeholders": {
+                "inputMessage": "Geben Sie Ihre Nachricht ein..."
+            },
+            "messages": {
+                "developing": "Diese Funktion ist in Entwicklung",
+                "apiKeyError": "API-Schlüssel nicht konfiguriert oder Authentifizierung fehlgeschlagen, öffne Konfigurationsoberfläche...",
+                "executionFailed": "Ausführung fehlgeschlagen",
+                "flowCreationSuccess": "Flow erfolgreich erstellt!",
+                "toolExecutionFailed": "Tool-Ausführung fehlgeschlagen",
+                "networkError": "Netzwerkfehler",
+                "applied": "Angewendet",
+                "thinking": "Denke nach...",
+                "processing": "Verarbeite...",
+                "loading": "Lade...",
+                "error": "Fehler aufgetreten",
+                "noResponse": "Keine Antwort erhalten",
+                "scenarioSwitched": "🔄 Gewechselt zu **{scenarioName}** Szenario\n\n📝 **Szenario-Beschreibung**: {description}",
+                "welcome": "👋 Willkommen beim Make IoT Smart KI-Assistenten!\n\n🎯 **Aktuelles Szenario**: {scenarioName}\n\nBitte wählen Sie ein geeignetes Szenario und beginnen Sie das Gespräch:\n• 🎓 **Lernen** - Node-RED Konzepte und Knoten verstehen\n• 💡 **Lösungen** - IoT-Lösungsvorschläge erhalten\n• 🔌 **Integration** - Protokolle und Systeme integrieren\n• 💻 **Entwicklung** - Flows optimieren und entwickeln\n• ⚙️ **Konfiguration** - Node-RED Umgebung konfigurieren\n• 🖥️ **Verwaltung** - Anwendungen verwalten und bereitstellen",
+                "fallbackWelcome": "👋 Willkommen beim Make IoT Smart KI-Assistenten!\n\n🎯 **Aktuelles Szenario**: Lernen\n\nBitte beginnen Sie das Gespräch, ich helfe Ihnen dabei zu verstehen, wie Node-RED verwendet wird."
+            },
+            "errors": {
+                "configRequired": "Bitte konfigurieren Sie zuerst den API-Schlüssel",
+                "messageRequired": "Bitte geben Sie Nachrichteninhalt ein",
+                "connectionFailed": "Verbindung fehlgeschlagen",
+                "timeout": "Anfrage-Timeout",
+                "loadFailed": "Laden fehlgeschlagen",
+                "updateFlowNameFailed": "Aktualisierung des Flow-Namens fehlgeschlagen:",
+                "updateNodeInfoFailed": "Aktualisierung der Knoteninformationen fehlgeschlagen:",
+                "scenarioNotFound": "Szenario-Daten nicht gefunden"
+            },
+            "scenarios": {
+                "init": "Initialisiere Szenario-Manager",
+                "loadingData": "Lade Szenario-Daten vom Backend...",
+                "loadSuccess": "Szenario-Daten erfolgreich geladen:",
+                "loadFailed": "Laden der Szenario-Daten fehlgeschlagen:",
+                "learning": {
+                    "name": "Lernen",
+                    "description": "Node-RED Knoten und Flow-Konzepte lernen"
+                }
+            }
+        }
+    }
+}

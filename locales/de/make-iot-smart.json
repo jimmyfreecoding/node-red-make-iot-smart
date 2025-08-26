@@ -1,0 +1,90 @@
+{
+    "make-iot-smart": {
+        "paletteLabel": "KI-Assistent",
+        "label": {
+            "name": "Name",
+            "apiConfig": "API-Konfiguration",
+            "aiAssistant": "KI-Assistent",
+            "defaultName": "KI-Assistent"
+        },
+        "placeholder": {
+            "name": "Knotennamen eingeben"
+        },
+        "tips": {
+            "autoHide": "Dieser Knoten wird automatisch ausgeblendet und dient zur Konfiguration der KI-Assistenten-Funktionalität"
+        }
+    },
+    "common": {
+        "label": {
+            "tip": "Tipp:"
+        }
+    },
+    "api-config": {
+        "label": {
+            "name": "Name",
+            "provider": "API-Anbieter",
+            "apiKey": "API-Schlüssel",
+            "model": "Modell",
+            "maxTokens": "Maximale Token-Anzahl",
+            "useDifferentModels": "Verschiedene Modelle für Plan- und Act-Modus verwenden"
+        },
+        "placeholder": {
+            "name": "Name",
+            "apiKey": "Bitte API-Schlüssel eingeben"
+        },
+        "tips": {
+            "apiKey": "Dieser Schlüssel wird lokal gespeichert und nur für API-Anfragen von dieser Erweiterung verwendet.",
+            "differentModels": "Das Wechseln zwischen Plan- und Act-Modus behält die im vorherigen Modus verwendete API und das Modell bei. Dies kann hilfreich sein, wenn ein leistungsstarkes Reasoning-Modell für die Planung und dann ein günstigeres Coding-Modell für die Ausführung verwendet wird.",
+            "capabilities": {
+                "noImage": "Keine Bildunterstützung",
+                "noBrowser": "Keine Browser-Nutzung unterstützt",
+                "promptCache": "Prompt-Caching unterstützt",
+                "maxInput": "Maximale Eingabe: 8.000 Token",
+                "cacheWritePrice": "Cache-Schreibpreis: $0,27/Million Token",
+                "cacheReadPrice": "Cache-Lesepreis: $0,07/Million Token",
+                "outputPrice": "Ausgabepreis: $1,10/Million Token"
+            }
+        },
+        "help": {
+            "description": "Der API-Konfigurationsknoten wird verwendet, um API-Schlüssel und Modellauswahl für KI-Serviceanbieter zu speichern.",
+            "providers": "Unterstützte Anbieter sind DeepSeek, OpenAI und Anthropic.",
+            "usage": "Sie können verschiedene Modelle für verschiedene Anwendungsszenarien auswählen und optional verschiedene Modelle für Plan- und Act-Modus verwenden."
+        },
+        "validation": {
+            "apiKeyFiltered": "Ungültige Zeichen gefiltert, API-Schlüssel darf nur Zahlen, Buchstaben und Symbole enthalten"
+        }
+    },
+    "errors": {
+        "apiKeyMissing": "API-Schlüssel nicht konfiguriert, bitte API-Schlüssel im Konfigurationsknoten setzen",
+        "apiKeyAuthFailed": "API-Schlüssel-Authentifizierung fehlgeschlagen, bitte prüfen Sie, ob der API-Schlüssel im Konfigurationsknoten korrekt ist",
+        "modelMissing": "Modellname fehlt, bitte Modell im Konfigurationsknoten auswählen",
+        "configNodeNotFound": "API-Konfigurationsknoten nicht gefunden",
+        "networkError": "Netzwerkfehler",
+        "executionFailed": "Ausführung fehlgeschlagen",
+        "toolExecutionFailed": "Tool-Ausführung fehlgeschlagen",
+        "unknownError": "Unbekannter Fehler aufgetreten"
+    },
+    "messages": {
+        "apiConfigInit": "API-Konfigurationsknoten-Initialisierung",
+        "mcpNotEnabled": "MCP nicht aktiviert - enableMcp ist false",
+        "mcpCommandNotConfigured": "MCP-Befehl nicht konfiguriert",
+        "mcpInitStart": "Beginne MCP-Verbindungsinitialisierung",
+        "mcpInitSuccess": "MCP-Initialisierung erfolgreich",
+        "mcpInitFailed": "MCP-Initialisierung fehlgeschlagen",
+        "aiHelperNodeExists": "KI-Assistenten-Knoten existiert bereits, keine Erstellung erforderlich",
+        "aiHelperNodeCreated": "KI-Assistenten-Knoten automatisch erfolgreich erstellt",
+        "aiHelperNodeCreating": "KI-Assistenten-Knoten nicht gefunden, automatische Erstellung läuft...",
+        "flowCreationSuccess": "Flow erfolgreich erstellt!",
+        "toolExecutionSuccess": "Angewendet",
+        "retry": "Wiederholen",
+        "apiConfigNotFound": "API-Konfigurationsknoten nicht gefunden, automatische Erstellung des KI-Assistenten-Knotens nicht möglich",
+        "initializingAIHelper": "setTimeout gesetzt, um ensureAIHelperNode aufzurufen...",
+        "aiHelperNodeChecking": "setTimeout ausgelöst, beginne ensureAIHelperNode-Ausführung..."
+    },
+    "status": {
+        "ready": "Bereit",
+        "connected": "Verbunden",
+        "disconnected": "Getrennt",
+        "error": "Fehler"
+    }
+}

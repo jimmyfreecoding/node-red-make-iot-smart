@@ -1,0 +1,90 @@
+{
+    "make-iot-smart": {
+        "paletteLabel": "Assistant IA",
+        "label": {
+            "name": "Nom",
+            "apiConfig": "Configuration API",
+            "aiAssistant": "Assistant IA",
+            "defaultName": "Assistant IA"
+        },
+        "placeholder": {
+            "name": "Saisir le nom du nœud"
+        },
+        "tips": {
+            "autoHide": "Ce nœud se cache automatiquement et est utilisé pour configurer la fonctionnalité de l'assistant IA"
+        }
+    },
+    "common": {
+        "label": {
+            "tip": "Conseil :"
+        }
+    },
+    "api-config": {
+        "label": {
+            "name": "Nom",
+            "provider": "Fournisseur API",
+            "apiKey": "Clé API",
+            "model": "Modèle",
+            "maxTokens": "Nombre maximum de tokens",
+            "useDifferentModels": "Utiliser différents modèles pour les modes Plan et Act"
+        },
+        "placeholder": {
+            "name": "Nom",
+            "apiKey": "Veuillez saisir la clé API"
+        },
+        "tips": {
+            "apiKey": "Cette clé est stockée localement et utilisée uniquement pour les requêtes API depuis cette extension.",
+            "differentModels": "Basculer entre les modes Plan et Act conservera l'API et le modèle utilisés dans le mode précédent. Cela peut être utile lors de l'utilisation d'un modèle de raisonnement puissant pour planifier, puis d'un modèle de codage moins cher pour exécuter.",
+            "capabilities": {
+                "noImage": "Pas de support d'images",
+                "noBrowser": "Pas d'utilisation de navigateur supportée",
+                "promptCache": "Cache de prompts supporté",
+                "maxInput": "Entrée maximale : 8 000 tokens",
+                "cacheWritePrice": "Prix d'écriture du cache : 0,27 $/million de tokens",
+                "cacheReadPrice": "Prix de lecture du cache : 0,07 $/million de tokens",
+                "outputPrice": "Prix de sortie : 1,10 $/million de tokens"
+            }
+        },
+        "help": {
+            "description": "Le nœud de configuration API est utilisé pour stocker les clés API et la sélection de modèles pour les fournisseurs de services IA.",
+            "providers": "Les fournisseurs supportés incluent DeepSeek, OpenAI et Anthropic.",
+            "usage": "Vous pouvez sélectionner différents modèles pour différents scénarios d'utilisation et optionnellement utiliser différents modèles pour les modes Plan et Act."
+        },
+        "validation": {
+            "apiKeyFiltered": "Caractères illégaux filtrés, la clé API ne peut contenir que des chiffres, lettres et symboles"
+        }
+    },
+    "errors": {
+        "apiKeyMissing": "Clé API non configurée, veuillez définir la clé API dans le nœud de configuration",
+        "apiKeyAuthFailed": "Échec de l'authentification de la clé API, veuillez vérifier si la clé API dans le nœud de configuration est correcte",
+        "modelMissing": "Nom du modèle manquant, veuillez sélectionner un modèle dans le nœud de configuration",
+        "configNodeNotFound": "Nœud de configuration API non trouvé",
+        "networkError": "Erreur réseau",
+        "executionFailed": "Échec de l'exécution",
+        "toolExecutionFailed": "Échec de l'exécution de l'outil",
+        "unknownError": "Erreur inconnue survenue"
+    },
+    "messages": {
+        "apiConfigInit": "Initialisation du nœud de configuration API",
+        "mcpNotEnabled": "MCP non activé - enableMcp est false",
+        "mcpCommandNotConfigured": "Commande MCP non configurée",
+        "mcpInitStart": "Début de l'initialisation de la connexion MCP",
+        "mcpInitSuccess": "Initialisation MCP réussie",
+        "mcpInitFailed": "Échec de l'initialisation MCP",
+        "aiHelperNodeExists": "Le nœud assistant IA existe déjà, aucune création requise",
+        "aiHelperNodeCreated": "Nœud assistant IA créé automatiquement avec succès",
+        "aiHelperNodeCreating": "Nœud assistant IA non trouvé, création automatique en cours...",
+        "flowCreationSuccess": "Flux créé avec succès !",
+        "toolExecutionSuccess": "Appliqué",
+        "retry": "Réessayer",
+        "apiConfigNotFound": "Nœud de configuration API non trouvé, impossible de créer automatiquement le nœud assistant IA",
+        "initializingAIHelper": "Configuration de setTimeout pour appeler ensureAIHelperNode...",
+        "aiHelperNodeChecking": "setTimeout déclenché, début de l'exécution d'ensureAIHelperNode..."
+    },
+    "status": {
+        "ready": "Prêt",
+        "connected": "Connecté",
+        "disconnected": "Déconnecté",
+        "error": "Erreur"
+    }
+}

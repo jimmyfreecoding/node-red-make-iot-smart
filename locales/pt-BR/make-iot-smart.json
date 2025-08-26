@@ -1,0 +1,90 @@
+{
+    "make-iot-smart": {
+        "paletteLabel": "Assistente IA",
+        "label": {
+            "name": "Nome",
+            "apiConfig": "Configuração API",
+            "aiAssistant": "Assistente IA",
+            "defaultName": "Assistente IA"
+        },
+        "placeholder": {
+            "name": "Digite o nome do nó"
+        },
+        "tips": {
+            "autoHide": "Este nó se oculta automaticamente e é usado para configurar a funcionalidade do assistente IA"
+        }
+    },
+    "common": {
+        "label": {
+            "tip": "Dica:"
+        }
+    },
+    "api-config": {
+        "label": {
+            "name": "Nome",
+            "provider": "Provedor API",
+            "apiKey": "Chave API",
+            "model": "Modelo",
+            "maxTokens": "Máximo de tokens",
+            "useDifferentModels": "Usar modelos diferentes para modos Plan e Act"
+        },
+        "placeholder": {
+            "name": "Nome",
+            "apiKey": "Por favor, digite a chave API"
+        },
+        "tips": {
+            "apiKey": "Esta chave é armazenada localmente e usada apenas para solicitações API desta extensão.",
+            "differentModels": "Alternar entre modos Plan e Act manterá a API e modelo usados no modo anterior. Isso pode ser útil ao usar um modelo de raciocínio poderoso para planejar e depois um modelo de codificação mais barato para executar.",
+            "capabilities": {
+                "noImage": "Sem suporte a imagens",
+                "noBrowser": "Sem suporte ao uso de navegador",
+                "promptCache": "Cache de prompts suportado",
+                "maxInput": "Entrada máxima: 8.000 tokens",
+                "cacheWritePrice": "Preço de escrita do cache: $0,27/milhão de tokens",
+                "cacheReadPrice": "Preço de leitura do cache: $0,07/milhão de tokens",
+                "outputPrice": "Preço de saída: $1,10/milhão de tokens"
+            }
+        },
+        "help": {
+            "description": "O nó de configuração API é usado para armazenar chaves API e seleção de modelos para provedores de serviços IA.",
+            "providers": "Os provedores suportados incluem DeepSeek, OpenAI e Anthropic.",
+            "usage": "Você pode selecionar diferentes modelos para diferentes cenários de uso e opcionalmente usar diferentes modelos para modos Plan e Act."
+        },
+        "validation": {
+            "apiKeyFiltered": "Caracteres ilegais filtrados, a chave API só pode conter números, letras e símbolos"
+        }
+    },
+    "errors": {
+        "apiKeyMissing": "Chave API não configurada, por favor defina a chave API no nó de configuração",
+        "apiKeyAuthFailed": "Falha na autenticação da chave API, por favor verifique se a chave API no nó de configuração está correta",
+        "modelMissing": "Nome do modelo ausente, por favor selecione um modelo no nó de configuração",
+        "configNodeNotFound": "Nó de configuração API não encontrado",
+        "networkError": "Erro de rede",
+        "executionFailed": "Execução falhou",
+        "toolExecutionFailed": "Execução da ferramenta falhou",
+        "unknownError": "Erro desconhecido ocorreu"
+    },
+    "messages": {
+        "apiConfigInit": "Inicialização do nó de configuração API",
+        "mcpNotEnabled": "MCP não habilitado - enableMcp é false",
+        "mcpCommandNotConfigured": "Comando MCP não configurado",
+        "mcpInitStart": "Iniciando inicialização da conexão MCP",
+        "mcpInitSuccess": "Inicialização MCP bem-sucedida",
+        "mcpInitFailed": "Falha na inicialização MCP",
+        "aiHelperNodeExists": "Nó assistente IA já existe, nenhuma criação necessária",
+        "aiHelperNodeCreated": "Nó assistente IA criado automaticamente com sucesso",
+        "aiHelperNodeCreating": "Nó assistente IA não encontrado, criação automática em andamento...",
+        "flowCreationSuccess": "Fluxo criado com sucesso!",
+        "toolExecutionSuccess": "Aplicado",
+        "retry": "Tentar novamente",
+        "apiConfigNotFound": "Nó de configuração API não encontrado, não é possível criar automaticamente o nó assistente IA",
+        "initializingAIHelper": "Configurando setTimeout para chamar ensureAIHelperNode...",
+        "aiHelperNodeChecking": "setTimeout acionado, iniciando execução de ensureAIHelperNode..."
+    },
+    "status": {
+        "ready": "Pronto",
+        "connected": "Conectado",
+        "disconnected": "Desconectado",
+        "error": "Erro"
+    }
+}

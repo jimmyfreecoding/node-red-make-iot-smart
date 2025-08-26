@@ -1,0 +1,76 @@
+{
+    "ai-sidebar": {
+        "sidebar": {
+            "title": "Assistant IA",
+
+            "labels": {
+                "chatHistory": "Historique du chat",
+                "noChatHistory": "Aucun historique de chat",
+                "historySessions": "Sessions historiques",
+                "loadingHistory": "Chargement de l'historique des sessions...",
+                "loadSessionFailed": "Échec du chargement de la session, veuillez réessayer",
+                "noHistoryAvailable": "Aucun historique de chat disponible",
+                "scenarioPrefix": "Scénario :",
+                "noFlowSelected": "Aucun flux sélectionné",
+                "noNodeSelected": "Aucun nœud sélectionné",
+                "unknownFlow": "Flux inconnu",
+                "unknownNode": "Nœud inconnu",
+                "multipleNodesSelected": "nœuds sélectionnés",
+                "type": "Type",
+                "scenario": "Scénario",
+                "general": "Général",
+                "availableScenarios": "Scénarios disponibles",
+                "unknownScenario": "Scénario inconnu",
+                "switchedTo": "Basculé vers",
+                "quickStart": "Démarrage rapide",
+                "loadSession": "Charger la session"
+            },
+            "buttons": {
+                "showConfig": "Afficher la configuration",
+                "send": "Envoyer",
+                "clear": "Effacer",
+                "retry": "Réessayer"
+            },
+            "placeholders": {
+                "inputMessage": "Saisissez votre message..."
+            },
+            "messages": {
+                "developing": "Cette fonctionnalité est en développement",
+                "apiKeyError": "Clé API non configurée ou authentification échouée, ouverture de l'interface de configuration...",
+                "executionFailed": "Échec de l'exécution",
+                "flowCreationSuccess": "Flux créé avec succès !",
+                "toolExecutionFailed": "Échec de l'exécution de l'outil",
+                "networkError": "Erreur réseau",
+                "applied": "Appliqué",
+                "thinking": "Réflexion en cours...",
+                "processing": "Traitement en cours...",
+                "loading": "Chargement...",
+                "error": "Erreur survenue",
+                "noResponse": "Aucune réponse reçue",
+                "scenarioSwitched": "🔄 Basculé vers le scénario **{scenarioName}**\n\n📝 **Description du scénario** : {description}",
+                "welcome": "👋 Bienvenue dans l'Assistant IA Make IoT Smart !\n\n🎯 **Scénario actuel** : {scenarioName}\n\nVeuillez sélectionner un scénario approprié et commencer la conversation :\n• 🎓 **Apprentissage** - Comprendre les concepts et nœuds Node-RED\n• 💡 **Solutions** - Obtenir des suggestions de solutions IoT\n• 🔌 **Intégration** - Intégrer protocoles et systèmes\n• 💻 **Développement** - Optimiser et développer des flux\n• ⚙️ **Configuration** - Configurer l'environnement Node-RED\n• 🖥️ **Gestion** - Gérer et déployer des applications",
+                "fallbackWelcome": "👋 Bienvenue dans l'Assistant IA Make IoT Smart !\n\n🎯 **Scénario actuel** : Apprentissage\n\nVeuillez commencer la conversation, je vous aiderai à comprendre comment utiliser Node-RED."
+            },
+            "errors": {
+                "configRequired": "Veuillez d'abord configurer la clé API",
+                "messageRequired": "Veuillez saisir le contenu du message",
+                "connectionFailed": "Échec de la connexion",
+                "timeout": "Délai d'attente dépassé",
+                "loadFailed": "Échec du chargement",
+                "updateFlowNameFailed": "Échec de la mise à jour du nom du flux :",
+                "updateNodeInfoFailed": "Échec de la mise à jour des informations du nœud :",
+                "scenarioNotFound": "Données du scénario non trouvées"
+            },
+            "scenarios": {
+                "init": "Initialisation du gestionnaire de scénarios",
+                "loadingData": "Chargement des données de scénarios depuis le backend...",
+                "loadSuccess": "Données de scénarios chargées avec succès :",
+                "loadFailed": "Échec du chargement des données de scénarios :",
+                "learning": {
+                    "name": "Apprentissage",
+                    "description": "Apprendre les concepts de nœuds et flux Node-RED"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,76 @@
+{
+    "ai-sidebar": {
+        "sidebar": {
+            "title": "AI助手",
+
+            "labels": {
+                "chatHistory": "聊天歷史",
+                "noChatHistory": "無聊天歷史",
+                "historySessions": "歷史會話",
+                "loadingHistory": "正在載入會話歷史...",
+                "loadSessionFailed": "載入會話失敗，請重試",
+                "noHistoryAvailable": "暫無聊天歷史",
+                "scenarioPrefix": "場景：",
+                "noFlowSelected": "未選擇流程",
+                "noNodeSelected": "未選擇節點",
+                "unknownFlow": "未知流程",
+                "unknownNode": "未知節點",
+                "multipleNodesSelected": "個節點已選擇",
+                "type": "類型",
+                "scenario": "場景",
+                "general": "通用",
+                "availableScenarios": "可用場景",
+                "unknownScenario": "未知場景",
+                "switchedTo": "已切換到",
+                "quickStart": "快速開始",
+                "loadSession": "載入會話"
+            },
+            "buttons": {
+                "showConfig": "顯示配置",
+                "send": "發送",
+                "clear": "清空",
+                "retry": "重試"
+            },
+            "placeholders": {
+                "inputMessage": "輸入您的訊息..."
+            },
+            "messages": {
+                "developing": "此功能正在開發中",
+                "apiKeyError": "API密鑰未配置或認證失敗，正在打開配置介面...",
+                "executionFailed": "執行失敗",
+                "flowCreationSuccess": "流程創建成功！",
+                "toolExecutionFailed": "工具執行失敗",
+                "networkError": "網路錯誤",
+                "applied": "已應用",
+                "thinking": "思考中...",
+                "processing": "處理中...",
+                "loading": "載入中...",
+                "error": "發生錯誤",
+                "noResponse": "未收到回應",
+                "scenarioSwitched": "🔄 已切換到 **{scenarioName}** 場景\n\n📝 **場景描述**: {description}",
+                "welcome": "👋 歡迎使用Make IoT Smart AI助手！\n\n🎯 **當前場景**: {scenarioName}\n\n請選擇合適的場景並開始對話：\n• 🎓 **學習** - 理解Node-RED概念和節點\n• 💡 **解決方案** - 獲取IoT解決方案建議\n• 🔌 **整合** - 整合協定和系統\n• 💻 **開發** - 優化和開發流程\n• ⚙️ **配置** - 配置Node-RED環境\n• 🖥️ **管理** - 管理和部署應用程式",
+                "fallbackWelcome": "👋 歡迎使用Make IoT Smart AI助手！\n\n🎯 **當前場景**: 學習\n\n請開始對話，我將幫助您了解如何使用Node-RED。"
+            },
+            "errors": {
+                "configRequired": "請先配置API密鑰",
+                "messageRequired": "請輸入訊息內容",
+                "connectionFailed": "連接失敗",
+                "timeout": "請求逾時",
+                "loadFailed": "載入失敗",
+                "updateFlowNameFailed": "更新流程名稱失敗：",
+                "updateNodeInfoFailed": "更新節點資訊失敗：",
+                "scenarioNotFound": "未找到場景資料"
+            },
+            "scenarios": {
+                "init": "正在初始化場景管理器",
+                "loadingData": "正在從後端載入場景資料...",
+                "loadSuccess": "場景資料載入成功：",
+                "loadFailed": "場景資料載入失敗：",
+                "learning": {
+                    "name": "學習",
+                    "description": "學習Node-RED節點和流程概念"
+                }
+            }
+        }
+    }
+}

@@ -34,7 +34,7 @@
     // Load language files
     async function loadI18nMessages() {
         // Use RED.i18n.lang() to get current language
-        let lang = 'en-US'; // Default language
+        let lang = 'zh-CN'; // Default language
         
 
         
@@ -57,6 +57,20 @@
             langFile = 'en-US';
         } else if (lang === 'ja' || lang === 'ja-JP') {
             langFile = 'ja';
+        } else if (lang === 'zh-TW') {
+            langFile = 'zh-TW';
+        } else if (lang === 'de') {
+            langFile = 'de';
+        } else if (lang === 'es-ES' || lang === 'es') {
+            langFile = 'es-ES';
+        } else if (lang === 'fr') {
+            langFile = 'fr';
+        } else if (lang === 'ko') {
+            langFile = 'ko';
+        } else if (lang === 'pt-BR' || lang === 'pt') {
+            langFile = 'pt-BR';
+        } else if (lang === 'ru') {
+            langFile = 'ru';
         } else {
             langFile = 'zh-CN';
         }
@@ -149,29 +163,70 @@
     // Monitor Node-RED language changes
     function watchLanguageChange() {
         let currentLang = RED.i18n.lang() || 'zh-CN';
-        
-
+        console.log('🌐 Initial language detected:', currentLang);
         
         // Periodically check for language setting changes
         setInterval(async () => {
             const newLang = RED.i18n.lang() || 'zh-CN';
             const settingsLang = RED.settings ? RED.settings.get('lang') : 'unknown';
             
-
+            console.log('🔍 Language check - Current:', currentLang, 'New:', newLang, 'Settings:', settingsLang);
             
             if (newLang !== currentLang) {
+                console.log('🔄 Language changed from', currentLang, 'to', newLang);
                 currentLang = newLang;
                 await loadI18nMessages(); // Reload language files
-            } else {
-                // Language unchanged
+                
+                // Notify backend to update LangChainManager language
+                try {
+                    console.log('📡 Sending language update to backend:', newLang);
+                    const response = await fetch('/ai-sidebar/update-language', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ language: newLang })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('✅ Backend language updated successfully:', result);
+                    } else {
+                        console.warn('❌ Failed to update backend language:', response.status);
+                    }
+                } catch (error) {
+                    console.warn('❌ Error updating backend language:', error);
+                }
             }
-            // Language check completed
         }, 2000);
     }
     
     // Initialize internationalization after page load
     $(document).ready(async function() {
         await loadI18nMessages();
+        
+        // Initialize backend language on page load
+        const initialLang = getCurrentLanguage();
+        try {
+            console.log('🚀 Initializing backend language:', initialLang);
+            const response = await fetch('/ai-sidebar/update-language', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ language: initialLang })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Backend language initialized successfully:', result);
+            } else {
+                console.warn('❌ Failed to initialize backend language:', response.status);
+            }
+        } catch (error) {
+            console.warn('❌ Error initializing backend language:', error);
+        }
+        
         watchLanguageChange(); // Start language change monitoring
     })
     window.addEventListener('error', function(e) {

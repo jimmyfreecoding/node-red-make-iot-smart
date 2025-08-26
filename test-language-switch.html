@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Language Switch Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Language Switch Test</h1>
+    
+    <div class="test-section">
+        <h2>Manual Language Switch Test</h2>
+        <button onclick="testLanguageSwitch('zh-CN')">Switch to Chinese</button>
+        <button onclick="testLanguageSwitch('en-US')">Switch to English</button>
+        <button onclick="testLanguageSwitch('ja-JP')">Switch to Japanese</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Current Language Status</h2>
+        <p>Current Language: <span id="current-lang">Loading...</span></p>
+        <button onclick="checkCurrentLanguage()">Check Current Language</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Logs</h2>
+        <div id="logs" class="log"></div>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <script>
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('logs');
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function testLanguageSwitch(language) {
+            log(`🔄 Testing language switch to: ${language}`);
+            
+            try {
+                const response = await fetch('/ai-sidebar/update-language', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ language: language })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    log(`✅ Language switch successful: ${JSON.stringify(result)}`);
+                } else {
+                    log(`❌ Language switch failed: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                log(`❌ Error during language switch: ${error.message}`);
+            }
+        }
+        
+        function checkCurrentLanguage() {
+            // This would normally check RED.i18n.lang() but since we're not in Node-RED context,
+            // we'll just show a placeholder
+            const currentLang = 'Not available (outside Node-RED context)';
+            document.getElementById('current-lang').textContent = currentLang;
+            log(`🔍 Current language check: ${currentLang}`);
+        }
+        
+        // Initialize
+        window.onload = function() {
+            log('🚀 Language switch test page loaded');
+            checkCurrentLanguage();
+        };
+    </script>
+</body>
+</html>

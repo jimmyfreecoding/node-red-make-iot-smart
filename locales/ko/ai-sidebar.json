@@ -1,0 +1,76 @@
+{
+    "ai-sidebar": {
+        "sidebar": {
+            "title": "AI 어시스턴트",
+
+            "labels": {
+                "chatHistory": "채팅 기록",
+                "noChatHistory": "채팅 기록 없음",
+                "historySessions": "기록 세션",
+                "loadingHistory": "세션 기록 로딩 중...",
+                "loadSessionFailed": "세션 로드 실패, 다시 시도해 주세요",
+                "noHistoryAvailable": "사용 가능한 채팅 기록 없음",
+                "scenarioPrefix": "시나리오:",
+                "noFlowSelected": "선택된 플로우 없음",
+                "noNodeSelected": "선택된 노드 없음",
+                "unknownFlow": "알 수 없는 플로우",
+                "unknownNode": "알 수 없는 노드",
+                "multipleNodesSelected": "개 노드 선택됨",
+                "type": "유형",
+                "scenario": "시나리오",
+                "general": "일반",
+                "availableScenarios": "사용 가능한 시나리오",
+                "unknownScenario": "알 수 없는 시나리오",
+                "switchedTo": "전환됨",
+                "quickStart": "빠른 시작",
+                "loadSession": "세션 로드"
+            },
+            "buttons": {
+                "showConfig": "설정 표시",
+                "send": "전송",
+                "clear": "지우기",
+                "retry": "다시 시도"
+            },
+            "placeholders": {
+                "inputMessage": "메시지를 입력하세요..."
+            },
+            "messages": {
+                "developing": "이 기능은 개발 중입니다",
+                "apiKeyError": "API 키가 구성되지 않았거나 인증에 실패했습니다. 설정 인터페이스를 여는 중...",
+                "executionFailed": "실행 실패",
+                "flowCreationSuccess": "플로우 생성 성공!",
+                "toolExecutionFailed": "도구 실행 실패",
+                "networkError": "네트워크 오류",
+                "applied": "적용됨",
+                "thinking": "생각 중...",
+                "processing": "처리 중...",
+                "loading": "로딩 중...",
+                "error": "오류 발생",
+                "noResponse": "응답을 받지 못했습니다",
+                "scenarioSwitched": "🔄 **{scenarioName}** 시나리오로 전환됨\n\n📝 **시나리오 설명**: {description}",
+                "welcome": "👋 Make IoT Smart AI 어시스턴트에 오신 것을 환영합니다!\n\n🎯 **현재 시나리오**: {scenarioName}\n\n적절한 시나리오를 선택하고 대화를 시작하세요:\n• 🎓 **학습** - Node-RED 개념과 노드 이해\n• 💡 **솔루션** - IoT 솔루션 제안 받기\n• 🔌 **통합** - 프로토콜과 시스템 통합\n• 💻 **개발** - 플로우 최적화 및 개발\n• ⚙️ **구성** - Node-RED 환경 구성\n• 🖥️ **관리** - 애플리케이션 관리 및 배포",
+                "fallbackWelcome": "👋 Make IoT Smart AI 어시스턴트에 오신 것을 환영합니다!\n\n🎯 **현재 시나리오**: 학습\n\n대화를 시작해 주세요. Node-RED 사용법을 이해하는 데 도움을 드리겠습니다."
+            },
+            "errors": {
+                "configRequired": "먼저 API 키를 구성해 주세요",
+                "messageRequired": "메시지 내용을 입력해 주세요",
+                "connectionFailed": "연결 실패",
+                "timeout": "요청 시간 초과",
+                "loadFailed": "로드 실패",
+                "updateFlowNameFailed": "플로우 이름 업데이트 실패:",
+                "updateNodeInfoFailed": "노드 정보 업데이트 실패:",
+                "scenarioNotFound": "시나리오 데이터를 찾을 수 없습니다"
+            },
+            "scenarios": {
+                "init": "시나리오 관리자 초기화 중",
+                "loadingData": "백엔드에서 시나리오 데이터 로딩 중...",
+                "loadSuccess": "시나리오 데이터 로드 성공:",
+                "loadFailed": "시나리오 데이터 로드 실패:",
+                "learning": {
+                    "name": "학습",
+                    "description": "Node-RED 노드와 플로우 개념 학습"
+                }
+            }
+        }
+    }
+}

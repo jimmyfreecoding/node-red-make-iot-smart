@@ -1,0 +1,90 @@
+{
+    "make-iot-smart": {
+        "paletteLabel": "AI助手",
+        "label": {
+            "name": "名稱",
+            "apiConfig": "API配置",
+            "aiAssistant": "AI助手",
+            "defaultName": "AI助手"
+        },
+        "placeholder": {
+            "name": "輸入節點名稱"
+        },
+        "tips": {
+            "autoHide": "此節點會自動隱藏，用於配置AI助手功能"
+        }
+    },
+    "common": {
+        "label": {
+            "tip": "提示:"
+        }
+    },
+    "api-config": {
+        "label": {
+            "name": "名稱",
+            "provider": "API提供商",
+            "apiKey": "API密鑰",
+            "model": "模型",
+            "maxTokens": "最大令牌數",
+            "useDifferentModels": "為Plan和Act模式使用不同模型"
+        },
+        "placeholder": {
+            "name": "名稱",
+            "apiKey": "請輸入API密鑰"
+        },
+        "tips": {
+            "apiKey": "此密鑰儲存在本地，僅用於從此擴展發出API請求。",
+            "differentModels": "在Plan和Act模式之間切換將保留上一模式中使用的API和模型。這在使用強大的推理模型來制定計劃，然後使用更便宜的編碼模型來執行時可能會有所幫助。",
+            "capabilities": {
+                "noImage": "不支援圖像",
+                "noBrowser": "不支援瀏覽器使用",
+                "promptCache": "支援提示快取",
+                "maxInput": "最大輸入：8,000 tokens",
+                "cacheWritePrice": "快取寫入價格：$0.27/百萬tokens",
+                "cacheReadPrice": "快取讀取價格：$0.07/百萬tokens",
+                "outputPrice": "輸出價格：$1.10/百萬tokens"
+            }
+        },
+        "help": {
+            "description": "API配置節點用於儲存AI服務提供商的API密鑰和模型選擇。",
+            "providers": "支援的提供商包括DeepSeek、OpenAI和Anthropic。",
+            "usage": "您可以為不同的使用場景選擇不同的模型，並可以選擇為Plan和Act模式使用不同的模型。"
+        },
+        "validation": {
+            "apiKeyFiltered": "已過濾非法字元，API密鑰只能包含數字、字母和符號"
+        }
+    },
+    "errors": {
+        "apiKeyMissing": "API密鑰未配置，請在配置節點中設定API密鑰",
+        "apiKeyAuthFailed": "API密鑰認證失敗，請檢查配置節點中的API密鑰是否正確",
+        "modelMissing": "模型名稱缺失，請在配置節點中選擇模型",
+        "configNodeNotFound": "未找到API配置節點",
+        "networkError": "網路錯誤",
+        "executionFailed": "執行失敗",
+        "toolExecutionFailed": "工具執行失敗",
+        "unknownError": "發生未知錯誤"
+    },
+    "messages": {
+        "apiConfigInit": "API配置節點初始化",
+        "mcpNotEnabled": "MCP未啟用 - enableMcp為false",
+        "mcpCommandNotConfigured": "MCP命令未配置",
+        "mcpInitStart": "開始初始化MCP連接",
+        "mcpInitSuccess": "MCP初始化成功",
+        "mcpInitFailed": "MCP初始化失敗",
+        "aiHelperNodeExists": "AI助手節點已存在，無需創建",
+        "aiHelperNodeCreated": "AI助手節點自動創建成功",
+        "aiHelperNodeCreating": "未找到AI助手節點，自動創建中...",
+        "flowCreationSuccess": "流程創建成功！",
+        "toolExecutionSuccess": "已應用",
+        "retry": "重試",
+        "apiConfigNotFound": "未找到API配置節點，無法自動創建AI助手節點",
+        "initializingAIHelper": "設定setTimeout來調用ensureAIHelperNode...",
+        "aiHelperNodeChecking": "setTimeout觸發，開始執行ensureAIHelperNode..."
+    },
+    "status": {
+        "ready": "就緒",
+        "connected": "已連接",
+        "disconnected": "已斷開",
+        "error": "錯誤"
+    }
+}
