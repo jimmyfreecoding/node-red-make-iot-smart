@@ -4372,5 +4372,56 @@
         "x": 950,
         "y": 160,
         "wires": []
+    },
+    {
+        "type": "tab",
+        "label": "新流程",
+        "id": "ee359f5a03165d83"
+    },
+    {
+        "id": "809bade71c8551e6",
+        "type": "http in",
+        "name": "接收HTTP请求",
+        "url": "/api/data",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "83639557b034f9f1"
+            ]
+        ],
+        "z": "ee359f5a03165d83"
+    },
+    {
+        "id": "83639557b034f9f1",
+        "type": "function",
+        "name": "处理请求数据",
+        "func": "// 处理接收到的HTTP请求数据\nmsg.payload = {\n    status: \"success\",\n    message: \"数据接收成功\",\n    receivedData: msg.payload,\n    timestamp: new Date().toISOString(),\n    requestMethod: msg.req.method\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 350,
+        "y": 100,
+        "wires": [
+            [
+                "469b7995f1435114"
+            ]
+        ],
+        "z": "ee359f5a03165d83"
+    },
+    {
+        "id": "469b7995f1435114",
+        "type": "http response",
+        "name": "返回HTTP响应",
+        "statusCode": "",
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "x": 550,
+        "y": 100,
+        "wires": [],
+        "z": "ee359f5a03165d83"
     }
 ]

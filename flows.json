@@ -4423,5 +4423,224 @@
         "y": 100,
         "wires": [],
         "z": "ee359f5a03165d83"
+    },
+    {
+        "type": "tab",
+        "label": "New Flow",
+        "id": "be3e28555406e245"
+    },
+    {
+        "id": "250a6ec480c47db1",
+        "type": "inject",
+        "name": "Trigger Demo",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "demo-message",
+        "payload": "Hello from Node-RED!",
+        "payloadType": "str",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "430f593aadd2774b",
+                "f2f307bd4450e8e8"
+            ]
+        ],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "430f593aadd2774b",
+        "type": "function",
+        "name": "Process Message",
+        "func": "// Add timestamp and process the message\nmsg.payload = {\n    original: msg.payload,\n    processed: msg.payload.toUpperCase(),\n    timestamp: new Date().toISOString(),\n    length: msg.payload.length\n};\n\n// Add some metadata\nmsg.processed = true;\nmsg.node = \"function-process\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 100,
+        "wires": [
+            [
+                "7fe2f3717c38905c"
+            ]
+        ],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "f2f307bd4450e8e8",
+        "type": "debug",
+        "name": "Original Message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 350,
+        "y": 60,
+        "wires": [],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "7fe2f3717c38905c",
+        "type": "debug",
+        "name": "Processed Message",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 550,
+        "y": 100,
+        "wires": [],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "15372c46a4b9485d",
+        "type": "http in",
+        "name": "HTTP Input",
+        "url": "/demo",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 160,
+        "wires": [
+            [
+                "d415069ecee6678f"
+            ]
+        ],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "d415069ecee6678f",
+        "type": "http response",
+        "name": "HTTP Response",
+        "statusCode": "",
+        "headers": {
+            "content-type": "application/json"
+        },
+        "x": 350,
+        "y": 160,
+        "wires": [],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "e8f7112f9849b56e",
+        "type": "template",
+        "name": "HTML Template",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<!DOCTYPE html>\n<html>\n<head>\n    <title>Node-RED Demo</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 40px; }\n        .demo { background: #f0f0f0; padding: 20px; border-radius: 5px; }\n    </style>\n</head>\n<body>\n    <div class=\"demo\">\n        <h1>Node-RED Demo Flow</h1>\n        <p>Current time: {{timestamp}}</p>\n        <p>Message: {{message}}</p>\n    </div>\n</body>\n</html>",
+        "output": "str",
+        "x": 350,
+        "y": 200,
+        "wires": [
+            [
+                "3982b393f6a3e8f4"
+            ]
+        ],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "b0b2cfed395be6ab",
+        "type": "http in",
+        "name": "HTML Endpoint",
+        "url": "/demo/html",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 200,
+        "wires": [
+            [
+                "e8f7112f9849b56e"
+            ]
+        ],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "3982b393f6a3e8f4",
+        "type": "http response",
+        "name": "HTML Response",
+        "statusCode": "",
+        "headers": {
+            "content-type": "text/html"
+        },
+        "x": 550,
+        "y": 200,
+        "wires": [],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "37ab268c495d5b3c",
+        "type": "change",
+        "name": "Set Timestamp",
+        "rules": [
+            {
+                "t": "set",
+                "p": "timestamp",
+                "pt": "msg",
+                "to": "$now()",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "message",
+                "pt": "msg",
+                "to": "Hello from HTML Template!",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 240,
+        "wires": [
+            [
+                "e8f7112f9849b56e"
+            ]
+        ],
+        "z": "be3e28555406e245"
+    },
+    {
+        "id": "265d0b84296fc9ab",
+        "type": "http in",
+        "name": "Dynamic HTML",
+        "url": "/demo/dynamic",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 240,
+        "wires": [
+            [
+                "37ab268c495d5b3c"
+            ]
+        ],
+        "z": "be3e28555406e245"
     }
 ]
