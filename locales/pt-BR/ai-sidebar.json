@@ -24,7 +24,10 @@
                 "unknownScenario": "Cenário desconhecido",
                 "switchedTo": "Alternado para",
                 "quickStart": "Início rápido",
-                "loadSession": "Carregar sessão"
+                "loadSession": "Carregar sessão",
+                "switchedToSession": "Alternado para sessão",
+                "switchedToNewSession": "Alternado para nova sessão",
+                "switchedToSessionFailed": "Alternado para sessão (falha ao carregar histórico)"
             },
             "buttons": {
                 "showConfig": "Mostrar configuração",

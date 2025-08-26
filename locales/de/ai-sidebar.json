@@ -24,7 +24,10 @@
                 "unknownScenario": "Unbekanntes Szenario",
                 "switchedTo": "Gewechselt zu",
                 "quickStart": "Schnellstart",
-                "loadSession": "Sitzung laden"
+                "loadSession": "Sitzung laden",
+                "switchedToSession": "Zur Sitzung gewechselt",
+                "switchedToNewSession": "Zu neuer Sitzung gewechselt",
+                "switchedToSessionFailed": "Zur Sitzung gewechselt (Verlauf konnte nicht geladen werden)"
             },
             "buttons": {
                 "showConfig": "Konfiguration anzeigen",

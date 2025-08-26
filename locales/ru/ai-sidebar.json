@@ -24,7 +24,10 @@
                 "unknownScenario": "Неизвестный сценарий",
                 "switchedTo": "Переключено на",
                 "quickStart": "Быстрый старт",
-                "loadSession": "Загрузить сессию"
+                "loadSession": "Загрузить сессию",
+                "switchedToSession": "Переключено на сессию",
+                "switchedToNewSession": "Переключено на новую сессию",
+                "switchedToSessionFailed": "Переключено на сессию (не удалось загрузить историю)"
             },
             "buttons": {
                 "showConfig": "Показать конфигурацию",

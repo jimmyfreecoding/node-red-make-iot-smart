@@ -26,7 +26,10 @@
                 "unknownScenario": "Unknown scenario",
                 "switchedTo": "Switched to",
                 "quickStart": "Quick Start",
-                "loadSession": "Load Session"
+                "loadSession": "Load Session",
+                "switchedToSession": "Switched to session",
+                "switchedToNewSession": "Switched to new session",
+                "switchedToSessionFailed": "Switched to session (history loading failed)"
             },
             "buttons": {
                 "showConfig": "Settings",

@@ -24,7 +24,10 @@
                 "unknownScenario": "Escenario desconocido",
                 "switchedTo": "Cambiado a",
                 "quickStart": "Inicio rápido",
-                "loadSession": "Cargar sesión"
+                "loadSession": "Cargar sesión",
+                "switchedToSession": "Cambiado a sesión",
+                "switchedToNewSession": "Cambiado a nueva sesión",
+                "switchedToSessionFailed": "Cambiado a sesión (falló la carga del historial)"
             },
             "buttons": {
                 "showConfig": "Mostrar configuración",

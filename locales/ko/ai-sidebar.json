@@ -24,7 +24,10 @@
                 "unknownScenario": "알 수 없는 시나리오",
                 "switchedTo": "전환됨",
                 "quickStart": "빠른 시작",
-                "loadSession": "세션 로드"
+                "loadSession": "세션 로드",
+                "switchedToSession": "세션으로 전환됨",
+                "switchedToNewSession": "새 세션으로 전환됨",
+                "switchedToSessionFailed": "세션으로 전환됨 (히스토리 로드 실패)"
             },
             "buttons": {
                 "showConfig": "설정 표시",

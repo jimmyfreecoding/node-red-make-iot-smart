@@ -24,7 +24,10 @@
                 "unknownScenario": "未知場景",
                 "switchedTo": "已切換到",
                 "quickStart": "快速開始",
-                "loadSession": "載入會話"
+                "loadSession": "載入會話",
+                "switchedToSession": "已切換到會話",
+                "switchedToNewSession": "已切換到新會話",
+                "switchedToSessionFailed": "已切換到會話（歷史記錄載入失敗）"
             },
             "buttons": {
                 "showConfig": "顯示配置",

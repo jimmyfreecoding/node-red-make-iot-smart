@@ -2619,7 +2619,7 @@
                 
                 if (response.history && response.history.length > 0) {
                     // Add system prompt message
-                    addMessageToChat('system', `📋 Switched to session: ${sessionId.substring(0, 8)}`);
+                    addMessageToChat('system', `📋 ${_('sidebar.labels.switchedToSession')}: ${sessionId.substring(0, 8)}`);
                     
                     // Redisplay historical conversations in chronological order (oldest first)
                     response.history.forEach(function(msg, index) {
@@ -2630,7 +2630,7 @@
                     // Session history loaded
                 } else {
                     // Add system prompt message
-                    addMessageToChat('system', `📋 Switched to new session: ${sessionId.substring(0, 8)}`);
+                    addMessageToChat('system', `📋 ${_('sidebar.labels.switchedToNewSession')}: ${sessionId.substring(0, 8)}`);
                 }
                 
                 // Scroll to bottom
@@ -2641,7 +2641,7 @@
             error: function(xhr, status, error) {
                 // Switch session ID even if failed
                 $('#augment-chat-messages').empty();
-                addMessageToChat('system', `⚠️ Switched to session: ${sessionId.substring(0, 8)} (history loading failed)`);
+                addMessageToChat('system', `⚠️ ${_('sidebar.labels.switchedToSessionFailed')}: ${sessionId.substring(0, 8)}`);
             }
         });
     }

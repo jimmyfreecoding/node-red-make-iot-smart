@@ -24,7 +24,10 @@
                 "unknownScenario": "不明なシナリオ",
                 "switchedTo": "切り替えました：",
                 "quickStart": "クイックスタート",
-                "loadSession": "セッションを読み込む"
+                "loadSession": "セッションを読み込む",
+                "switchedToSession": "セッションに切り替えました",
+                "switchedToNewSession": "新しいセッションに切り替えました",
+                "switchedToSessionFailed": "セッションに切り替えました（履歴の読み込みに失敗）"
             },
             "buttons": {
                 "showConfig": "設定を表示",
