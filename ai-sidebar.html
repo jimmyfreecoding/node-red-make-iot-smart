@@ -106,11 +106,13 @@
             updateUITexts();
         } catch (error) {
 
-            // Use default Chinese text
+            // Use default English text as fallback
             i18nMessages = {
                 sidebar: {
-                    title: '智能助手',
-                    welcome: '欢迎使用AI助手！'
+                    title: 'AI Assistant',
+                    messages: {
+                        welcome: 'Welcome to AI Assistant!'
+                    }
                 }
             };
             updateUITexts();
@@ -860,7 +862,7 @@
             case 'tool_call':
                 // Show tool call information (only when tool name is valid)
                 if (currentStreamMessageId && data.tool_name && data.tool_name !== 'undefined') {
-                    var toolInfo = `🔧 调用工具: ${data.tool_name}\n参数: ${JSON.stringify(data.arguments, null, 2)}\n`;
+                    var toolInfo = `🔧 ${_("sidebar.messages.toolCalling")}: ${data.tool_name}\n${_("sidebar.messages.parameters")}: ${JSON.stringify(data.arguments, null, 2)}\n`;
                     appendToMessage(currentStreamMessageId, toolInfo);
                 }
                 break;
@@ -868,7 +870,7 @@
             case 'tool_result':
                 // Show tool execution result
                 if (currentStreamMessageId) {
-                    var resultInfo = `✅ 工具执行成功\n\n`;
+                    var resultInfo = `✅ ${_("sidebar.messages.toolExecutionSuccess")}\n\n`;
                     
                     // If there's specific result data, show formatted result
                     if (data.result) {
@@ -891,7 +893,7 @@
                                         try {
                                             // Try to parse nested JSON configuration
                                             var configData = JSON.parse(contentItem.text);
-                                            resultInfo += '**Node-RED 配置信息：**\n\n```json\n' + JSON.stringify(configData, null, 2) + '\n```\n\n';
+                                            resultInfo += '**' + _('sidebar.messages.nodeRedConfigInfo') + '**\n\n```json\n' + JSON.stringify(configData, null, 2) + '\n```\n\n';
                                         } catch (e) {
                                             // If not JSON, show text directly
                                             resultInfo += contentItem.text + '\n\n';
@@ -900,7 +902,7 @@
                                 }
                             } else {
                                 // Other format results, show directly
-                                resultInfo += '**结果：**\n\n```\n' + (typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult, null, 2)) + '\n```\n\n';
+                                resultInfo += '**' + _('sidebar.messages.result') + '**\n\n```\n' + (typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult, null, 2)) + '\n```\n\n';
                             }
                         } catch (e) {
                             resultInfo += '**结果：**\n\n```\n' + data.result + '\n```\n\n';
@@ -3781,7 +3783,7 @@
                 result = result.replace(/<code([^>]*)>([\s\S]*?)<\/code>/g, function(match, attrs, codeContent) {
                     // Find escaped button HTML in code blocks and restore
                     var processedContent = codeContent
-                        .replace(/&lt;button class=&quot;code-view-btn&quot;[\s\S]*?&gt;查看代码&lt;\/button&gt;/g, 
+                        .replace(new RegExp('&lt;button class=&quot;code-view-btn&quot;[\\s\\S]*?&gt;' + _('sidebar.messages.viewCode') + '&lt;\\/button&gt;', 'g'), 
                             function(buttonMatch) {
                                 // Fully decode button HTML
                                 var decodedButton = buttonMatch
@@ -4220,7 +4222,7 @@
                                 padding: 0 4px;
                                 line-height: 1;
                             ">
-                                <span id="scenario-label" data-i18n="ai-sidebar.sidebar.labels.scenarioPrefix">Scenario:</span><span id="current-scenario-name" style="font-weight: 500;">General</span>
+                                <span id="current-scenario-name" style="font-weight: 500;">General</span>
                             </span>
                         </button>
                     
