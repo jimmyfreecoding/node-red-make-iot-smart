@@ -2,7 +2,7 @@
     "ai-sidebar": {
         "sidebar": {
             "title": "AI Assistant",
-            "test": "Test Text",
+
             "labels": {
                 "chatHistory": "Chat History",
                 "noChatHistory": "No chat history",

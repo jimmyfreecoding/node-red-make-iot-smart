@@ -2,7 +2,7 @@
     "ai-sidebar": {
         "sidebar": {
             "title": "AI助手",
-            "test": "测试文本",
+
             "labels": {
                 "chatHistory": "聊天历史",
                 "noChatHistory": "无聊天历史",

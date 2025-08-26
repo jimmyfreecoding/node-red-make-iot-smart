@@ -2,7 +2,7 @@
     "ai-sidebar": {
         "sidebar": {
             "title": "AIアシスタント",
-            "test": "テストテキスト",
+
             "labels": {
                 "chatHistory": "チャット履歴",
                 "noChatHistory": "チャット履歴がありません",
