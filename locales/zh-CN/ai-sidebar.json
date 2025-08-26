@@ -57,6 +57,15 @@
                 "welcome": "👋 欢迎使用Make IoT Smart AI助手！\n\n🎯 **当前场景**: {scenarioName}\n\n请选择合适的场景并开始对话：\n• 🎓 **学习** - 理解Node-RED概念和节点\n• 💡 **解决方案** - 获取IoT解决方案建议\n• 🔌 **集成** - 集成协议和系统\n• 💻 **开发** - 优化和开发流程\n• ⚙️ **配置** - 配置Node-RED环境\n• 🖥️ **管理** - 管理和部署应用程序",
                 "fallbackWelcome": "👋 欢迎使用Make IoT Smart AI助手！\n\n🎯 **当前场景**: 学习\n\n请开始对话，我将帮助您了解如何使用Node-RED。"
             },
+            "toolCalls": {
+                "getFlowPrompt": "请使用get-flow工具获取流程ID为\"{flowId}\"的流程数据，然后分析和解释这个流程的功能、节点连接关系和工作原理。\n\n用户原始请求：{originalMessage}",
+                "getNodeInfoPrompt": "请使用get-node-info工具获取节点ID为[{nodeIds}]的详细信息，然后分析和解释{nodeDescription}的功能、配置和作用。\n\n用户原始请求：{originalMessage}",
+                "noFlowSelectedWarning": "注意：当前没有选中具体的流程，请先在Node-RED编辑器中选择要分析的流程标签页。",
+                "noNodeSelectedWarning": "注意：当前没有选中具体的节点，请先在Node-RED编辑器中选择要分析的节点。",
+                "singleNodeDescription": "节点\"{nodeName}\"(类型: {nodeType})",
+                "multipleNodesDescription": "{nodeCount}个选中节点",
+                "flowDetectionLog": "检测到流程解释请求，传递流程ID:"
+            },
             "errors": {
                 "configRequired": "请先配置API密钥",
                 "messageRequired": "请输入消息内容",

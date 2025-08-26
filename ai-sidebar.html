@@ -54,7 +54,7 @@
         // Support multiple language formats
         let langFile;
         if (lang === 'en-US' || lang === 'en') {
-            langFile = 'en-US';
+            langFile = 'en';
         } else if (lang === 'ja' || lang === 'ja-JP') {
             langFile = 'ja';
         } else if (lang === 'zh-TW') {
@@ -62,7 +62,7 @@
         } else if (lang === 'de') {
             langFile = 'de';
         } else if (lang === 'es-ES' || lang === 'es') {
-            langFile = 'es-ES';
+            langFile = 'es';
         } else if (lang === 'fr') {
             langFile = 'fr';
         } else if (lang === 'ko') {
@@ -174,6 +174,7 @@
             
             console.log('🔍 Language check - Current:', currentLang, 'New:', newLang, 'Settings:', settingsLang);
             
+
             if (newLang !== currentLang) {
                 console.log('🔄 Language changed from', currentLang, 'to', newLang);
                 currentLang = newLang;
@@ -381,17 +382,14 @@
 
                 return;
             }
-            
             // Update input placeholder
-            $("#augment-chat-input").attr('placeholder', _("sidebar.placeholders.scenarioInput").replace("{scenarioName}", scenario.name));
+            $("#augment-chat-input").attr('placeholder', _("sidebar.placeholders.inputMessage").replace("{scenarioName}", scenario.name));
             
             // Update selector value
             $("#scenario-selector").val(this.currentScenario);
             
             // Update current scenario display
             $("#current-scenario-name").text(scenario.name);
-            
-            console.log(_("sidebar.scenarios.uiUpdated"), this.currentScenario, scenario.name);
         },
         
         getCurrentScenario: function() {
@@ -478,6 +476,9 @@
         $("#augment-attach-file").on("click", function() {
             RED.notify(_("sidebar.messages.developing"), "info");
         });
+
+        // Apply custom internationalization to elements with data-i18n attributes
+        updateUITexts();
 
         // Note: @ button event binding moved to sidebar initialization
     }
@@ -691,13 +692,15 @@
             // If there's a selected flow, pass flow ID to get-flow tool
             if (selectedFlow && selectedFlow.id) {
                 dynamicData.flowId = selectedFlow.id;
-                console.log('检测到流程解释请求，传递流程ID:', selectedFlow.id);
+                console.log(_('sidebar.toolCalls.flowDetectionLog'), selectedFlow.id);
                 
                 // Modify message to include tool call instruction
-                sendMessage = `请使用get-flow工具获取流程ID为"${selectedFlow.id}"的流程数据，然后分析和解释这个流程的功能、节点连接关系和工作原理。\n\n用户原始请求：${sendMessage}`;
+                const promptTemplate = _('sidebar.toolCalls.getFlowPrompt');
+                console.log("promptTemplate",promptTemplate)
+                sendMessage = promptTemplate.replace('{flowId}', selectedFlow.id).replace('{originalMessage}', sendMessage);
             } else {
                 // Prompt when no flow is selected
-                sendMessage = `${sendMessage}\n\n注意：当前没有选中具体的流程，请先在Node-RED编辑器中选择要分析的流程标签页。`;
+                sendMessage = `${sendMessage}\n\n${_('sidebar.toolCalls.noFlowSelectedWarning')}`;
             }
         }
         
@@ -719,13 +722,20 @@
                 // Modify message to include tool call instruction and explicit node IDs
                 const nodeIds = selectedNodes.map(n => n.id);
                 const nodeDescription = selectedNodes.length === 1 
-                    ? `节点"${selectedNodes[0].name || selectedNodes[0].type}"(类型: ${selectedNodes[0].type})`
-                    : `${selectedNodes.length}个选中节点`;
+                    ? _('sidebar.toolCalls.singleNodeDescription')
+                        .replace('{nodeName}', selectedNodes[0].name || selectedNodes[0].type)
+                        .replace('{nodeType}', selectedNodes[0].type)
+                    : _('sidebar.toolCalls.multipleNodesDescription')
+                        .replace('{nodeCount}', selectedNodes.length);
                     
-                sendMessage = `请使用get-node-info工具获取节点ID为[${nodeIds.map(id => `"${id}"`).join(', ')}]的详细信息，然后分析和解释${nodeDescription}的功能、配置和作用。\n\n用户原始请求：${sendMessage}`;
+                const nodePromptTemplate = _('sidebar.toolCalls.getNodeInfoPrompt');
+                sendMessage = nodePromptTemplate
+                    .replace('{nodeIds}', nodeIds.map(id => `"${id}"`).join(', '))
+                    .replace('{nodeDescription}', nodeDescription)
+                    .replace('{originalMessage}', sendMessage);
             } else {
                 // Prompt when no nodes are selected
-                sendMessage = `${sendMessage}\n\n注意：当前没有选中具体的节点，请先在Node-RED编辑器中选择要分析的节点。`;
+                sendMessage = `${sendMessage}\n\n${_('sidebar.toolCalls.noNodeSelectedWarning')}`;
             }
         }
         
@@ -3937,7 +3947,10 @@
         // Initialize scenario manager immediately, not dependent on sidebar display
         
         // Delayed initialization to ensure DOM elements are loaded
-        setTimeout(() => {
+        setTimeout(async () => {
+                    // Ensure i18n messages are loaded before initializing scenario manager
+                    await loadI18nMessages();
+                    
                     // Update context information
                     updateCurrentFlowName();
                     updateSelectedNodeInfo();
@@ -4244,7 +4257,7 @@
                         gap: 6px;
                     " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
                         <i class="fa fa-paper-plane"></i>
-                        <span id="send-button-text">Send</span>
+                        <span id="send-button-text"  data-i18n="ai-sidebar.sidebar.buttons.send">Send</span>
                     </button>
                 </div>
             </div>
