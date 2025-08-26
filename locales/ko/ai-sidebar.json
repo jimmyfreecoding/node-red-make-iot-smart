@@ -7,6 +7,7 @@
                 "chatHistory": "채팅 기록",
                 "noChatHistory": "채팅 기록 없음",
                 "historySessions": "기록 세션",
+                "clearHistory": "기록 삭제",
                 "loadingHistory": "세션 기록 로딩 중...",
                 "loadSessionFailed": "세션 로드 실패, 다시 시도해 주세요",
                 "noHistoryAvailable": "사용 가능한 채팅 기록 없음",
@@ -71,11 +72,22 @@
             "scenarios": {
                 "init": "시나리오 관리자 초기화 중",
                 "loadingData": "백엔드에서 시나리오 데이터 로딩 중...",
-                "loadSuccess": "시나리오 데이터 로드 성공:",
-                "loadFailed": "시나리오 데이터 로드 실패:",
+                "loadSuccess": "시나리오 데이터가 성공적으로 로드되었습니다:",
+                "loadFailed": "시나리오 데이터 로드에 실패했습니다:",
                 "learning": {
                     "name": "학습",
-                    "description": "Node-RED 노드와 플로우 개념 학습"
+                    "description": "Node-RED 노드 및 플로우 개념 학습"
+                }
+            },
+            "confirmations": {
+                "clearAllHistory": {
+                    "title": "모든 기록 삭제",
+                    "message": "이 작업은 모든 채팅 세션을 영구적으로 삭제하며 되돌릴 수 없습니다. 계속하시겠습니까?",
+                    "confirm": "모두 삭제",
+                    "cancel": "취소",
+                    "clearing": "삭제 중...",
+                    "success": "모든 채팅 기록이 성공적으로 삭제되었습니다",
+                    "error": "기록 삭제에 실패했습니다. 다시 시도해 주세요."
                 }
             }
         }

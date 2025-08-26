@@ -6,6 +6,7 @@
                 "chatHistory": "Chat History",
                 "noChatHistory": "No chat history",
                 "historySessions": "History Sessions",
+                "clearHistory": "Clear History",
                 "loadingHistory": "Loading session history...",
                 "loadSessionFailed": "Failed to load session, please retry",
                 "noHistoryAvailable": "No chat history available",

@@ -7,6 +7,7 @@
                 "chatHistory": "聊天历史",
                 "noChatHistory": "无聊天历史",
                 "historySessions": "历史会话",
+                "clearHistory": "清除历史",
                 "loadingHistory": "正在加载会话历史...",
                 "loadSessionFailed": "加载会话失败，请重试",
                 "noHistoryAvailable": "暂无聊天历史",
@@ -86,6 +87,17 @@
                 "learning": {
                     "name": "学习",
                     "description": "学习Node-RED节点和流程概念"
+                }
+            },
+            "confirmations": {
+                "clearAllHistory": {
+                    "title": "清除所有历史记录",
+                    "message": "此操作将永久删除所有聊天会话，无法撤销。您确定要继续吗？",
+                    "confirm": "清除所有",
+                    "cancel": "取消",
+                    "clearing": "清除中...",
+                    "success": "所有聊天历史记录已成功清除",
+                    "error": "清除历史记录失败，请重试"
                 }
             }
         }

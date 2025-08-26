@@ -1032,6 +1032,31 @@ module.exports = function (RED) {
         }
     });
 
+    // 删除所有会话端点
+    RED.httpAdmin.delete('/ai-sidebar/sessions', function(req, res) {
+        try {
+            // 使用全局变量获取配置节点
+            let configNode = null;
+            if (global.apiConfigNode) {
+                configNode = global.apiConfigNode;
+            }
+            
+            if (!configNode) {
+                return res.status(400).json({ error: 'No API configuration found' });
+            }
+
+            const success = configNode.memoryManager.deleteAllSessions();
+            if (success) {
+                res.json({ success: true });
+            } else {
+                res.status(500).json({ error: 'Failed to delete all sessions' });
+            }
+        } catch (error) {
+            // console.error('Delete all sessions endpoint error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     // 搜索对话端点
     RED.httpAdmin.post('/ai-sidebar/search', function(req, res) {
         try {

@@ -54,7 +54,7 @@
         // Support multiple language formats
         let langFile;
         if (lang === 'en-US' || lang === 'en') {
-            langFile = 'en';
+            langFile = 'en-US';
         } else if (lang === 'ja' || lang === 'ja-JP') {
             langFile = 'ja';
         } else if (lang === 'zh-TW') {
@@ -62,7 +62,7 @@
         } else if (lang === 'de') {
             langFile = 'de';
         } else if (lang === 'es-ES' || lang === 'es') {
-            langFile = 'es';
+            langFile = 'es-ES';
         } else if (lang === 'fr') {
             langFile = 'fr';
         } else if (lang === 'ko') {
@@ -2477,7 +2477,7 @@
                                 color: #6b7280;
                                 text-transform: uppercase;
                                 letter-spacing: 0.5px;
-                            " data-i18n="ai-sidebar.sidebar.labels.historySessions">History Sessions</div>
+                            ">${_('sidebar.labels.historySessions')}</div>
                     `;
                     
                     sessions.forEach(function(session, index) {
@@ -2552,7 +2552,7 @@
                         font-size: 11px;
                         cursor: pointer;
                         transition: background-color 0.1s;
-                    " onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">Clear History</button>
+                    " onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">${_('sidebar.labels.clearHistory')}</button>
                 </div>
             `;
             
@@ -2655,8 +2655,222 @@
     
     // Clear chat history
     function clearChatHistory() {
-        $('#augment-chat-messages').empty();
-        // console.log('Chat history cleared');
+        // 创建美观的确认模态框
+        const modalHtml = `
+            <div id="clear-history-modal" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                backdrop-filter: blur(4px);
+            ">
+                <div style="
+                    background: white;
+                    border-radius: 12px;
+                    padding: 24px;
+                    max-width: 400px;
+                    width: 90%;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    animation: modalSlideIn 0.3s ease-out;
+                ">
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 16px;
+                    ">
+                        <div style="
+                            width: 48px;
+                            height: 48px;
+                            background: #fee2e2;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin-right: 16px;
+                        ">
+                            <i class="fa fa-exclamation-triangle" style="
+                                color: #dc2626;
+                                font-size: 20px;
+                            "></i>
+                        </div>
+                        <div>
+                            <h3 style="
+                                margin: 0;
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #111827;
+                            ">${_('sidebar.confirmations.clearAllHistory.title') || 'Clear All History'}</h3>
+                        </div>
+                    </div>
+                    <p style="
+                        margin: 0 0 24px 0;
+                        color: #6b7280;
+                        font-size: 14px;
+                        line-height: 1.5;
+                    ">${_('sidebar.confirmations.clearAllHistory.message') || 'This action will permanently delete all chat sessions and cannot be undone. Are you sure you want to continue?'}</p>
+                    <div style="
+                        display: flex;
+                        gap: 12px;
+                        justify-content: flex-end;
+                    ">
+                        <button id="cancel-clear-history" style="
+                            padding: 8px 16px;
+                            background: #f3f4f6;
+                            color: #374151;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+                            ${_('sidebar.confirmations.clearAllHistory.cancel') || 'Cancel'}
+                        </button>
+                        <button id="confirm-clear-history" style="
+                            padding: 8px 16px;
+                            background: #dc2626;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 14px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">
+                            ${_('sidebar.confirmations.clearAllHistory.confirm') || 'Clear All'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <style>
+                @keyframes modalSlideIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.95) translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+            </style>
+        `;
+        
+        // 添加模态框到页面
+        $('body').append(modalHtml);
+        
+        // 绑定取消按钮事件
+        $('#cancel-clear-history').on('click', function() {
+            $('#clear-history-modal').remove();
+        });
+        
+        // 绑定确认按钮事件
+        $('#confirm-clear-history').on('click', function() {
+            // 显示加载状态
+            $(this).html('<i class="fa fa-spinner fa-spin"></i> ' + (_('sidebar.confirmations.clearAllHistory.clearing') || 'Clearing...'));
+            $(this).prop('disabled', true);
+            
+            // 发送删除请求
+            $.ajax({
+                url: '/ai-sidebar/sessions',
+                method: 'DELETE',
+                success: function(response) {
+                    if (response.success) {
+                        // 清空当前聊天界面
+                        $('#augment-chat-messages').empty();
+                        
+                        // 重置会话ID
+                        currentSessionId = null;
+                        localStorage.removeItem('node-red-ai-session-id');
+                        
+                        // 关闭模态框
+                        $('#clear-history-modal').remove();
+                        
+                        // 关闭历史记录下拉菜单
+                        $('#chat-history-dropdown-menu').hide();
+                        $('#chat-history-dropdown-btn .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                        
+                        // 显示成功消息
+                        showNotification(_('sidebar.confirmations.clearAllHistory.success') || 'All chat history has been cleared successfully', 'success');
+                    } else {
+                        showNotification(_('sidebar.confirmations.clearAllHistory.error') || 'Failed to clear history. Please try again.', 'error');
+                        $('#clear-history-modal').remove();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Failed to clear all sessions:', error);
+                    showNotification(_('sidebar.confirmations.clearAllHistory.error') || 'Failed to clear history. Please try again.', 'error');
+                    $('#clear-history-modal').remove();
+                }
+            });
+        });
+        
+        // 点击模态框背景关闭
+        $('#clear-history-modal').on('click', function(e) {
+            if (e.target === this) {
+                $(this).remove();
+            }
+        });
+        
+        // ESC键关闭模态框
+        $(document).on('keydown.clearHistoryModal', function(e) {
+            if (e.keyCode === 27) { // ESC key
+                $('#clear-history-modal').remove();
+                $(document).off('keydown.clearHistoryModal');
+            }
+        });
+    }
+    
+    // 显示通知消息的辅助函数
+    function showNotification(message, type = 'info') {
+        const notificationHtml = `
+            <div class="ai-notification" style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                z-index: 10001;
+                animation: notificationSlideIn 0.3s ease-out;
+                max-width: 300px;
+                font-size: 14px;
+            ">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            </div>
+            <style>
+                @keyframes notificationSlideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateX(100%);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+            </style>
+        `;
+        
+        $('body').append(notificationHtml);
+        
+        // 3秒后自动移除通知
+        setTimeout(function() {
+            $('.ai-notification').fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 3000);
     }
 
     function saveChatMessage(role, content) {

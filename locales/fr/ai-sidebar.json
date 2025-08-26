@@ -7,6 +7,7 @@
                 "chatHistory": "Historique du chat",
                 "noChatHistory": "Aucun historique de chat",
                 "historySessions": "Sessions historiques",
+                "clearHistory": "Effacer l'Historique",
                 "loadingHistory": "Chargement de l'historique des sessions...",
                 "loadSessionFailed": "Échec du chargement de la session, veuillez réessayer",
                 "noHistoryAvailable": "Aucun historique de chat disponible",
@@ -70,12 +71,23 @@
             },
             "scenarios": {
                 "init": "Initialisation du gestionnaire de scénarios",
-                "loadingData": "Chargement des données de scénarios depuis le backend...",
-                "loadSuccess": "Données de scénarios chargées avec succès :",
-                "loadFailed": "Échec du chargement des données de scénarios :",
+                "loadingData": "Chargement des données de scénario depuis le backend...",
+                "loadSuccess": "Données de scénario chargées avec succès :",
+                "loadFailed": "Échec du chargement des données de scénario :",
                 "learning": {
                     "name": "Apprentissage",
-                    "description": "Apprendre les concepts de nœuds et flux Node-RED"
+                    "description": "Apprendre les concepts de nœuds et de flux Node-RED"
+                }
+            },
+            "confirmations": {
+                "clearAllHistory": {
+                    "title": "Effacer tout l'historique",
+                    "message": "Cette action supprimera définitivement toutes les sessions de chat et ne peut pas être annulée. Êtes-vous sûr de vouloir continuer ?",
+                    "confirm": "Tout effacer",
+                    "cancel": "Annuler",
+                    "clearing": "Suppression en cours...",
+                    "success": "Tout l'historique de chat a été effacé avec succès",
+                    "error": "Échec de la suppression de l'historique. Veuillez réessayer."
                 }
             }
         }

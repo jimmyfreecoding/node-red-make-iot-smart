@@ -7,6 +7,7 @@
                 "chatHistory": "Chat-Verlauf",
                 "noChatHistory": "Kein Chat-Verlauf",
                 "historySessions": "Verlaufssitzungen",
+                "clearHistory": "Verlauf löschen",
                 "loadingHistory": "Lade Sitzungsverlauf...",
                 "loadSessionFailed": "Laden der Sitzung fehlgeschlagen, bitte erneut versuchen",
                 "noHistoryAvailable": "Kein Chat-Verlauf verfügbar",
@@ -69,13 +70,24 @@
                 "scenarioNotFound": "Szenario-Daten nicht gefunden"
             },
             "scenarios": {
-                "init": "Initialisiere Szenario-Manager",
+                "init": "Szenario-Manager wird initialisiert",
                 "loadingData": "Lade Szenario-Daten vom Backend...",
                 "loadSuccess": "Szenario-Daten erfolgreich geladen:",
                 "loadFailed": "Laden der Szenario-Daten fehlgeschlagen:",
                 "learning": {
                     "name": "Lernen",
-                    "description": "Node-RED Knoten und Flow-Konzepte lernen"
+                    "description": "Node-RED Knoten- und Flow-Konzepte lernen"
+                }
+            },
+            "confirmations": {
+                "clearAllHistory": {
+                    "title": "Gesamten Verlauf löschen",
+                    "message": "Diese Aktion wird alle Chat-Sitzungen dauerhaft löschen und kann nicht rückgängig gemacht werden. Sind Sie sicher, dass Sie fortfahren möchten?",
+                    "confirm": "Alles löschen",
+                    "cancel": "Abbrechen",
+                    "clearing": "Lösche...",
+                    "success": "Gesamter Chat-Verlauf wurde erfolgreich gelöscht",
+                    "error": "Löschen des Verlaufs fehlgeschlagen. Bitte versuchen Sie es erneut."
                 }
             }
         }

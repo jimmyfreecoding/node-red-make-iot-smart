@@ -7,6 +7,7 @@
                 "chatHistory": "Historial de chat",
                 "noChatHistory": "Sin historial de chat",
                 "historySessions": "Sesiones históricas",
+                "clearHistory": "Borrar Historial",
                 "loadingHistory": "Cargando historial de sesiones...",
                 "loadSessionFailed": "Error al cargar la sesión, por favor inténtelo de nuevo",
                 "noHistoryAvailable": "No hay historial de chat disponible",
@@ -68,12 +69,23 @@
             },
             "scenarios": {
                 "init": "Inicializando gestor de escenarios",
-                "loadingData": "Cargando datos de escenarios desde el backend...",
-                "loadSuccess": "Datos de escenarios cargados exitosamente:",
-                "loadFailed": "Error al cargar datos de escenarios:",
+                "loadingData": "Cargando datos de escenario desde el backend...",
+                "loadSuccess": "Datos de escenario cargados exitosamente:",
+                "loadFailed": "Error al cargar datos de escenario:",
                 "learning": {
                     "name": "Aprendizaje",
                     "description": "Aprender conceptos de nodos y flujos de Node-RED"
+                }
+            },
+            "confirmations": {
+                "clearAllHistory": {
+                    "title": "Borrar todo el historial",
+                    "message": "Esta acción eliminará permanentemente todas las sesiones de chat y no se puede deshacer. ¿Está seguro de que desea continuar?",
+                    "confirm": "Borrar todo",
+                    "cancel": "Cancelar",
+                    "clearing": "Borrando...",
+                    "success": "Todo el historial de chat ha sido borrado exitosamente",
+                    "error": "Error al borrar el historial. Por favor, inténtelo de nuevo."
                 }
             }
         }
