@@ -1,6 +1,6 @@
 {
   "learning": {
-    "name": "Learning Mode",
+    "name": "Learning",
     "description": "Node-RED learning assistant, providing teaching guidance and knowledge answers",
     "prompt": [
       "I'm new to Node-RED, please introduce the basic concepts and core functions of Node-RED",
@@ -49,7 +49,7 @@
     "tools": ["get-flows", "get-nodes", "create-flow", "update-flow"]
   },
   "solution": {
-    "name": "Solution Mode",
+    "name": "Solution",
     "description": "IoT solution expert, providing technical solutions and architecture recommendations",
     "prompt": [
       "I need to design a smart home control system, please provide a complete IoT solution architecture",
@@ -104,7 +104,7 @@
     "tools": ["create-flow", "update-flow", "get-flows", "create-subflow"]
   },
   "integration": {
-    "name": "Integration Mode",
+    "name": "Integration",
     "description": "System integration expert, handling device connections and data integration",
     "prompt": [
       "How to integrate MQTT devices and HTTP APIs in Node-RED? Please provide detailed integration solutions",
@@ -151,7 +151,7 @@
     "tools": ["create-flow", "update-flow", "install-node", "get-node-info"]
   },
   "development": {
-    "name": "Development Mode",
+    "name": "Development",
     "description": "Code development assistant, helping to write and optimize Node-RED flows",
     "keywords": [
       {
@@ -161,8 +161,8 @@
       }
     ],
     "prompt": [
-      "Detailed explanation and description of the current flow",
-      "Detailed explanation and description of the current node",
+      "Explanation current flow",
+      "Explanation current node",
       "Please help me write a Function node code that implements data filtering and format conversion",
       "How to create a custom node in Node-RED? Please provide complete development steps",
       "My flow is running slowly, please help me analyze performance bottlenecks and provide optimization suggestions",
@@ -207,23 +207,23 @@
     "tools": ["create-flow", "update-flow", "create-subflow", "get-node-info", "install-node", "get-flow"]
   },
   "configuration": {
-    "name": "Configuration Mode",
+    "name": "Configuration",
     "description": "System configuration expert, handling Node-RED environment and node configuration",
     "keywords": [
       {
-        "key": ["current config", "current settings", "system config", "configuration info"],
+        "key": ["current config", "current settings", "system config", "configuration info","Current Node-RED configuration"],
         "scenario": "configuration",
         "newHumanPrompt": "Please use get_settings tool to get current Node-RED configuration information, then analyze and explain the various settings, functions and roles of the configuration file.\n\nUser original request: "
       },
       {
-        "key": ["current diagnostics", "system diagnostics", "diagnostic info", "health check"],
+        "key": ["current diagnostics", "system diagnostics", "diagnostic info", "health check","Current Node-RED diagnostics"],
         "scenario": "configuration",
         "newHumanPrompt": "Please use get_diagnostics tool to get current Node-RED system diagnostic information, then use natural language to analyze and explain system status, performance metrics and potential issues in detail. Please do not return JSON format directly, but use understandable English for explanation. Display specific diagnostic data in a table at the end of the reply.\n\nUser original request: "
       }
     ],
     "prompt": [
-      "How is the current Node-RED configuration?",
-      "How is the current Node-RED diagnostics?",
+      "Current Node-RED configuration",
+      "Current Node-RED diagnostics",
       "How to configure Node-RED security settings, including user authentication and HTTPS?",
       "Please help me optimize Node-RED performance configuration to improve system efficiency",
       "How to install and manage third-party node packages in Node-RED?",
@@ -268,7 +268,7 @@
     "tools": ["get-settings", "update-settings", "install-node", "get-node-info", "get_diagnostics"]
   },
   "management": {
-    "name": "Management Mode",
+    "name": "Management",
     "description": "Project management assistant, helping with flow organization and project planning",
     "prompt": [
       "Please help me develop an IoT project development plan and milestone arrangement",
@@ -315,7 +315,7 @@
     "tools": ["get-flows", "create-flow", "update-flow", "create-subflow"]
   },
   "general": {
-    "name": "General Mode",
+    "name": "General",
     "description": "General AI assistant, handling various Node-RED related issues",
     "prompt": [
       "What is Node-RED? What are its main features and application scenarios?",

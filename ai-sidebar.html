@@ -167,8 +167,8 @@
         let currentLang = RED.i18n.lang() || 'zh-CN';
         console.log('🌐 Initial language detected:', currentLang);
         
-        // Periodically check for language setting changes
-        setInterval(async () => {
+        // Check for language setting changes once after startup
+        setTimeout(async () => {
             const newLang = RED.i18n.lang() || 'zh-CN';
             const settingsLang = RED.settings ? RED.settings.get('lang') : 'unknown';
             
