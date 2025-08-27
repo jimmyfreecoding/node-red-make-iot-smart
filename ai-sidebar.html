@@ -1038,49 +1038,50 @@ SOFTWARE.
                 break;
                 
             case 'tool_result':
-                // Show tool execution result
-                if (currentStreamMessageId) {
-                    var resultInfo = `✅ ${_("sidebar.messages.toolExecutionSuccess")}\n\n`;
-                    
-                    // If there's specific result data, show formatted result
-                    if (data.result) {
-                        try {
-                            // Try to parse tool result
-                            var toolResult = data.result;
-                            if (typeof toolResult === 'string') {
-                                try {
-                                    toolResult = JSON.parse(toolResult);
-                                } catch (e) {
-                                    // If not JSON, use string directly
-                                }
+                // Show tool execution result in a separate message bubble
+                var toolResultMessageId = 'tool-result-' + Date.now();
+                var resultInfo = `✅ ${_("sidebar.messages.toolExecutionSuccess")}\n\n`;
+                
+                // If there's specific result data, show formatted result
+                if (data.result) {
+                    try {
+                        // Try to parse tool result
+                        var toolResult = data.result;
+                        if (typeof toolResult === 'string') {
+                            try {
+                                toolResult = JSON.parse(toolResult);
+                            } catch (e) {
+                                // If not JSON, use string directly
                             }
-                            
-                            // If result contains content array (MCP tool return format)
-                            if (toolResult && toolResult.content && Array.isArray(toolResult.content)) {
-                                for (var i = 0; i < toolResult.content.length; i++) {
-                                    var contentItem = toolResult.content[i];
-                                    if (contentItem.type === 'text' && contentItem.text) {
-                                        try {
-                                            // Try to parse nested JSON configuration
-                                            var configData = JSON.parse(contentItem.text);
-                                            resultInfo += '**' + _('sidebar.messages.nodeRedConfigInfo') + '**\n\n```json\n' + JSON.stringify(configData, null, 2) + '\n```\n\n';
-                                        } catch (e) {
-                                            // If not JSON, show text directly
-                                            resultInfo += contentItem.text + '\n\n';
-                                        }
+                        }
+                        
+                        // If result contains content array (MCP tool return format)
+                        if (toolResult && toolResult.content && Array.isArray(toolResult.content)) {
+                            for (var i = 0; i < toolResult.content.length; i++) {
+                                var contentItem = toolResult.content[i];
+                                if (contentItem.type === 'text' && contentItem.text) {
+                                    try {
+                                        // Try to parse nested JSON configuration
+                                        var configData = JSON.parse(contentItem.text);
+                                        resultInfo += '**' + _('sidebar.messages.nodeRedConfigInfo') + '**\n\n```json\n' + JSON.stringify(configData, null, 2) + '\n```\n\n';
+                                    } catch (e) {
+                                        // If not JSON, show text directly
+                                        resultInfo += contentItem.text + '\n\n';
                                     }
                                 }
-                            } else {
-                                // Other format results, show directly
-                                resultInfo += '**' + _('sidebar.messages.result') + '**\n\n```\n' + (typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult, null, 2)) + '\n```\n\n';
                             }
-                        } catch (e) {
-                            resultInfo += '**结果：**\n\n```\n' + data.result + '\n```\n\n';
+                        } else {
+                            // Other format results, show directly
+                            resultInfo += '**' + _('sidebar.messages.result') + '**\n\n```\n' + (typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult, null, 2)) + '\n```\n\n';
                         }
+                    } catch (e) {
+                        resultInfo += '**结果：**\n\n```\n' + data.result + '\n```\n\n';
                     }
-                    
-                    appendToMessage(currentStreamMessageId, resultInfo);
                 }
+                console.log("+++++++++++++++++++++++++++resultInfo",resultInfo)
+                
+                // Create a separate message bubble for tool result
+                addMessageToChat("system", resultInfo, toolResultMessageId);
                 break;
                 
             case 'error':
