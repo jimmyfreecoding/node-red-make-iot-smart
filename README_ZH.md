@@ -1,10 +1,10 @@
 # Node-RED Make IoT Smart
 
-一个专为Node-RED设计的AI驱动助手扩展，让IoT开发更智能、更高效。
+一个专为Node-RED设计的AI智能助手扩展，让IoT开发更智能、更高效。
 
 ## 概述
 
-Node-RED Make IoT Smart 是一个专为Node-RED开发设计的综合性AI助手。它提供智能代码辅助、自动化流程优化和智能调试功能，以增强您的IoT开发体验。扩展现支持六大场景：学习、方案、集成、开发、配置和管理。
+Node-RED Make IoT Smart 是一个专为Node-RED开发设计的综合性AI智能体。它提供智能代码辅助、自动化流程优化和智能调试功能，以增强您的IoT开发体验。扩展现支持六大场景：学习、方案、集成、开发、配置和管理。
 
 ## 功能特性
 
@@ -210,7 +210,7 @@ npm install @jimmyfreecoding/node-red-make-iot-smart
 
 ## 许可证
 
-根据Apache License 2.0许可。详见[LICENSE](LICENSE)文件。
+根据MIT许可证许可。详见[LICENSE](LICENSE)文件。
 
 ## 支持
 
