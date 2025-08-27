@@ -158,6 +158,16 @@
         "key": ["创建流程", "生成流程", "创造流程", "新建流程"],
         "scenario": "development",
         "newHumanPrompt": "请按照以下格式回复：\n1. 首先生成完整的Node-RED流程JSON代码\n2. 然后详细解释流程中每个节点的作用和配置\n3. 最后以\"点击Apply按钮进行创建\"结束描述\n\n用户原始请求："
+      },
+      {
+        "key": ["当前节点", "选中节点", "这个节点", "节点信息", "节点详情"],
+        "scenario": "development",
+        "newHumanPrompt": "请使用get-node-info工具获取节点详细信息，然后分析和解释节点的功能、配置和作用。\n\n用户原始请求："
+      },
+      {
+        "key": ["当前流程", "流程信息", "流程详情", "这个流程", "流程分析"],
+        "scenario": "development",
+        "newHumanPrompt": "请使用get-flow工具获取当前流程的详细信息，然后分析和解释流程的结构、功能和各个节点的作用。\n\n用户原始请求："
       }
     ],
     "prompt": [
@@ -213,12 +223,12 @@
       {
         "key": ["当前配置", "系统配置", "配置信息", "设置", "当前设置"],
         "scenario": "configuration",
-        "newHumanPrompt": "请使用get_settings工具获取当前Node-RED的配置信息，然后用自然语言详细分析和解释配置文件的各项设置、功能和作用，最后使用表格来显示所有配置项内容。\n\n用户原始请求："
+        "newHumanPrompt": "请使用get-settings工具获取当前Node-RED的配置信息，然后用自然语言详细分析和解释配置文件的各项设置、功能和作用，最后使用表格来显示所有配置项内容。\n\n用户原始请求："
       },
       {
         "key": ["当前诊断", "系统诊断", "诊断信息", "健康检查"],
         "scenario": "configuration",
-        "newHumanPrompt": "请使用get_diagnostics工具获取当前Node-RED的系统诊断信息，然后用自然语言详细分析和解释系统状态、性能指标和潜在问题，请不要直接返回JSON格式，而是用易懂的中文进行说明。在回复最后用表格显示当前诊断的具体数据。\n\n用户原始请求："
+        "newHumanPrompt": "请使用get-diagnostics工具获取当前Node-RED的系统诊断信息，然后用自然语言详细分析和解释系统状态、性能指标和潜在问题，请不要直接返回JSON格式，而是用易懂的中文进行说明。在回复最后用表格显示当前诊断的具体数据。\n\n用户原始请求："
       }
     ],
     "prompt": [
@@ -229,7 +239,7 @@
       "如何在Node-RED中安装和管理第三方节点包？",
       "我需要配置Node-RED的日志记录和监控，应该如何设置？"
     ],
-    "systemPrompt": "你是一个专业的Node-RED系统管理员和配置专家。你的任务是帮助用户配置和管理Node-RED环境、节点和系统设置。\n\n**重要：工具调用规则**\n当用户询问以下内容时，你必须首先调用相应的工具获取最新信息：\n- 询问\"当前配置\"、\"系统配置\"、\"设置\"、\"配置信息\"等时，必须先调用get_settings工具\n- 询问\"系统诊断\"、\"系统状态\"、\"性能\"等时，必须先调用get_diagnostics工具\n- 询问\"节点信息\"时，必须先调用get_node_info工具\n\n你应该：\n1. 提供系统配置和环境设置建议\n2. 协助节点安装和配置管理\n3. 优化性能和资源使用\n4. 处理安全配置和权限管理\n5. 提供故障排除和维护指导\n6. 分析系统诊断数据，用自然语言解释系统状态、性能指标和问题\n\n当分析诊断数据时，请：\n- 详细解释系统运行状态和健康度\n- 分析性能指标（内存使用、CPU使用率、事件循环延迟等）\n- 解释发现的问题和警告的具体含义\n- 提供针对性的优化建议和解决方案\n- 给出系统维护建议\n- 用易懂的中文自然语言回复，避免直接输出JSON格式\n\n**流程创建格式要求：**\n当用户请求创建、生成、创造或新建流程时，请严格按照以下格式回复：\n1. 首先生成完整的Node-RED流程JSON代码，使用```json代码块格式，即：```json\n{{流程json数据}}\n```\n2. 然后详细解释流程中每个节点的作用和配置\n3. 最后以\"点击Apply按钮进行创建\"结束描述\n\n当前环境信息：\n- Node-RED版本: {{nodeRedVersion}}\n- Node.js版本: {{nodeVersion}}\n- 当前时间: {{currentTime}}\n- 选中的流程: {{selectedFlow}}\n- 选中的节点: {{selectedNodes}}\n- 配置需求: {{configurationNeeds}}\n\n可用的MCP工具: {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
+    "systemPrompt": "你是一个专业的Node-RED系统管理员和配置专家。你的任务是帮助用户配置和管理Node-RED环境、节点和系统设置。\n\n**重要：工具调用规则**\n当用户询问以下内容时，你必须首先调用相应的工具获取最新信息：\n- 询问\"当前配置\"、\"系统配置\"、\"设置\"、\"配置信息\"等时，必须先调用get-settings工具\n- 询问\"系统诊断\"、\"系统状态\"、\"性能\"等时，必须先调用get_diagnostics工具\n- 询问\"节点信息\"时，必须先调用get_node_info工具\n\n你应该：\n1. 提供系统配置和环境设置建议\n2. 协助节点安装和配置管理\n3. 优化性能和资源使用\n4. 处理安全配置和权限管理\n5. 提供故障排除和维护指导\n6. 分析系统诊断数据，用自然语言解释系统状态、性能指标和问题\n\n当分析诊断数据时，请：\n- 详细解释系统运行状态和健康度\n- 分析性能指标（内存使用、CPU使用率、事件循环延迟等）\n- 解释发现的问题和警告的具体含义\n- 提供针对性的优化建议和解决方案\n- 给出系统维护建议\n- 用易懂的中文自然语言回复，避免直接输出JSON格式\n\n**流程创建格式要求：**\n当用户请求创建、生成、创造或新建流程时，请严格按照以下格式回复：\n1. 首先生成完整的Node-RED流程JSON代码，使用```json代码块格式，即：```json\n{{流程json数据}}\n```\n2. 然后详细解释流程中每个节点的作用和配置\n3. 最后以\"点击Apply按钮进行创建\"结束描述\n\n当前环境信息：\n- Node-RED版本: {{nodeRedVersion}}\n- Node.js版本: {{nodeVersion}}\n- 当前时间: {{currentTime}}\n- 选中的流程: {{selectedFlow}}\n- 选中的节点: {{selectedNodes}}\n- 配置需求: {{configurationNeeds}}\n\n可用的MCP工具: {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
     "outputFormat": {
       "type": "structured",
       "schema": {
@@ -265,7 +275,7 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get_settings", "update_settings", "install_node", "get_node_info", "get_diagnostics"]
+    "tools": ["get-settings", "update-settings", "install-node", "get-node-info", "get-diagnostics"]
   },
   "management": {
     "name": "管理模式",

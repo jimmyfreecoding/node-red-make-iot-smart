@@ -46,9 +46,9 @@ async function debugMCPTools() {
             // console.log('   configuration场景工具数量:', configTools.length);
             // console.log('   configuration场景工具名称:', configTools.map(t => t.name));
             
-            // 测试get_settings工具是否存在
-            const getSettingsTool = manager.tools.get('get_settings');
-            // console.log('7. get_settings工具检查:');
+            // 测试get-settings工具是否存在
+            const getSettingsTool = manager.tools.get('get-settings');
+            // console.log('7. get-settings工具检查:');
             // console.log('   工具存在:', !!getSettingsTool);
             if (getSettingsTool) {
                 // console.log('   工具名称:', getSettingsTool.name);

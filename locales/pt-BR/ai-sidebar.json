@@ -62,6 +62,14 @@
                 "welcome": "👋 Bem-vindo ao Assistente IA Make IoT Smart!\n\n🎯 **Cenário atual**: {scenarioName}\n\nPor favor, selecione um cenário apropriado e comece a conversa:\n• 🎓 **Aprendizado** - Entender conceitos e nós do Node-RED\n• 💡 **Soluções** - Obter sugestões de soluções IoT\n• 🔌 **Integração** - Integrar protocolos e sistemas\n• 💻 **Desenvolvimento** - Otimizar e desenvolver fluxos\n• ⚙️ **Configuração** - Configurar ambiente Node-RED\n• 🖥️ **Gerenciamento** - Gerenciar e implantar aplicações",
                 "fallbackWelcome": "👋 Bem-vindo ao Assistente IA Make IoT Smart!\n\n🎯 **Cenário atual**: Aprendizado\n\nPor favor, comece a conversa, eu ajudarei você a entender como usar o Node-RED."
             },
+            "toolCalls": {
+
+                "noFlowSelectedWarning": "Nota: Atualmente não há um fluxo específico selecionado. Por favor, selecione primeiro a aba de fluxo que deseja analisar no editor Node-RED.",
+                "noNodeSelectedWarning": "Nota: Atualmente não há um nó específico selecionado. Por favor, selecione primeiro o nó que deseja analisar no editor Node-RED.",
+                "singleNodeDescription": "Nó \"{nodeName}\" (tipo: {nodeType})",
+                "multipleNodesDescription": "{nodeCount} nós selecionados",
+                "flowDetectionLog": "Solicitação de descrição de fluxo detectada, passando ID do fluxo:"
+            },
             "errors": {
                 "configRequired": "Por favor, configure primeiro a chave API",
                 "messageRequired": "Por favor, digite o conteúdo da mensagem",

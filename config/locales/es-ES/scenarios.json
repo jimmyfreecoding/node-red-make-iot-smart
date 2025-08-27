@@ -158,6 +158,16 @@
         "key": ["crear flujo", "generar flujo", "crear flujo", "nuevo flujo"],
         "scenario": "development",
         "newHumanPrompt": "Por favor responde en el siguiente formato:\n1. Primero genera el código JSON completo del flujo de Node-RED\n2. Luego explica detalladamente la función y configuración de cada nodo en el flujo\n3. Termina con \"Haz clic en el botón Apply para crear\"\n\nSolicitud original del usuario:"
+      },
+      {
+        "key": ["nodo actual", "nodo seleccionado", "este nodo", "información del nodo", "detalles del nodo"],
+        "scenario": "development",
+        "newHumanPrompt": "Por favor usa la herramienta get-node-info para obtener información detallada del nodo, luego analiza y explica la funcionalidad, configuración y propósito del nodo.\n\nSolicitud original del usuario:"
+      },
+      {
+        "key": ["flujo actual", "información del flujo", "detalles del flujo", "este flujo", "análisis del flujo"],
+        "scenario": "development",
+        "newHumanPrompt": "Por favor usa la herramienta get-flow para obtener información detallada sobre el flujo actual, luego analiza y explica la estructura del flujo, funcionalidad y el papel de cada nodo.\n\nSolicitud original del usuario:"
       }
     ],
     "prompt": [
@@ -218,7 +228,7 @@
       {
         "key": ["diagnóstico actual", "diagnóstico del sistema", "información de diagnóstico", "chequeo de salud"],
         "scenario": "configuration",
-        "newHumanPrompt": "Por favor usa la herramienta get_diagnostics para obtener la información de diagnóstico del sistema Node-RED actual, luego analiza y explica detalladamente en lenguaje natural el estado del sistema, métricas de rendimiento y problemas potenciales. No devuelvas directamente el formato JSON, sino usa español comprensible para la explicación. Al final de la respuesta, muestra los datos específicos del diagnóstico actual en una tabla.\n\nSolicitud original del usuario:"
+        "newHumanPrompt": "Por favor usa la herramienta get-diagnostics para obtener la información de diagnóstico del sistema Node-RED actual, luego analiza y explica detalladamente en lenguaje natural el estado del sistema, métricas de rendimiento y problemas potenciales. No devuelvas directamente el formato JSON, sino usa español comprensible para la explicación. Al final de la respuesta, muestra los datos específicos del diagnóstico actual en una tabla.\n\nSolicitud original del usuario:"
       }
     ],
     "prompt": [
@@ -265,7 +275,7 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get_settings", "update_settings", "install_node", "get_node_info", "get_diagnostics"]
+    "tools": ["get-settings", "update-settings", "install-node", "get-node-info", "get-diagnostics"]
   },
   "management": {
     "name": "Modo de Gestión",
@@ -337,6 +347,6 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get_settings", "get_diagnostics"]
+    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get-settings", "get-diagnostics"]
   }
 }

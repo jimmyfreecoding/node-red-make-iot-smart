@@ -1,28 +1,28 @@
-// 测试自动端口检测功能
+// Test automatic port detection functionality
 const path = require('path');
 
-// 模拟RED对象
+// Mock RED object
 const mockRED = {
     settings: {
-        uiPort: 1881  // 模拟当前Node-RED运行在1881端口
+        uiPort: 1881  // Mock current Node-RED running on port 1881
     }
 };
 
-// 模拟全局RED对象
+// Mock global RED object
 global.RED = mockRED;
 
-// 测试端口自动检测
+// Test automatic port detection
 function testAutoPortDetection() {
     console.log('🧪 测试MCP客户端端口自动检测功能');
     
-    // 模拟配置节点的端口检测逻辑
+    // Mock configuration node's port detection logic
     const currentPort = mockRED.settings.uiPort || 1880;
     const mcpEnv = `NODE_RED_URL=http://localhost:${currentPort}`;
     
     console.log('✅ 检测到的端口:', currentPort);
     console.log('✅ 生成的MCP环境变量:', mcpEnv);
     
-    // 验证结果
+    // Verify results
     if (currentPort === 1881 && mcpEnv === 'NODE_RED_URL=http://localhost:1881') {
         console.log('🎉 端口自动检测功能正常工作！');
         return true;
@@ -32,7 +32,7 @@ function testAutoPortDetection() {
     }
 }
 
-// 测试不同端口场景
+// Test different port scenarios
 function testDifferentPorts() {
     console.log('\n🧪 测试不同端口场景');
     
@@ -40,7 +40,7 @@ function testDifferentPorts() {
         { port: 1880, expected: 'NODE_RED_URL=http://localhost:1880' },
         { port: 1881, expected: 'NODE_RED_URL=http://localhost:1881' },
         { port: 3000, expected: 'NODE_RED_URL=http://localhost:3000' },
-        { port: undefined, expected: 'NODE_RED_URL=http://localhost:1880' } // 默认端口
+        { port: undefined, expected: 'NODE_RED_URL=http://localhost:1880' } // Default port
     ];
     
     let allPassed = true;
@@ -63,7 +63,7 @@ function testDifferentPorts() {
     return allPassed;
 }
 
-// 运行测试
+// Run tests
 if (require.main === module) {
     console.log('开始测试MCP端口自动检测功能\n');
     

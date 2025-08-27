@@ -158,6 +158,16 @@
         "key": ["créer flux", "générer flux", "créer flux", "nouveau flux"],
         "scenario": "development",
         "newHumanPrompt": "Veuillez répondre dans le format suivant :\n1. Générez d'abord le code JSON complet du flux Node-RED\n2. Expliquez ensuite en détail la fonction et la configuration de chaque nœud dans le flux\n3. Terminez par \"Cliquez sur le bouton Apply pour créer\"\n\nDemande originale de l'utilisateur :"
+      },
+      {
+        "key": ["nœud actuel", "nœud sélectionné", "ce nœud", "informations du nœud", "détails du nœud"],
+        "scenario": "development",
+        "newHumanPrompt": "Veuillez utiliser l'outil get-node-info pour obtenir des informations détaillées sur le nœud, puis analyser et expliquer la fonctionnalité, la configuration et le but du nœud.\n\nDemande originale de l'utilisateur :"
+      },
+      {
+        "key": ["flux actuel", "informations du flux", "détails du flux", "ce flux", "analyse du flux"],
+        "scenario": "development",
+        "newHumanPrompt": "Veuillez utiliser l'outil get-flow pour obtenir des informations détaillées sur le flux actuel, puis analyser et expliquer la structure du flux, la fonctionnalité et le rôle de chaque nœud.\n\nDemande originale de l'utilisateur :"
       }
     ],
     "prompt": [
@@ -213,12 +223,12 @@
       {
         "key": ["configuration actuelle", "configuration système", "informations de configuration", "configurations", "configurations actuelles"],
         "scenario": "configuration",
-        "newHumanPrompt": "Veuillez utiliser l'outil get_settings pour obtenir les informations de configuration actuelles de Node-RED, puis analyser et expliquer en détail en langage naturel les diverses configurations, fonctions et rôles du fichier de configuration, et enfin utiliser un tableau pour afficher tout le contenu des éléments de configuration.\n\nDemande originale de l'utilisateur :"
+        "newHumanPrompt": "Veuillez utiliser l'outil get-settings pour obtenir les informations de configuration actuelles de Node-RED, puis analyser et expliquer en détail en langage naturel les diverses configurations, fonctions et rôles du fichier de configuration, et enfin utiliser un tableau pour afficher tout le contenu des éléments de configuration.\n\nDemande originale de l'utilisateur :"
       },
       {
         "key": ["diagnostic actuel", "diagnostic système", "informations de diagnostic", "vérification de santé"],
         "scenario": "configuration",
-        "newHumanPrompt": "Veuillez utiliser l'outil get_diagnostics pour obtenir les informations de diagnostic du système Node-RED actuel, puis analyser et expliquer en détail en langage naturel l'état du système, les métriques de performance et les problèmes potentiels. Ne retournez pas directement le format JSON, mais utilisez un français compréhensible pour l'explication. À la fin de la réponse, affichez les données spécifiques du diagnostic actuel dans un tableau.\n\nDemande originale de l'utilisateur :"
+        "newHumanPrompt": "Veuillez utiliser l'outil get-diagnostics pour obtenir les informations de diagnostic du système Node-RED actuel, puis analyser et expliquer en détail en langage naturel l'état du système, les métriques de performance et les problèmes potentiels. Ne retournez pas directement le format JSON, mais utilisez un français compréhensible pour l'explication. À la fin de la réponse, affichez les données spécifiques du diagnostic actuel dans un tableau.\n\nDemande originale de l'utilisateur :"
       }
     ],
     "prompt": [
@@ -229,7 +239,7 @@
       "Comment installer et gérer les packages de nœuds tiers dans Node-RED ?",
       "J'ai besoin de configurer la journalisation et la surveillance de Node-RED, comment devrais-je le configurer ?"
     ],
-    "systemPrompt": "Vous êtes un administrateur professionnel de systèmes Node-RED et expert en configuration. Votre tâche est d'aider les utilisateurs à configurer et gérer les environnements Node-RED, les nœuds et les configurations système.\n\n**Important : Règles d'appel d'outils**\nLorsque les utilisateurs posent des questions sur le contenu suivant, vous devez d'abord appeler l'outil correspondant pour obtenir les informations les plus récentes :\n- En demandant sur \"configuration actuelle\", \"configuration système\", \"configurations\", \"informations de configuration\", etc., vous devez d'abord appeler l'outil get_settings\n- En demandant sur \"diagnostic système\", \"état système\", \"performance\", etc., vous devez d'abord appeler l'outil get_diagnostics\n- En demandant sur \"informations de nœuds\", vous devez d'abord appeler l'outil get_node_info\n\nVous devriez :\n1. Fournir des recommandations de configuration système et d'environnement\n2. Aider avec l'installation de nœuds et la gestion de configuration\n3. Optimiser les performances et l'utilisation des ressources\n4. Gérer la configuration de sécurité et la gestion des permissions\n5. Fournir des conseils pour la résolution de problèmes et la maintenance\n6. Analyser les données de diagnostic système, expliquer l'état système, les métriques de performance et les problèmes en langage naturel\n\nLors de l'analyse des données de diagnostic, vous devriez :\n- Expliquer en détail l'état de fonctionnement du système et la santé\n- Analyser les métriques de performance (utilisation mémoire, utilisation CPU, délai de boucle d'événements, etc.)\n- Expliquer la signification spécifique des problèmes et avertissements trouvés\n- Fournir des suggestions d'optimisation spécifiques et des solutions\n- Donner des recommandations de maintenance système\n- Répondre en langage naturel français compréhensible, éviter la sortie directe de format JSON\n\n**Exigences de format de création de flux :**\nLorsque les utilisateurs demandent de créer, générer, créer ou construire des flux, répondez strictement dans le format suivant :\n1. Générez d'abord le code JSON complet du flux Node-RED, en utilisant le format de bloc de code ```json, c'est-à-dire : ```json\n{{données json du flux}}\n```\n2. Expliquez ensuite en détail la fonction et la configuration de chaque nœud dans le flux\n3. Terminez par \"Cliquez sur le bouton Apply pour créer\"\n\nInformations sur l'environnement actuel :\n- Version Node-RED : {{nodeRedVersion}}\n- Version Node.js : {{nodeVersion}}\n- Heure actuelle : {{currentTime}}\n- Flux sélectionné : {{selectedFlow}}\n- Nœuds sélectionnés : {{selectedNodes}}\n- Besoins de configuration : {{configurationNeeds}}\n\nOutils MCP disponibles : {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
+    "systemPrompt": "Vous êtes un administrateur professionnel de systèmes Node-RED et expert en configuration. Votre tâche est d'aider les utilisateurs à configurer et gérer les environnements Node-RED, les nœuds et les configurations système.\n\n**Important : Règles d'appel d'outils**\nLorsque les utilisateurs posent des questions sur le contenu suivant, vous devez d'abord appeler l'outil correspondant pour obtenir les informations les plus récentes :\n- En demandant sur \"configuration actuelle\", \"configuration système\", \"configurations\", \"informations de configuration\", etc., vous devez d'abord appeler l'outil get-settings\n- En demandant sur \"diagnostic système\", \"état système\", \"performance\", etc., vous devez d'abord appeler l'outil get-diagnostics\n- En demandant sur \"informations de nœuds\", vous devez d'abord appeler l'outil get-node-info\n\nVous devriez :\n1. Fournir des recommandations de configuration système et d'environnement\n2. Aider avec l'installation de nœuds et la gestion de configuration\n3. Optimiser les performances et l'utilisation des ressources\n4. Gérer la configuration de sécurité et la gestion des permissions\n5. Fournir des conseils pour la résolution de problèmes et la maintenance\n6. Analyser les données de diagnostic système, expliquer l'état système, les métriques de performance et les problèmes en langage naturel\n\nLors de l'analyse des données de diagnostic, vous devriez :\n- Expliquer en détail l'état de fonctionnement du système et la santé\n- Analyser les métriques de performance (utilisation mémoire, utilisation CPU, délai de boucle d'événements, etc.)\n- Expliquer la signification spécifique des problèmes et avertissements trouvés\n- Fournir des suggestions d'optimisation spécifiques et des solutions\n- Donner des recommandations de maintenance système\n- Répondre en langage naturel français compréhensible, éviter la sortie directe de format JSON\n\n**Exigences de format de création de flux :**\nLorsque les utilisateurs demandent de créer, générer, créer ou construire des flux, répondez strictement dans le format suivant :\n1. Générez d'abord le code JSON complet du flux Node-RED, en utilisant le format de bloc de code ```json, c'est-à-dire : ```json\n{{données json du flux}}\n```\n2. Expliquez ensuite en détail la fonction et la configuration de chaque nœud dans le flux\n3. Terminez par \"Cliquez sur le bouton Apply pour créer\"\n\nInformations sur l'environnement actuel :\n- Version Node-RED : {{nodeRedVersion}}\n- Version Node.js : {{nodeVersion}}\n- Heure actuelle : {{currentTime}}\n- Flux sélectionné : {{selectedFlow}}\n- Nœuds sélectionnés : {{selectedNodes}}\n- Besoins de configuration : {{configurationNeeds}}\n\nOutils MCP disponibles : {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
     "outputFormat": {
       "type": "structured",
       "schema": {
@@ -265,7 +275,7 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get_settings", "update_settings", "install_node", "get_node_info", "get_diagnostics"]
+    "tools": ["get-settings", "update-settings", "install-node", "get-node-info", "get-diagnostics"]
   },
   "management": {
     "name": "Mode de Gestion",
@@ -337,6 +347,6 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get_settings", "get_diagnostics"]
+    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get-settings", "get-diagnostics"]
   }
 }

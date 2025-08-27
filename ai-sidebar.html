@@ -783,8 +783,8 @@ SOFTWARE.
                 dynamicData.flowId = selectedFlow.id;
                 console.log(_('sidebar.toolCalls.flowDetectionLog'), selectedFlow.id);
                 
-                // Modify message to include tool call instruction
-                const promptTemplate = _('sidebar.toolCalls.getFlowPrompt');
+                // Hardcoded English template for get-flow tool with args format
+                const promptTemplate = "Please use the get-flow tool to retrieve flow data for flow args:{\"id\":\"{flowId}\"}, then analyze and explain the functionality, node connections, and working principles of this flow.\n\nUser's original request: {originalMessage}";
                 console.log("promptTemplate",promptTemplate)
                 sendMessage = promptTemplate.replace('{flowId}', selectedFlow.id).replace('{originalMessage}', sendMessage);
             } else {
@@ -817,7 +817,8 @@ SOFTWARE.
                     : _('sidebar.toolCalls.multipleNodesDescription')
                         .replace('{nodeCount}', selectedNodes.length);
                     
-                const nodePromptTemplate = _('sidebar.toolCalls.getNodeInfoPrompt');
+                // Hardcoded English template for get-node-info tool with args format
+                const nodePromptTemplate = "Please use get-node-info tool to retrieve detailed information for nodes with args:{\"id\":[{nodeIds}]}, then analyze and explain the functionality, configuration, and purpose of {nodeDescription}.\n\nUser's original request: {originalMessage}";
                 sendMessage = nodePromptTemplate
                     .replace('{nodeIds}', nodeIds.map(id => `"${id}"`).join(', '))
                     .replace('{nodeDescription}', nodeDescription)

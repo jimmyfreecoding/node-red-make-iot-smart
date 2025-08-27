@@ -62,6 +62,14 @@
                 "welcome": "👋 歡迎使用Make IoT Smart AI助手！\n\n🎯 **當前場景**: {scenarioName}\n\n請選擇合適的場景並開始對話：\n• 🎓 **學習** - 理解Node-RED概念和節點\n• 💡 **解決方案** - 獲取IoT解決方案建議\n• 🔌 **整合** - 整合協定和系統\n• 💻 **開發** - 優化和開發流程\n• ⚙️ **配置** - 配置Node-RED環境\n• 🖥️ **管理** - 管理和部署應用程式",
                 "fallbackWelcome": "👋 歡迎使用Make IoT Smart AI助手！\n\n🎯 **當前場景**: 學習\n\n請開始對話，我將幫助您了解如何使用Node-RED。"
             },
+            "toolCalls": {
+
+                "noFlowSelectedWarning": "注意：目前沒有選擇具體的流程。請先在 Node-RED 編輯器中選擇要分析的流程標籤頁。",
+                "noNodeSelectedWarning": "注意：目前沒有選擇具體的節點。請先在 Node-RED 編輯器中選擇要分析的節點。",
+                "singleNodeDescription": "節點 \"{nodeName}\"（類型：{nodeType}）",
+                "multipleNodesDescription": "{nodeCount} 個選中的節點",
+                "flowDetectionLog": "檢測到流程說明請求，傳遞流程 ID："
+            },
             "errors": {
                 "configRequired": "請先配置API密鑰",
                 "messageRequired": "請輸入訊息內容",

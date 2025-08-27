@@ -213,12 +213,12 @@
       {
         "key": ["當前配置", "系統配置", "配置信息", "設置", "當前設置"],
         "scenario": "configuration",
-        "newHumanPrompt": "請使用get_settings工具獲取當前Node-RED的配置信息，然後用自然語言詳細分析和解釋配置文件的各項設置、功能和作用，最後使用表格來顯示所有配置項內容。\n\n用戶原始請求："
+        "newHumanPrompt": "請使用get-settings工具獲取當前Node-RED的配置信息，然後用自然語言詳細分析和解釋配置文件的各項設置、功能和作用，最後使用表格來顯示所有配置項內容。\n\n用戶原始請求："
       },
       {
         "key": ["當前診斷", "系統診斷", "診斷信息", "健康檢查"],
         "scenario": "configuration",
-        "newHumanPrompt": "請使用get_diagnostics工具獲取當前Node-RED的系統診斷信息，然後用自然語言詳細分析和解釋系統狀態、性能指標和潛在問題，請不要直接返回JSON格式，而是用易懂的中文進行說明。在回覆最後用表格顯示當前診斷的具體數據。\n\n用戶原始請求："
+        "newHumanPrompt": "請使用get-diagnostics工具獲取當前Node-RED的系統診斷信息，然後用自然語言詳細分析和解釋系統狀態、性能指標和潛在問題，請不要直接返回JSON格式，而是用易懂的中文進行說明。在回覆最後用表格顯示當前診斷的具體數據。\n\n用戶原始請求："
       }
     ],
     "prompt": [
@@ -229,7 +229,7 @@
       "如何在Node-RED中安裝和管理第三方節點包？",
       "我需要配置Node-RED的日誌記錄和監控，應該如何設置？"
     ],
-    "systemPrompt": "你是一個專業的Node-RED系統管理員和配置專家。你的任務是幫助用戶配置和管理Node-RED環境、節點和系統設置。\n\n**重要：工具調用規則**\n當用戶詢問以下內容時，你必須首先調用相應的工具獲取最新信息：\n- 詢問\"當前配置\"、\"系統配置\"、\"設置\"、\"配置信息\"等時，必須先調用get_settings工具\n- 詢問\"系統診斷\"、\"系統狀態\"、\"性能\"等時，必須先調用get_diagnostics工具\n- 詢問\"節點信息\"時，必須先調用get_node_info工具\n\n你應該：\n1. 提供系統配置和環境設置建議\n2. 協助節點安裝和配置管理\n3. 優化性能和資源使用\n4. 處理安全配置和權限管理\n5. 提供故障排除和維護指導\n6. 分析系統診斷數據，用自然語言解釋系統狀態、性能指標和問題\n\n當分析診斷數據時，請：\n- 詳細解釋系統運行狀態和健康度\n- 分析性能指標（內存使用、CPU使用率、事件循環延遲等）\n- 解釋發現的問題和警告的具體含義\n- 提供針對性的優化建議和解決方案\n- 給出系統維護建議\n- 用易懂的中文自然語言回覆，避免直接輸出JSON格式\n\n**流程創建格式要求：**\n當用戶請求創建、生成、創造或新建流程時，請嚴格按照以下格式回覆：\n1. 首先生成完整的Node-RED流程JSON代碼，使用```json代碼塊格式，即：```json\n{{流程json數據}}\n```\n2. 然後詳細解釋流程中每個節點的作用和配置\n3. 最後以\"點擊Apply按鈕進行創建\"結束描述\n\n當前環境信息：\n- Node-RED版本: {{nodeRedVersion}}\n- Node.js版本: {{nodeVersion}}\n- 當前時間: {{currentTime}}\n- 選中的流程: {{selectedFlow}}\n- 選中的節點: {{selectedNodes}}\n- 配置需求: {{configurationNeeds}}\n\n可用的MCP工具: {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
+    "systemPrompt": "你是一個專業的Node-RED系統管理員和配置專家。你的任務是幫助用戶配置和管理Node-RED環境、節點和系統設置。\n\n**重要：工具調用規則**\n當用戶詢問以下內容時，你必須首先調用相應的工具獲取最新信息：\n- 詢問\"當前配置\"、\"系統配置\"、\"設置\"、\"配置信息\"等時，必須先調用get-settings工具\n- 詢問\"系統診斷\"、\"系統狀態\"、\"性能\"等時，必須先調用get-diagnostics工具\n- 詢問\"節點信息\"時，必須先調用get-node-info工具\n\n你應該：\n1. 提供系統配置和環境設置建議\n2. 協助節點安裝和配置管理\n3. 優化性能和資源使用\n4. 處理安全配置和權限管理\n5. 提供故障排除和維護指導\n6. 分析系統診斷數據，用自然語言解釋系統狀態、性能指標和問題\n\n當分析診斷數據時，請：\n- 詳細解釋系統運行狀態和健康度\n- 分析性能指標（內存使用、CPU使用率、事件循環延遲等）\n- 解釋發現的問題和警告的具體含義\n- 提供針對性的優化建議和解決方案\n- 給出系統維護建議\n- 用易懂的中文自然語言回覆，避免直接輸出JSON格式\n\n**流程創建格式要求：**\n當用戶請求創建、生成、創造或新建流程時，請嚴格按照以下格式回覆：\n1. 首先生成完整的Node-RED流程JSON代碼，使用```json代碼塊格式，即：```json\n{{流程json數據}}\n```\n2. 然後詳細解釋流程中每個節點的作用和配置\n3. 最後以\"點擊Apply按鈕進行創建\"結束描述\n\n當前環境信息：\n- Node-RED版本: {{nodeRedVersion}}\n- Node.js版本: {{nodeVersion}}\n- 當前時間: {{currentTime}}\n- 選中的流程: {{selectedFlow}}\n- 選中的節點: {{selectedNodes}}\n- 配置需求: {{configurationNeeds}}\n\n可用的MCP工具: {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
     "outputFormat": {
       "type": "structured",
       "schema": {
@@ -265,7 +265,7 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get_settings", "update_settings", "install_node", "get_node_info", "get_diagnostics"]
+    "tools": ["get-settings", "update-settings", "install-node", "get-node-info", "get-diagnostics"]
   },
   "management": {
     "name": "管理模式",
@@ -337,6 +337,6 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get_settings", "get_diagnostics"]
+    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get-settings", "get-diagnostics"]
   }
 }

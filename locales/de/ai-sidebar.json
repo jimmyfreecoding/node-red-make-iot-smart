@@ -62,6 +62,13 @@
                 "welcome": "👋 Willkommen beim Make IoT Smart KI-Assistenten!\n\n🎯 **Aktuelles Szenario**: {scenarioName}\n\nBitte wählen Sie ein geeignetes Szenario und beginnen Sie das Gespräch:\n• 🎓 **Lernen** - Node-RED Konzepte und Knoten verstehen\n• 💡 **Lösungen** - IoT-Lösungsvorschläge erhalten\n• 🔌 **Integration** - Protokolle und Systeme integrieren\n• 💻 **Entwicklung** - Flows optimieren und entwickeln\n• ⚙️ **Konfiguration** - Node-RED Umgebung konfigurieren\n• 🖥️ **Verwaltung** - Anwendungen verwalten und bereitstellen",
                 "fallbackWelcome": "👋 Willkommen beim Make IoT Smart KI-Assistenten!\n\n🎯 **Aktuelles Szenario**: Lernen\n\nBitte beginnen Sie das Gespräch, ich helfe Ihnen dabei zu verstehen, wie Node-RED verwendet wird."
             },
+            "toolCalls": {
+                "noFlowSelectedWarning": "Hinweis: Derzeit ist kein spezifischer Flow ausgewählt. Bitte wählen Sie zuerst den zu analysierenden Flow-Tab im Node-RED-Editor aus.",
+                "noNodeSelectedWarning": "Hinweis: Derzeit ist kein spezifischer Knoten ausgewählt. Bitte wählen Sie zuerst den zu analysierenden Knoten im Node-RED-Editor aus.",
+                "singleNodeDescription": "Knoten \"{nodeName}\" (Typ: {nodeType})",
+                "multipleNodesDescription": "{nodeCount} ausgewählte Knoten",
+                "flowDetectionLog": "Flow-Beschreibungsanfrage erkannt, Flow-ID wird übergeben:"
+            },
             "errors": {
                 "configRequired": "Bitte konfigurieren Sie zuerst den API-Schlüssel",
                 "messageRequired": "Bitte geben Sie Nachrichteninhalt ein",

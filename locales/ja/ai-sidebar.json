@@ -62,6 +62,14 @@
                 "welcome": "👋 Make IoT Smart AIアシスタントへようこそ！\n\n🎯 **現在のシナリオ**: {scenarioName}\n\n適切なシナリオを選択して会話を開始してください：\n• 🎓 **学習** - Node-REDの概念とノードを理解する\n• 💡 **ソリューション** - IoTソリューションの提案を得る\n• 🔌 **統合** - プロトコルとシステムを統合する\n• 💻 **開発** - フローを最適化・開発する\n• ⚙️ **設定** - Node-RED環境を設定する\n• 🖥️ **管理** - アプリケーションを管理・デプロイする",
                 "fallbackWelcome": "👋 Make IoT Smart AIアシスタントへようこそ！\n\n🎯 **現在のシナリオ**: 学習\n\n会話を開始してください。Node-REDの使い方をお手伝いします。"
             },
+            "toolCalls": {
+
+                "noFlowSelectedWarning": "注意：現在、具体的なフローが選択されていません。まずNode-REDエディターで分析したいフロータブを選択してください。",
+                "noNodeSelectedWarning": "注意：現在、具体的なノードが選択されていません。まずNode-REDエディターで分析したいノードを選択してください。",
+                "singleNodeDescription": "ノード\"{nodeName}\"（タイプ: {nodeType}）",
+                "multipleNodesDescription": "{nodeCount}個の選択されたノード",
+                "flowDetectionLog": "フロー説明リクエストを検出、フローIDを渡します:"
+            },
             "errors": {
                 "configRequired": "まずAPIキーを設定してください",
                 "messageRequired": "メッセージ内容を入力してください",

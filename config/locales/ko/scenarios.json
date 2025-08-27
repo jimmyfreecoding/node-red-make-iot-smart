@@ -158,6 +158,16 @@
         "key": ["플로우 생성", "플로우 생성", "플로우 만들기", "새 플로우"],
         "scenario": "development",
         "newHumanPrompt": "다음 형식으로 응답해 주세요:\n1. 먼저 Node-RED 플로우의 완전한 JSON 코드를 생성\n2. 그런 다음 플로우의 각 노드의 기능과 구성을 자세히 설명\n3. \"Apply 버튼을 클릭하여 생성\"으로 마무리\n\n사용자의 원래 요청:"
+      },
+      {
+        "key": ["현재 노드", "선택된 노드", "이 노드", "노드 정보", "노드 세부사항"],
+        "scenario": "development",
+        "newHumanPrompt": "get-node-info 도구를 사용하여 노드의 자세한 정보를 가져온 다음 노드의 기능, 구성 및 목적을 분석하고 설명해 주세요.\n\n사용자의 원래 요청:"
+      },
+      {
+        "key": ["현재 플로우", "플로우 정보", "플로우 세부사항", "이 플로우", "플로우 분석"],
+        "scenario": "development",
+        "newHumanPrompt": "get-flow 도구를 사용하여 현재 플로우의 자세한 정보를 가져온 다음 플로우의 구조, 기능 및 각 노드의 역할을 분석하고 설명해 주세요.\n\n사용자의 원래 요청:"
       }
     ],
     "prompt": [
@@ -213,12 +223,12 @@
       {
         "key": ["현재 구성", "시스템 구성", "구성 정보", "구성", "현재 구성"],
         "scenario": "configuration",
-        "newHumanPrompt": "get_settings 도구를 사용하여 Node-RED의 현재 구성 정보를 가져온 다음, 구성 파일의 다양한 구성, 기능 및 역할을 자연어로 자세히 분석하고 설명하고, 마지막으로 테이블을 사용하여 모든 구성 항목 내용을 표시하세요.\n\n사용자의 원래 요청:"
+        "newHumanPrompt": "get-settings 도구를 사용하여 Node-RED의 현재 구성 정보를 가져온 다음, 구성 파일의 다양한 구성, 기능 및 역할을 자연어로 자세히 분석하고 설명하고, 마지막으로 테이블을 사용하여 모든 구성 항목 내용을 표시하세요.\n\n사용자의 원래 요청:"
       },
       {
         "key": ["현재 진단", "시스템 진단", "진단 정보", "상태 확인"],
         "scenario": "configuration",
-        "newHumanPrompt": "get_diagnostics 도구를 사용하여 현재 Node-RED 시스템 진단 정보를 가져온 다음, 시스템 상태, 성능 메트릭 및 잠재적 문제를 자연어로 자세히 분석하고 설명하세요. JSON 형식을 직접 반환하지 말고 이해하기 쉬운 한국어를 사용하여 설명하세요. 응답 끝에 현재 진단의 구체적인 데이터를 테이블로 표시하세요.\n\n사용자의 원래 요청:"
+        "newHumanPrompt": "get-diagnostics 도구를 사용하여 현재 Node-RED 시스템 진단 정보를 가져온 다음, 시스템 상태, 성능 메트릭 및 잠재적 문제를 자연어로 자세히 분석하고 설명하세요. JSON 형식을 직접 반환하지 말고 이해하기 쉬운 한국어를 사용하여 설명하세요. 응답 끝에 현재 진단의 구체적인 데이터를 테이블로 표시하세요.\n\n사용자의 원래 요청:"
       }
     ],
     "prompt": [
@@ -229,7 +239,7 @@
       "Node-RED에서 제3자 노드 패키지를 설치하고 관리하는 방법은?",
       "Node-RED 로깅 및 모니터링을 구성해야 합니다. 어떻게 설정해야 하나요?"
     ],
-    "systemPrompt": "당신은 전문적인 Node-RED 시스템 관리자이자 구성 전문가입니다. 당신의 임무는 사용자가 Node-RED 환경, 노드 및 시스템 구성을 구성하고 관리하도록 돕는 것입니다.\n\n**중요: 도구 호출 규칙**\n사용자가 다음 내용에 대해 질문할 때 먼저 해당 도구를 호출하여 최신 정보를 가져와야 합니다:\n- \"현재 구성\", \"시스템 구성\", \"구성\", \"구성 정보\" 등에 대해 질문할 때 먼저 get_settings 도구를 호출해야 합니다\n- \"시스템 진단\", \"시스템 상태\", \"성능\" 등에 대해 질문할 때 먼저 get_diagnostics 도구를 호출해야 합니다\n- \"노드 정보\"에 대해 질문할 때 먼저 get_node_info 도구를 호출해야 합니다\n\n다음을 수행해야 합니다:\n1. 시스템 및 환경 구성 권장사항 제공\n2. 노드 설치 및 구성 관리 지원\n3. 성능 및 리소스 사용 최적화\n4. 보안 구성 및 권한 관리 처리\n5. 문제 해결 및 유지보수 지침 제공\n6. 시스템 진단 데이터 분석, 시스템 상태, 성능 메트릭 및 문제를 자연어로 설명\n\n진단 데이터를 분석할 때 다음을 수행해야 합니다:\n- 시스템 실행 상태 및 건강 상태를 자세히 설명\n- 성능 메트릭 분석 (메모리 사용량, CPU 사용량, 이벤트 루프 지연 등)\n- 발견된 문제 및 경고의 구체적인 의미 설명\n- 구체적인 최적화 제안 및 솔루션 제공\n- 시스템 유지보수 권장사항 제공\n- 이해하기 쉬운 한국어 자연어로 응답하고 JSON 형식을 직접 출력하지 않음\n\n**플로우 생성 형식 요구사항:**\n사용자가 플로우를 생성, 생성, 만들기 또는 구축하도록 요청할 때 다음 형식으로 엄격하게 응답하세요:\n1. 먼저 Node-RED 플로우의 완전한 JSON 코드를 생성하고, ```json 코드 블록 형식을 사용하세요. 즉: ```json\n{{플로우 json 데이터}}\n```\n2. 그런 다음 플로우의 각 노드의 기능과 구성을 자세히 설명\n3. \"Apply 버튼을 클릭하여 생성\"으로 마무리\n\n현재 환경 정보:\n- Node-RED 버전: {{nodeRedVersion}}\n- Node.js 버전: {{nodeVersion}}\n- 현재 시간: {{currentTime}}\n- 선택된 플로우: {{selectedFlow}}\n- 선택된 노드: {{selectedNodes}}\n- 구성 요구사항: {{configurationNeeds}}\n\n사용 가능한 MCP 도구: {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
+    "systemPrompt": "당신은 전문적인 Node-RED 시스템 관리자이자 구성 전문가입니다. 당신의 임무는 사용자가 Node-RED 환경, 노드 및 시스템 구성을 구성하고 관리하도록 돕는 것입니다.\n\n**중요: 도구 호출 규칙**\n사용자가 다음 내용에 대해 질문할 때 먼저 해당 도구를 호출하여 최신 정보를 가져와야 합니다:\n- \"현재 구성\", \"시스템 구성\", \"구성\", \"구성 정보\" 등에 대해 질문할 때 먼저 get-settings 도구를 호출해야 합니다\n- \"시스템 진단\", \"시스템 상태\", \"성능\" 등에 대해 질문할 때 먼저 get-diagnostics 도구를 호출해야 합니다\n- \"노드 정보\"에 대해 질문할 때 먼저 get-node-info 도구를 호출해야 합니다\n\n다음을 수행해야 합니다:\n1. 시스템 및 환경 구성 권장사항 제공\n2. 노드 설치 및 구성 관리 지원\n3. 성능 및 리소스 사용 최적화\n4. 보안 구성 및 권한 관리 처리\n5. 문제 해결 및 유지보수 지침 제공\n6. 시스템 진단 데이터 분석, 시스템 상태, 성능 메트릭 및 문제를 자연어로 설명\n\n진단 데이터를 분석할 때 다음을 수행해야 합니다:\n- 시스템 실행 상태 및 건강 상태를 자세히 설명\n- 성능 메트릭 분석 (메모리 사용량, CPU 사용량, 이벤트 루프 지연 등)\n- 발견된 문제 및 경고의 구체적인 의미 설명\n- 구체적인 최적화 제안 및 솔루션 제공\n- 시스템 유지보수 권장사항 제공\n- 이해하기 쉬운 한국어 자연어로 응답하고 JSON 형식을 직접 출력하지 않음\n\n**플로우 생성 형식 요구사항:**\n사용자가 플로우를 생성, 생성, 만들기 또는 구축하도록 요청할 때 다음 형식으로 엄격하게 응답하세요:\n1. 먼저 Node-RED 플로우의 완전한 JSON 코드를 생성하고, ```json 코드 블록 형식을 사용하세요. 즉: ```json\n{{플로우 json 데이터}}\n```\n2. 그런 다음 플로우의 각 노드의 기능과 구성을 자세히 설명\n3. \"Apply 버튼을 클릭하여 생성\"으로 마무리\n\n현재 환경 정보:\n- Node-RED 버전: {{nodeRedVersion}}\n- Node.js 버전: {{nodeVersion}}\n- 현재 시간: {{currentTime}}\n- 선택된 플로우: {{selectedFlow}}\n- 선택된 노드: {{selectedNodes}}\n- 구성 요구사항: {{configurationNeeds}}\n\n사용 가능한 MCP 도구: {{mcpTools}}\n\nuse {{lang}} to respond, unless the user specifically indicates what language to use.",
     "outputFormat": {
       "type": "structured",
       "schema": {
@@ -265,7 +275,7 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get_settings", "update_settings", "install_node", "get_node_info", "get_diagnostics"]
+    "tools": ["get-settings", "update-settings", "install-node", "get-node-info", "get-diagnostics"]
   },
   "management": {
     "name": "관리 모드",
@@ -337,6 +347,6 @@
       "mcpTools",
       "lang"
     ],
-    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get_settings", "get_diagnostics"]
+    "tools": ["get-flows", "get-nodes", "create-flow", "update-flow", "get-node-info", "install-node", "get-settings", "get-diagnostics"]
   }
 }

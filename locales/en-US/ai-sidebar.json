@@ -63,6 +63,13 @@
                 "welcome": "👋 Welcome to Make IoT Smart AI Assistant!\n\n🎯 **Current Scenario**: {scenarioName}\n\nPlease select an appropriate scenario and start the conversation:\n• 🎓 **Learning** - Understand Node-RED concepts and nodes\n• 💡 **Solutions** - Get IoT solution suggestions\n• 🔌 **Integration** - Integrate protocols and systems\n• 💻 **Development** - Optimize and develop flows\n• ⚙️ **Configuration** - Configure Node-RED environment\n• 🖥️ **Management** - Manage and deploy applications",
                 "fallbackWelcome": "👋 Welcome to Make IoT Smart AI Assistant!\n\n🎯 **Current Scenario**: Learning\n\nPlease start the conversation, I will help you understand how to use Node-RED."
             },
+            "toolCalls": {
+                "noFlowSelectedWarning": "Note: No specific flow is currently selected. Please first select the flow tab you want to analyze in the Node-RED editor.",
+                "noNodeSelectedWarning": "Note: No specific node is currently selected. Please first select the node you want to analyze in the Node-RED editor.",
+                "singleNodeDescription": "node \"{nodeName}\" (type: {nodeType})",
+                "multipleNodesDescription": "{nodeCount} selected nodes",
+                "flowDetectionLog": "Flow explanation request detected, passing flow ID:"
+            },
             "errors": {
                 "configRequired": "Please configure API key first",
                 "messageRequired": "Please enter message content",
