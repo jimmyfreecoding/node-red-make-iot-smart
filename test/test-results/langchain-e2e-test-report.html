@@ -1,0 +1,1008 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangChain End-to-End Test Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #007acc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #007acc;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007acc;
+            padding-left: 15px;
+        }
+        .summary {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .summary-item {
+            display: inline-block;
+            margin: 10px 20px;
+            text-align: center;
+        }
+        .summary-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007acc;
+        }
+        .summary-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #007acc;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f0f8ff;
+        }
+        .status-success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .code {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .keyword-tag {
+            background: #007acc;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin: 2px;
+            display: inline-block;
+        }
+        .tool-tag {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        .no-tool-tag {
+            background: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 LangChain End-to-End Test Report</h1>
+        
+        <div class="summary">
+            <div class="summary-item">
+                <div class="summary-number">7</div>
+                <div class="summary-label">Test Languages</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number">35</div>
+                <div class="summary-label">Total Test Cases</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number">35</div>
+                <div class="summary-label">Successful Cases</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number">2025/8/27 16:07:10</div>
+                <div class="summary-label">Test Time</div>
+            </div>
+        </div>
+
+        <h2>📋 zh-CN Test Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Input</th>
+                    <th>Detected Keyword</th>
+                    <th>Tool Called</th>
+                    <th>Tool Type</th>
+                    <th>Tool Result</th>
+                    <th>Final Human Prompt</th>
+                    <th>System Prompt</th>
+                    <th>LLM Response</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><span class="keyword-tag">current flow</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-flow</span></td>
+                    <td><div class="code">{
+  "id": "test-flow-123",
+  "label": "Test Flow",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject"
+    },
+    {
+      "id": "node2",
+      "type": "debug"
+    }
+  ]
+}</div></td>
+                    <td><div class="code">Please use the get-flow tool to retrieve flow data for flow args:{"id":"test-flow-123"}, then analyze and explain the functionality, node connections,...</div></td>
+                    <td><div class="code">你是一个专业的Node-RED AI助手。你可以帮助用户解决各种Node-RED相关的问题，包括但不限于学习、开发、配置、集成和管理。
+
+你应该：
+1. 根据用户问题自动识别最适合的处理方式
+2. 提...</div></td>
+                    <td><div class="code">Simulated LLM response (zh-CN): Based on the request for current flow, Get current flow information.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">current node</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-node-info</span></td>
+                    <td><div class="code">{
+  "id": "test-node-456",
+  "type": "inject",
+  "name": "Test Inject Node",
+  "properties": {
+    "topic": "test"
+  }
+}</div></td>
+                    <td><div class="code">Please use get-node-info tool to retrieve detailed information for nodes with args:{"id":["test-node-456"]}, then analyze and explain the functionalit...</div></td>
+                    <td><div class="code">你是一个专业的Node-RED AI助手。你可以帮助用户解决各种Node-RED相关的问题，包括但不限于学习、开发、配置、集成和管理。
+
+你应该：
+1. 根据用户问题自动识别最适合的处理方式
+2. 提...</div></td>
+                    <td><div class="code">Simulated LLM response (zh-CN): Based on the request for current node, Get current node information.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">current config</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-settings</span></td>
+                    <td><div class="code">{
+  "version": "3.0.0",
+  "settings": {
+    "httpAdminRoot": "/",
+    "httpNodeRoot": "/api"
+  }
+}</div></td>
+                    <td><div class="code">current config</div></td>
+                    <td><div class="code">你是一个专业的Node-RED AI助手。你可以帮助用户解决各种Node-RED相关的问题，包括但不限于学习、开发、配置、集成和管理。
+
+你应该：
+1. 根据用户问题自动识别最适合的处理方式
+2. 提...</div></td>
+                    <td><div class="code">Simulated LLM response (zh-CN): Based on the request for current config, Get current configuration.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">current diagnostics</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-diagnostics</span></td>
+                    <td><div class="code">{
+  "system": {
+    "memory": "512MB",
+    "cpu": "2 cores"
+  },
+  "nodeRed": {
+    "version": "3.0.0",
+    "uptime": "1 hour"
+  }
+}</div></td>
+                    <td><div class="code">current diagnostics</div></td>
+                    <td><div class="code">你是一个专业的Node-RED AI助手。你可以帮助用户解决各种Node-RED相关的问题，包括但不限于学习、开发、配置、集成和管理。
+
+你应该：
+1. 根据用户问题自动识别最适合的处理方式
+2. 提...</div></td>
+                    <td><div class="code">Simulated LLM response (zh-CN): Based on the request for current diagnostics, Get diagnostics information.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">introduce Node-RED</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">Unknown Tool</span></td>
+                    <td><div class="code">None</div></td>
+                    <td><div class="code">introduce Node-RED</div></td>
+                    <td><div class="code">你是一个专业的Node-RED AI助手。你可以帮助用户解决各种Node-RED相关的问题，包括但不限于学习、开发、配置、集成和管理。
+
+你应该：
+1. 根据用户问题自动识别最适合的处理方式
+2. 提...</div></td>
+                    <td><div class="code">Simulated LLM response (zh-CN): Based on the request for introduce Node-RED, Natural language conversation.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h2>📋 en-US Test Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Input</th>
+                    <th>Detected Keyword</th>
+                    <th>Tool Called</th>
+                    <th>Tool Type</th>
+                    <th>Tool Result</th>
+                    <th>Final Human Prompt</th>
+                    <th>System Prompt</th>
+                    <th>LLM Response</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><span class="keyword-tag">current flow</span></td>
+                    <td>current flow</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-flow</span></td>
+                    <td><div class="code">{
+  "id": "test-flow-123",
+  "label": "Test Flow",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject"
+    },
+    {
+      "id": "node2",
+      "type": "debug"
+    }
+  ]
+}</div></td>
+                    <td><div class="code">Please use get-flow tool to get detailed information about the current flow, then analyze and explain the flow structure, functionality and the role o...</div></td>
+                    <td><div class="code">You are a professional Node-RED development engineer. Your task is to assist users in developing, de...</div></td>
+                    <td><div class="code">Simulated LLM response (en-US): Based on the request for current flow, Get current flow information.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">current node</span></td>
+                    <td>current node</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-node-info</span></td>
+                    <td><div class="code">{
+  "id": "test-node-456",
+  "type": "inject",
+  "name": "Test Inject Node",
+  "properties": {
+    "topic": "test"
+  }
+}</div></td>
+                    <td><div class="code">Please use get-node-info tool to get detailed node information, then analyze and explain the node's functionality, configuration and purpose.
+
+User or...</div></td>
+                    <td><div class="code">You are a professional Node-RED development engineer. Your task is to assist users in developing, de...</div></td>
+                    <td><div class="code">Simulated LLM response (en-US): Based on the request for current node, Get current node information.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">current config</span></td>
+                    <td>current config</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-settings</span></td>
+                    <td><div class="code">{
+  "version": "3.0.0",
+  "settings": {
+    "httpAdminRoot": "/",
+    "httpNodeRoot": "/api"
+  }
+}</div></td>
+                    <td><div class="code">Please use get_settings tool to get current Node-RED configuration information, then analyze and explain the various settings, functions and roles of ...</div></td>
+                    <td><div class="code">You are a professional Node-RED system administrator and configuration expert. Your task is to help ...</div></td>
+                    <td><div class="code">Simulated LLM response (en-US): Based on the request for current config, Get current configuration.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">current diagnostics</span></td>
+                    <td>current diagnostics</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-diagnostics</span></td>
+                    <td><div class="code">{
+  "system": {
+    "memory": "512MB",
+    "cpu": "2 cores"
+  },
+  "nodeRed": {
+    "version": "3.0.0",
+    "uptime": "1 hour"
+  }
+}</div></td>
+                    <td><div class="code">Please use get-diagnostics tool to get current Node-RED system diagnostic information, then use natural language to analyze and explain system status,...</div></td>
+                    <td><div class="code">You are a professional Node-RED system administrator and configuration expert. Your task is to help ...</div></td>
+                    <td><div class="code">Simulated LLM response (en-US): Based on the request for current diagnostics, Get diagnostics information.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">introduce Node-RED</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">Unknown Tool</span></td>
+                    <td><div class="code">None</div></td>
+                    <td><div class="code">introduce Node-RED</div></td>
+                    <td><div class="code">You are a professional Node-RED AI assistant. You can help users solve various Node-RED related prob...</div></td>
+                    <td><div class="code">Simulated LLM response (en-US): Based on the request for introduce Node-RED, Natural language conversation.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h2>📋 ja Test Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Input</th>
+                    <th>Detected Keyword</th>
+                    <th>Tool Called</th>
+                    <th>Tool Type</th>
+                    <th>Tool Result</th>
+                    <th>Final Human Prompt</th>
+                    <th>System Prompt</th>
+                    <th>LLM Response</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><span class="keyword-tag">現在のフロー</span></td>
+                    <td>現在のフロー</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-flow</span></td>
+                    <td><div class="code">{
+  "id": "test-flow-123",
+  "label": "Test Flow",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject"
+    },
+    {
+      "id": "node2",
+      "type": "debug"
+    }
+  ]
+}</div></td>
+                    <td><div class="code">get-flowツールを使用して現在のフローの詳細情報を取得し、フローの構造、機能、各ノードの役割を分析して説明してください。
+
+ユーザーの元のリクエスト：現在のフロー</div></td>
+                    <td><div class="code">あなたは専門的なNode-RED開発エンジニアです。あなたの任務は、ユーザーがNode-REDフローとカスタムノードの開発、デバッグ、最適化を行うことを支援することです。
+
+あなたがすべきこと：
+1....</div></td>
+                    <td><div class="code">Simulated LLM response (ja): Based on the request for 現在のフロー, 現在のフロー情報を取得.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">現在のノード</span></td>
+                    <td>現在のノード</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-node-info</span></td>
+                    <td><div class="code">{
+  "id": "test-node-456",
+  "type": "inject",
+  "name": "Test Inject Node",
+  "properties": {
+    "topic": "test"
+  }
+}</div></td>
+                    <td><div class="code">get-node-infoツールを使用してノードの詳細情報を取得し、ノードの機能、設定、目的を分析して説明してください。
+
+ユーザーの元のリクエスト：現在のノード</div></td>
+                    <td><div class="code">あなたは専門的なNode-RED開発エンジニアです。あなたの任務は、ユーザーがNode-REDフローとカスタムノードの開発、デバッグ、最適化を行うことを支援することです。
+
+あなたがすべきこと：
+1....</div></td>
+                    <td><div class="code">Simulated LLM response (ja): Based on the request for 現在のノード, 現在のノード情報を取得.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">現在の設定</span></td>
+                    <td>現在の設定</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-settings</span></td>
+                    <td><div class="code">{
+  "version": "3.0.0",
+  "settings": {
+    "httpAdminRoot": "/",
+    "httpNodeRoot": "/api"
+  }
+}</div></td>
+                    <td><div class="code">get-settingsツールを使用して現在のNode-RED設定情報を取得し、設定ファイルの各種設定、機能、役割を分析して説明してください。
+
+ユーザーの元のリクエスト：現在の設定</div></td>
+                    <td><div class="code">あなたは専門的なNode-REDシステム管理者および設定専門家です。あなたの任務は、ユーザーがNode-RED環境、ノード、システム設定を構成・管理することを支援することです。
+
+**重要：ツール呼び...</div></td>
+                    <td><div class="code">Simulated LLM response (ja): Based on the request for 現在の設定, 現在の設定を取得.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">現在の診断</span></td>
+                    <td>現在の診断</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-diagnostics</span></td>
+                    <td><div class="code">{
+  "system": {
+    "memory": "512MB",
+    "cpu": "2 cores"
+  },
+  "nodeRed": {
+    "version": "3.0.0",
+    "uptime": "1 hour"
+  }
+}</div></td>
+                    <td><div class="code">get-diagnosticsツールを使用して現在のNode-REDシステム診断情報を取得し、自然言語でシステム状態、パフォーマンス指標、潜在的な問題を詳しく分析して説明してください。JSON形式を直接返すのではなく、理解しやすい日本語で説明してください。回答の最後に現在の診断の具体的なデータを表で...</div></td>
+                    <td><div class="code">あなたは専門的なNode-REDシステム管理者および設定専門家です。あなたの任務は、ユーザーがNode-RED環境、ノード、システム設定を構成・管理することを支援することです。
+
+**重要：ツール呼び...</div></td>
+                    <td><div class="code">Simulated LLM response (ja): Based on the request for 現在の診断, 診断情報を取得.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">Node-REDを紹介</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">Unknown Tool</span></td>
+                    <td><div class="code">None</div></td>
+                    <td><div class="code">Node-REDを紹介</div></td>
+                    <td><div class="code">あなたは専門的なNode-RED AIアシスタントです。学習、開発、設定、統合、管理を含むがこれに限定されない、様々なNode-RED関連の問題をユーザーが解決することを支援できます。
+
+あなたがすべ...</div></td>
+                    <td><div class="code">Simulated LLM response (ja): Based on the request for Node-REDを紹介, 自然言語での会話.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h2>📋 ko Test Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Input</th>
+                    <th>Detected Keyword</th>
+                    <th>Tool Called</th>
+                    <th>Tool Type</th>
+                    <th>Tool Result</th>
+                    <th>Final Human Prompt</th>
+                    <th>System Prompt</th>
+                    <th>LLM Response</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><span class="keyword-tag">현재 플로우</span></td>
+                    <td>현재 플로우</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-flow</span></td>
+                    <td><div class="code">{
+  "id": "test-flow-123",
+  "label": "Test Flow",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject"
+    },
+    {
+      "id": "node2",
+      "type": "debug"
+    }
+  ]
+}</div></td>
+                    <td><div class="code">get-flow 도구를 사용하여 현재 플로우의 자세한 정보를 가져온 다음 플로우의 구조, 기능 및 각 노드의 역할을 분석하고 설명해 주세요.
+
+사용자의 원래 요청:현재 플로우</div></td>
+                    <td><div class="code">당신은 전문적인 Node-RED 개발 엔지니어입니다. 당신의 임무는 사용자가 Node-RED 플로우와 사용자 정의 노드를 개발, 디버그 및 최적화하도록 돕는 것입니다.
+
+다음을 수...</div></td>
+                    <td><div class="code">Simulated LLM response (ko): Based on the request for 현재 플로우, 현재 플로우 정보 가져오기.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">현재 노드</span></td>
+                    <td>현재 노드</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-node-info</span></td>
+                    <td><div class="code">{
+  "id": "test-node-456",
+  "type": "inject",
+  "name": "Test Inject Node",
+  "properties": {
+    "topic": "test"
+  }
+}</div></td>
+                    <td><div class="code">get-node-info 도구를 사용하여 노드의 자세한 정보를 가져온 다음 노드의 기능, 구성 및 목적을 분석하고 설명해 주세요.
+
+사용자의 원래 요청:현재 노드</div></td>
+                    <td><div class="code">당신은 전문적인 Node-RED 개발 엔지니어입니다. 당신의 임무는 사용자가 Node-RED 플로우와 사용자 정의 노드를 개발, 디버그 및 최적화하도록 돕는 것입니다.
+
+다음을 수...</div></td>
+                    <td><div class="code">Simulated LLM response (ko): Based on the request for 현재 노드, 현재 노드 정보 가져오기.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">현재 설정</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-settings</span></td>
+                    <td><div class="code">{
+  "version": "3.0.0",
+  "settings": {
+    "httpAdminRoot": "/",
+    "httpNodeRoot": "/api"
+  }
+}</div></td>
+                    <td><div class="code">현재 설정</div></td>
+                    <td><div class="code">당신은 전문적인 Node-RED AI 도우미입니다. 학습, 개발, 구성, 통합 및 관리를 포함하되 이에 국한되지 않는 Node-RED 관련 다양한 문제를 해결하도록 사용자를 도울 ...</div></td>
+                    <td><div class="code">Simulated LLM response (ko): Based on the request for 현재 설정, 현재 설정 가져오기.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">현재 진단</span></td>
+                    <td>현재 진단</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-diagnostics</span></td>
+                    <td><div class="code">{
+  "system": {
+    "memory": "512MB",
+    "cpu": "2 cores"
+  },
+  "nodeRed": {
+    "version": "3.0.0",
+    "uptime": "1 hour"
+  }
+}</div></td>
+                    <td><div class="code">get-diagnostics 도구를 사용하여 현재 Node-RED 시스템 진단 정보를 가져온 다음, 시스템 상태, 성능 메트릭 및 잠재적 문제를 자연어로 자세히 분석하고 설명하세요. JSON 형식을 직접 반환하지 말고 이해하기 쉬운 한국어를 사용하여 설명하세요. 응답 ...</div></td>
+                    <td><div class="code">당신은 전문적인 Node-RED 시스템 관리자이자 구성 전문가입니다. 당신의 임무는 사용자가 Node-RED 환경, 노드 및 시스템 구성을 구성하고 관리하도록 돕는 것입니다.
+
+*...</div></td>
+                    <td><div class="code">Simulated LLM response (ko): Based on the request for 현재 진단, 진단 정보 가져오기.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">Node-RED 소개</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">Unknown Tool</span></td>
+                    <td><div class="code">None</div></td>
+                    <td><div class="code">Node-RED 소개</div></td>
+                    <td><div class="code">당신은 전문적인 Node-RED AI 도우미입니다. 학습, 개발, 구성, 통합 및 관리를 포함하되 이에 국한되지 않는 Node-RED 관련 다양한 문제를 해결하도록 사용자를 도울 ...</div></td>
+                    <td><div class="code">Simulated LLM response (ko): Based on the request for Node-RED 소개, 자연어 대화.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h2>📋 es-ES Test Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Input</th>
+                    <th>Detected Keyword</th>
+                    <th>Tool Called</th>
+                    <th>Tool Type</th>
+                    <th>Tool Result</th>
+                    <th>Final Human Prompt</th>
+                    <th>System Prompt</th>
+                    <th>LLM Response</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><span class="keyword-tag">flujo actual</span></td>
+                    <td>flujo actual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-flow</span></td>
+                    <td><div class="code">{
+  "id": "test-flow-123",
+  "label": "Test Flow",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject"
+    },
+    {
+      "id": "node2",
+      "type": "debug"
+    }
+  ]
+}</div></td>
+                    <td><div class="code">Por favor usa la herramienta get-flow para obtener información detallada sobre el flujo actual, luego analiza y explica la estructura del flujo, funci...</div></td>
+                    <td><div class="code">Eres un ingeniero profesional de desarrollo de Node-RED. Tu tarea es ayudar a los usuarios a desarro...</div></td>
+                    <td><div class="code">Simulated LLM response (es-ES): Based on the request for flujo actual, Obtener información del flujo actual.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">nodo actual</span></td>
+                    <td>nodo actual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-node-info</span></td>
+                    <td><div class="code">{
+  "id": "test-node-456",
+  "type": "inject",
+  "name": "Test Inject Node",
+  "properties": {
+    "topic": "test"
+  }
+}</div></td>
+                    <td><div class="code">Por favor usa la herramienta get-node-info para obtener información detallada del nodo, luego analiza y explica la funcionalidad, configuración y prop...</div></td>
+                    <td><div class="code">Eres un ingeniero profesional de desarrollo de Node-RED. Tu tarea es ayudar a los usuarios a desarro...</div></td>
+                    <td><div class="code">Simulated LLM response (es-ES): Based on the request for nodo actual, Obtener información del nodo actual.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">configuración actual</span></td>
+                    <td>configuración actual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-settings</span></td>
+                    <td><div class="code">{
+  "version": "3.0.0",
+  "settings": {
+    "httpAdminRoot": "/",
+    "httpNodeRoot": "/api"
+  }
+}</div></td>
+                    <td><div class="code">Por favor usa la herramienta get_settings para obtener la información de configuración actual de Node-RED, luego analiza y explica detalladamente en l...</div></td>
+                    <td><div class="code">Eres un administrador profesional de sistemas Node-RED y experto en configuración. Tu tarea es ayuda...</div></td>
+                    <td><div class="code">Simulated LLM response (es-ES): Based on the request for configuración actual, Obtener configuración actual.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">diagnóstico actual</span></td>
+                    <td>diagnóstico actual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-diagnostics</span></td>
+                    <td><div class="code">{
+  "system": {
+    "memory": "512MB",
+    "cpu": "2 cores"
+  },
+  "nodeRed": {
+    "version": "3.0.0",
+    "uptime": "1 hour"
+  }
+}</div></td>
+                    <td><div class="code">Por favor usa la herramienta get-diagnostics para obtener la información de diagnóstico del sistema Node-RED actual, luego analiza y explica detallada...</div></td>
+                    <td><div class="code">Eres un administrador profesional de sistemas Node-RED y experto en configuración. Tu tarea es ayuda...</div></td>
+                    <td><div class="code">Simulated LLM response (es-ES): Based on the request for diagnóstico actual, Obtener información de diagnóstico.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">introducir Node-RED</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">Unknown Tool</span></td>
+                    <td><div class="code">None</div></td>
+                    <td><div class="code">introducir Node-RED</div></td>
+                    <td><div class="code">Eres un asistente AI profesional de Node-RED. Puedes ayudar a los usuarios a resolver varios problem...</div></td>
+                    <td><div class="code">Simulated LLM response (es-ES): Based on the request for introducir Node-RED, Conversación en lenguaje natural.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h2>📋 pt-BR Test Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Input</th>
+                    <th>Detected Keyword</th>
+                    <th>Tool Called</th>
+                    <th>Tool Type</th>
+                    <th>Tool Result</th>
+                    <th>Final Human Prompt</th>
+                    <th>System Prompt</th>
+                    <th>LLM Response</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><span class="keyword-tag">fluxo atual</span></td>
+                    <td>fluxo atual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-flow</span></td>
+                    <td><div class="code">{
+  "id": "test-flow-123",
+  "label": "Test Flow",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject"
+    },
+    {
+      "id": "node2",
+      "type": "debug"
+    }
+  ]
+}</div></td>
+                    <td><div class="code">Por favor use a ferramenta get-flow para obter informações detalhadas sobre o fluxo atual, então analise e explique a estrutura do fluxo, funcionalida...</div></td>
+                    <td><div class="code">Você é um engenheiro profissional de desenvolvimento Node-RED. Sua tarefa é ajudar os usuários a des...</div></td>
+                    <td><div class="code">Simulated LLM response (pt-BR): Based on the request for fluxo atual, Obter informações do fluxo atual.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">nó atual</span></td>
+                    <td>nó atual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-node-info</span></td>
+                    <td><div class="code">{
+  "id": "test-node-456",
+  "type": "inject",
+  "name": "Test Inject Node",
+  "properties": {
+    "topic": "test"
+  }
+}</div></td>
+                    <td><div class="code">Por favor use a ferramenta get-node-info para obter informações detalhadas do nó, então analise e explique a funcionalidade, configuração e propósito ...</div></td>
+                    <td><div class="code">Você é um engenheiro profissional de desenvolvimento Node-RED. Sua tarefa é ajudar os usuários a des...</div></td>
+                    <td><div class="code">Simulated LLM response (pt-BR): Based on the request for nó atual, Obter informações do nó atual.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">configuração atual</span></td>
+                    <td>configuração atual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-settings</span></td>
+                    <td><div class="code">{
+  "version": "3.0.0",
+  "settings": {
+    "httpAdminRoot": "/",
+    "httpNodeRoot": "/api"
+  }
+}</div></td>
+                    <td><div class="code">Por favor, use a ferramenta get-settings para obter as informações de configuração atuais do Node-RED, depois analise e explique detalhadamente em lin...</div></td>
+                    <td><div class="code">Você é um administrador profissional de sistemas Node-RED e especialista em configuração. Sua tarefa...</div></td>
+                    <td><div class="code">Simulated LLM response (pt-BR): Based on the request for configuração atual, Obter configuração atual.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">diagnóstico atual</span></td>
+                    <td>diagnóstico atual</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-diagnostics</span></td>
+                    <td><div class="code">{
+  "system": {
+    "memory": "512MB",
+    "cpu": "2 cores"
+  },
+  "nodeRed": {
+    "version": "3.0.0",
+    "uptime": "1 hour"
+  }
+}</div></td>
+                    <td><div class="code">Por favor use a ferramenta get_diagnostics para obter as informações de diagnóstico do sistema Node-RED atual, então analise e explique detalhadamente...</div></td>
+                    <td><div class="code">Você é um administrador profissional de sistemas Node-RED e especialista em configuração. Sua tarefa...</div></td>
+                    <td><div class="code">Simulated LLM response (pt-BR): Based on the request for diagnóstico atual, Obter informações de diagnóstico.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">apresentar Node-RED</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">Unknown Tool</span></td>
+                    <td><div class="code">None</div></td>
+                    <td><div class="code">apresentar Node-RED</div></td>
+                    <td><div class="code">Você é um assistente IA profissional Node-RED. Você pode ajudar os usuários a resolver vários proble...</div></td>
+                    <td><div class="code">Simulated LLM response (pt-BR): Based on the request for apresentar Node-RED, Conversa em linguagem natural.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h2>📋 fr Test Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User Input</th>
+                    <th>Detected Keyword</th>
+                    <th>Tool Called</th>
+                    <th>Tool Type</th>
+                    <th>Tool Result</th>
+                    <th>Final Human Prompt</th>
+                    <th>System Prompt</th>
+                    <th>LLM Response</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><span class="keyword-tag">flux actuel</span></td>
+                    <td>flux actuel</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-flow</span></td>
+                    <td><div class="code">{
+  "id": "test-flow-123",
+  "label": "Test Flow",
+  "nodes": [
+    {
+      "id": "node1",
+      "type": "inject"
+    },
+    {
+      "id": "node2",
+      "type": "debug"
+    }
+  ]
+}</div></td>
+                    <td><div class="code">Veuillez utiliser l'outil get-flow pour obtenir des informations détaillées sur le flux actuel, puis analyser et expliquer la structure du flux, la fo...</div></td>
+                    <td><div class="code">Vous êtes un ingénieur professionnel de développement Node-RED. Votre tâche est d'aider les utilisat...</div></td>
+                    <td><div class="code">Simulated LLM response (fr): Based on the request for flux actuel, Obtenir les informations du flux actuel.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">nœud actuel</span></td>
+                    <td>nœud actuel</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-node-info</span></td>
+                    <td><div class="code">{
+  "id": "test-node-456",
+  "type": "inject",
+  "name": "Test Inject Node",
+  "properties": {
+    "topic": "test"
+  }
+}</div></td>
+                    <td><div class="code">Veuillez utiliser l'outil get-node-info pour obtenir des informations détaillées sur le nœud, puis analyser et expliquer la fonctionnalité, la configu...</div></td>
+                    <td><div class="code">Vous êtes un ingénieur professionnel de développement Node-RED. Votre tâche est d'aider les utilisat...</div></td>
+                    <td><div class="code">Simulated LLM response (fr): Based on the request for nœud actuel, Obtenir les informations du nœud actuel.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">configuration actuelle</span></td>
+                    <td>configuration actuelle</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-settings</span></td>
+                    <td><div class="code">{
+  "version": "3.0.0",
+  "settings": {
+    "httpAdminRoot": "/",
+    "httpNodeRoot": "/api"
+  }
+}</div></td>
+                    <td><div class="code">Veuillez utiliser l'outil get-settings pour obtenir les informations de configuration actuelles de Node-RED, puis analyser et expliquer en détail en l...</div></td>
+                    <td><div class="code">Vous êtes un administrateur professionnel de systèmes Node-RED et expert en configuration. Votre tâc...</div></td>
+                    <td><div class="code">Simulated LLM response (fr): Based on the request for configuration actuelle, Obtenir la configuration actuelle.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">diagnostic actuel</span></td>
+                    <td>diagnostic actuel</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">get-diagnostics</span></td>
+                    <td><div class="code">{
+  "system": {
+    "memory": "512MB",
+    "cpu": "2 cores"
+  },
+  "nodeRed": {
+    "version": "3.0.0",
+    "uptime": "1 hour"
+  }
+}</div></td>
+                    <td><div class="code">Veuillez utiliser l'outil get-diagnostics pour obtenir les informations de diagnostic du système Node-RED actuel, puis analyser et expliquer en détail...</div></td>
+                    <td><div class="code">Vous êtes un administrateur professionnel de systèmes Node-RED et expert en configuration. Votre tâc...</div></td>
+                    <td><div class="code">Simulated LLM response (fr): Based on the request for diagnostic actuel, Obtenir les informations de diagnostic.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+                <tr>
+                    <td><span class="keyword-tag">présenter Node-RED</span></td>
+                    <td>None</td>
+                    <td>Yes</td>
+                    <td><span class="tool-tag">Unknown Tool</span></td>
+                    <td><div class="code">None</div></td>
+                    <td><div class="code">présenter Node-RED</div></td>
+                    <td><div class="code">Vous êtes un assistant IA professionnel Node-RED. Vous pouvez aider les utilisateurs à résoudre dive...</div></td>
+                    <td><div class="code">Simulated LLM response (fr): Based on the request for présenter Node-RED, Conversation en langage naturel.</div></td>
+                    <td class="status-success">✅ Success</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center; color: #666;">
+            <p>📊 Test Report Generated: 2025/8/27 16:07:10</p>
+            <p>🔧 Based on LANGCHAIN_ARCHITECTURE.md Architecture Documentation</p>
+        </div>
+    </div>
+</body>
+</html>
