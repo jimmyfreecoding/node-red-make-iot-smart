@@ -614,6 +614,64 @@ SOFTWARE.
         console.log('🛑 AI响应已停止');
     }
 
+    // Get development scenario keywords for current node detection
+    async function getDevelopmentNodeKeywords() {
+        try {
+            const currentLang = getCurrentLanguage();
+            const configUrl = `/ai-sidebar/scenarios?lang=${encodeURIComponent(currentLang)}`;
+            const response = await fetch(configUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            const scenarios = data.scenarios || data;
+            
+            // Find development scenario keywords for current node
+            if (scenarios.development && scenarios.development.keywords) {
+                for (const keywordConfig of scenarios.development.keywords) {
+                    if (keywordConfig.scenario === 'development' && 
+                        keywordConfig.newHumanPrompt && 
+                        keywordConfig.newHumanPrompt.includes('get-node-info')) {
+                        return keywordConfig.key || [];
+                    }
+                }
+            }
+            return [];
+        } catch (error) {
+            console.error('Error getting development node keywords:', error);
+            return [];
+        }
+    }
+
+    // Get development scenario keywords for current flow detection
+    async function getDevelopmentFlowKeywords() {
+        try {
+            const currentLang = getCurrentLanguage();
+            const configUrl = `/ai-sidebar/scenarios?lang=${encodeURIComponent(currentLang)}`;
+            const response = await fetch(configUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            const scenarios = data.scenarios || data;
+            
+            // Find development scenario keywords for current flow
+            if (scenarios.development && scenarios.development.keywords) {
+                for (const keywordConfig of scenarios.development.keywords) {
+                    if (keywordConfig.scenario === 'development' && 
+                        keywordConfig.newHumanPrompt && 
+                        keywordConfig.newHumanPrompt.includes('get-flow')) {
+                        return keywordConfig.key || [];
+                    }
+                }
+            }
+            return [];
+        } catch (error) {
+            console.error('Error getting development flow keywords:', error);
+            return [];
+        }
+    }
+
     // Detect keywords from configuration file
     async function detectKeywords(message) {
         try {
@@ -766,85 +824,44 @@ SOFTWARE.
             sendMessage = `请为${scenario.name}场景提供初始指导信息和建议。`;
         }
 
-        // Detect "current flow" related keywords (all scenarios)
+        // Initialize dynamic data for tool usage
         var dynamicData = {};
-        if (sendMessage.includes('当前流程') || sendMessage.includes('current flow')) {
-            
-            // Auto switch to development scenario because get-flow tool is only available in development scenario
-            if (currentScenario !== 'development') {
-                console.log('自动切换到开发场景以使用get-flow工具');
-                currentScenario = 'development';
-                ScenarioManager.currentScenario = 'development';
-                ScenarioManager.updateUI();
-            }
-            
-            // If there's a selected flow, pass flow ID to get-flow tool
-            if (selectedFlow && selectedFlow.id) {
-                dynamicData.flowId = selectedFlow.id;
-                console.log(_('sidebar.toolCalls.flowDetectionLog'), selectedFlow.id);
-                
-                // Hardcoded English template for get-flow tool with args format
-                const promptTemplate = "Please use the get-flow tool to retrieve flow data for flow args:{\"id\":\"{flowId}\"}, then analyze and explain the functionality, node connections, and working principles of this flow.\n\nUser's original request: {originalMessage}";
-                console.log("promptTemplate",promptTemplate)
-                sendMessage = promptTemplate.replace('{flowId}', selectedFlow.id).replace('{originalMessage}', sendMessage);
-            } else {
-                // Prompt when no flow is selected
-                sendMessage = `${sendMessage}\n\n${_('sidebar.toolCalls.noFlowSelectedWarning')}`;
-            }
-        }
-        
-        // Detect "current node" related keywords (all scenarios)
-        if (sendMessage.includes('当前节点') || sendMessage.includes('current node')) {
-            
-            // Auto switch to development scenario because get-node-info tool is only available in development scenario
-            if (currentScenario !== 'development') {
-                currentScenario = 'development';
-                ScenarioManager.currentScenario = 'development';
-                ScenarioManager.updateUI();
-            }
-            
-            // If there are selected nodes, pass node information to get-node-info tool
-            if (selectedNodes && selectedNodes.length > 0) {
-                dynamicData.selectedNodes = selectedNodes;
-
-                
-                // Modify message to include tool call instruction and explicit node IDs
-                const nodeIds = selectedNodes.map(n => n.id);
-                const nodeDescription = selectedNodes.length === 1 
-                    ? _('sidebar.toolCalls.singleNodeDescription')
-                        .replace('{nodeName}', selectedNodes[0].name || selectedNodes[0].type)
-                        .replace('{nodeType}', selectedNodes[0].type)
-                    : _('sidebar.toolCalls.multipleNodesDescription')
-                        .replace('{nodeCount}', selectedNodes.length);
-                    
-                // Hardcoded English template for get-node-info tool with args format
-                const nodePromptTemplate = "Please use get-node-info tool to retrieve detailed information for nodes with args:{\"id\":[{nodeIds}]}, then analyze and explain the functionality, configuration, and purpose of {nodeDescription}.\n\nUser's original request: {originalMessage}";
-                sendMessage = nodePromptTemplate
-                    .replace('{nodeIds}', nodeIds.map(id => `"${id}"`).join(', '))
-                    .replace('{nodeDescription}', nodeDescription)
-                    .replace('{originalMessage}', sendMessage);
-            } else {
-                // Prompt when no nodes are selected
-                sendMessage = `${sendMessage}\n\n${_('sidebar.toolCalls.noNodeSelectedWarning')}`;
-            }
-        }
         
         // Detect keywords from config file and handle scenario switching
         const keywordDetected = await detectKeywords(sendMessage);
         
         if (keywordDetected) {
-            // Auto switch scenario
+            // Auto switch scenario only if different
             if (currentScenario !== keywordDetected.scenario) {
                 currentScenario = keywordDetected.scenario;
-                ScenarioManager.currentScenario = keywordDetected.scenario;
-                ScenarioManager.updateUI();
+                ScenarioManager.switchScenario(keywordDetected.scenario);
             }
             
             // Use new prompt from config file
             const originalMessage = sendMessage;
             sendMessage = keywordDetected.newHumanPrompt + sendMessage;
+            
+            // Handle flow-related keywords
+            if (keywordDetected.scenario === 'development') {
+                const lowerMessage = sendMessage.toLowerCase();
+                const flowKeywords = await getDevelopmentFlowKeywords();
+                const nodeKeywords = await getDevelopmentNodeKeywords();
+                
+                const matchedFlowKeyword = flowKeywords.some(keyword => lowerMessage.includes(keyword.toLowerCase()));
+                const matchedNodeKeyword = nodeKeywords.some(keyword => lowerMessage.includes(keyword.toLowerCase()));
+                
+                // Handle flow keywords
+                if (matchedFlowKeyword && selectedFlow && selectedFlow.id) {
+                    dynamicData.flowId = selectedFlow.id;
+                    console.log(_('sidebar.toolCalls.flowDetectionLog'), selectedFlow.id);
+                }
+                
+                // Handle node keywords
+                if (matchedNodeKeyword && selectedNodes && selectedNodes.length > 0) {
+                    dynamicData.selectedNodes = selectedNodes;
+                }
+            }
         }
-
 
         
         // Create loading message with animation
