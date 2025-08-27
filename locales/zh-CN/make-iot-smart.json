@@ -1,90 +1,99 @@
 {
     "make-iot-smart": {
-        "paletteLabel": "AI助手",
+        "name": "智能物联网助手",
         "label": {
             "name": "名称",
-            "apiConfig": "API配置",
-            "aiAssistant": "AI助手",
-            "defaultName": "AI助手"
+            "apiConfig": "API配置"
         },
         "placeholder": {
             "name": "输入节点名称"
         },
         "tips": {
-            "autoHide": "此节点会自动隐藏，用于配置AI助手功能"
+            "autoHide": "此节点将在不使用时自动隐藏AI侧边栏。"
+        },
+        "help": {
+            "description": "由AI驱动的智能物联网助手，能够理解自然语言命令并与物联网设备交互。",
+            "details": {
+                "overview": "此节点为物联网设备管理和自动化提供AI驱动的协助。它可以处理自然语言输入，理解设备状态，并通过连接的API执行命令。",
+                "features": "主要功能包括自然语言处理、设备状态监控、自动响应以及与多个AI提供商的集成。",
+                "aiSidebar": "AI侧边栏提供了一个交互式界面，可以直接从Node-RED编辑器与AI助手进行通信。",
+                "autoHide": "自动隐藏功能会在AI侧边栏未被积极使用时自动最小化，保持工作区整洁。",
+                "configuration": "通过选择API配置、设置响应参数和定义设备交互规则来配置节点。"
+            },
+            "references": {
+                "github": "GitHub仓库",
+                "npm": "NPM包",
+                "docs": "文档"
+            }
+        }
+    },
+    "api-config": {
+        "name": "API配置",
+        "label": {
+            "name": "名称",
+            "provider": "提供商",
+            "apiKey": "API密钥",
+            "model": "模型",
+            "useDifferentModels": "使用不同模型",
+            "maxTokens": "最大令牌数"
+        },
+        "placeholder": {
+            "name": "输入配置名称",
+            "apiKey": "输入您的API密钥"
+        },
+        "tips": {
+            "apiKey": "您的API密钥将被安全存储和加密。",
+            "capabilities": {
+                "noImage": "不支持图像",
+                "noBrowser": "不支持浏览器",
+                "promptCache": "支持提示缓存",
+                "maxInput": "最大输入令牌数",
+                "cacheWritePrice": "缓存写入价格",
+                "cacheReadPrice": "缓存读取价格",
+                "outputPrice": "输出价格"
+            },
+            "differentModels": "为规划和执行阶段使用不同的模型。"
+        },
+        "validation": {
+            "apiKeyFiltered": "已从API密钥中移除无效字符。仅允许ASCII字符。"
+        },
+        "help": {
+            "description": "AI服务提供商的配置节点，包括DeepSeek、OpenAI和Anthropic API。",
+            "details": {
+                "overview": "此配置节点管理与各种AI服务提供商的连接。它处理身份验证、模型选择和API参数，以实现与AI服务的无缝集成。",
+                "providers": "支持多个AI提供商，包括DeepSeek、OpenAI、Anthropic和其他兼容服务。每个提供商提供不同的模型和功能。",
+                "apiKey": "为不同服务提供商安全存储和管理API密钥。密钥经过加密并安全存储在Node-RED凭据系统中。",
+                "models": "为每个提供商配置特定的AI模型，包括GPT-4、Claude、DeepSeek模型和自定义端点。模型选择影响响应质量和成本。",
+                "advanced": "高级选项包括自定义端点、超时设置、重试逻辑和响应格式化参数。"
+            },
+            "configuration": {
+                "steps": "1. 选择您的AI服务提供商\n2. 输入您的API密钥\n3. 选择适当的模型\n4. 如需要，配置高级设置\n5. 测试连接",
+                "validation": "配置会自动验证API密钥并测试连接以确保正确设置。",
+                "security": "API密钥使用Node-RED的安全凭据系统存储，永远不会在流程或日志中暴露。"
+            },
+            "references": {
+                "deepseek": "DeepSeek API文档",
+                "openai": "OpenAI API文档",
+                "anthropic": "Anthropic API文档",
+                "troubleshooting": "故障排除指南"
+            }
         }
     },
     "common": {
         "label": {
-            "tip": "提示:"
-        }
-    },
-    "api-config": {
-        "label": {
-            "name": "名称",
-            "provider": "API提供商",
+            "details": "详细信息",
+            "features": "功能特性",
+            "aiSidebar": "AI侧边栏",
+            "autoHide": "自动隐藏",
+            "configuration": "配置",
+            "references": "参考资料",
+            "providers": "服务提供商",
             "apiKey": "API密钥",
-            "model": "模型",
-            "maxTokens": "最大令牌数",
-            "useDifferentModels": "为Plan和Act模式使用不同模型"
-        },
-        "placeholder": {
-            "name": "名称",
-            "apiKey": "请输入API密钥"
-        },
-        "tips": {
-            "apiKey": "此密钥存储在本地，仅用于从此扩展发出API请求。",
-            "differentModels": "在Plan和Act模式之间切换将保留上一模式中使用的API和模型。这在使用强大的推理模型来制定计划，然后使用更便宜的编码模型来执行时可能会有所帮助。",
-            "capabilities": {
-                "noImage": "不支持图像",
-                "noBrowser": "不支持浏览器使用",
-                "promptCache": "支持提示缓存",
-                "maxInput": "最大输入：8,000 tokens",
-                "cacheWritePrice": "缓存写入价格：$0.27/百万tokens",
-                "cacheReadPrice": "缓存读取价格：$0.07/百万tokens",
-                "outputPrice": "输出价格：$1.10/百万tokens"
-            }
-        },
-        "help": {
-            "description": "API配置节点用于存储AI服务提供商的API密钥和模型选择。",
-            "providers": "支持的提供商包括DeepSeek、OpenAI和Anthropic。",
-            "usage": "您可以为不同的使用场景选择不同的模型，并可以选择为Plan和Act模式使用不同的模型。"
-        },
-        "validation": {
-            "apiKeyFiltered": "已过滤非法字符，API密钥只能包含数字、字母和符号"
+            "models": "模型选择",
+            "advanced": "高级选项",
+            "steps": "配置步骤",
+            "validation": "验证机制",
+            "security": "安全性"
         }
-    },
-    "errors": {
-        "apiKeyMissing": "API密钥未配置，请在配置节点中设置API密钥",
-        "apiKeyAuthFailed": "API密钥认证失败，请检查配置节点中的API密钥是否正确",
-        "modelMissing": "模型名称缺失，请在配置节点中选择模型",
-        "configNodeNotFound": "未找到API配置节点",
-        "networkError": "网络错误",
-        "executionFailed": "执行失败",
-        "toolExecutionFailed": "工具执行失败",
-        "unknownError": "发生未知错误"
-    },
-    "messages": {
-        "apiConfigInit": "API配置节点初始化",
-        "mcpNotEnabled": "MCP未启用 - enableMcp为false",
-        "mcpCommandNotConfigured": "MCP命令未配置",
-        "mcpInitStart": "开始初始化MCP连接",
-        "mcpInitSuccess": "MCP初始化成功",
-        "mcpInitFailed": "MCP初始化失败",
-        "aiHelperNodeExists": "AI助手节点已存在，无需创建",
-        "aiHelperNodeCreated": "AI助手节点自动创建成功",
-        "aiHelperNodeCreating": "未找到AI助手节点，自动创建中...",
-        "flowCreationSuccess": "流程创建成功！",
-        "toolExecutionSuccess": "已应用",
-        "retry": "重试",
-        "apiConfigNotFound": "未找到API配置节点，无法自动创建AI助手节点",
-        "initializingAIHelper": "设置setTimeout来调用ensureAIHelperNode...",
-        "aiHelperNodeChecking": "setTimeout触发，开始执行ensureAIHelperNode..."
-    },
-    "status": {
-        "ready": "就绪",
-        "connected": "已连接",
-        "disconnected": "已断开",
-        "error": "错误"
     }
 }

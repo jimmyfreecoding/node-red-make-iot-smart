@@ -50,6 +50,7 @@
         },
         "plugins": {
             "ai-sidebar": "ai-sidebar.html"
-        }
+        },
+        "locales": "locales"
     }
 }

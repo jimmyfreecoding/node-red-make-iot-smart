@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Node-RED Help i18n</title>
+    <script src="http://localhost:1880/vendor/jquery/jquery-1.11.1.min.js"></script>
+</head>
+<body>
+    <h1>Debug Node-RED Help i18n</h1>
+    
+    <h2>Test 1: Check if locales are accessible</h2>
+    <div id="test1-result">Testing...</div>
+    
+    <h2>Test 2: Check namespace format</h2>
+    <div id="test2-result">Testing...</div>
+    
+    <h2>Test 3: Simulate help panel content</h2>
+    <div id="help-content">
+        <script type="text/html" data-help-name="make-iot-smart">
+            <p data-i18n="make-iot-smart.help.description">Default description</p>
+            <h3 data-i18n="common.label.details">Default details</h3>
+            <p data-i18n="make-iot-smart.help.details.overview">Default overview</p>
+        </script>
+    </div>
+    
+    <h2>Test 4: Manual i18n processing</h2>
+    <div id="manual-i18n">
+        <p data-i18n="make-iot-smart.help.description">Loading...</p>
+        <h3 data-i18n="common.label.details">Loading...</h3>
+        <p data-i18n="make-iot-smart.help.details.overview">Loading...</p>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            console.log('Starting debug tests...');
+            
+            // Test 1: Check if locales are accessible
+            $.getJSON('/locales/@jimmyfreecoding/node-red-make-iot-smart/make-iot-smart')
+                .done(function(data) {
+                    $('#test1-result').html('<span style="color: green;">✓ Locales accessible</span>');
+                    console.log('Locales data:', data);
+                    
+                    // Test 2: Check namespace format
+                    if (data['make-iot-smart'] && data['common']) {
+                        $('#test2-result').html('<span style="color: green;">✓ Namespace format correct</span>');
+                    } else {
+                        $('#test2-result').html('<span style="color: orange;">⚠ Namespace format may be incorrect</span>');
+                    }
+                    
+                    // Test 4: Manual i18n processing
+                    $('#manual-i18n [data-i18n]').each(function() {
+                        var key = $(this).attr('data-i18n');
+                        var keys = key.split('.');
+                        var value = data;
+                        
+                        for (var i = 0; i < keys.length; i++) {
+                            if (value && value[keys[i]]) {
+                                value = value[keys[i]];
+                            } else {
+                                value = 'Missing: ' + key;
+                                break;
+                            }
+                        }
+                        
+                        $(this).text(value);
+                    });
+                })
+                .fail(function() {
+                    $('#test1-result').html('<span style="color: red;">✗ Locales not accessible</span>');
+                    $('#test2-result').html('<span style="color: red;">✗ Cannot test namespace</span>');
+                });
+            
+            // Test 3: Check if Node-RED's i18n system is available
+            if (typeof RED !== 'undefined' && RED._) {
+                console.log('Node-RED i18n system available');
+                try {
+                    var testMsg = RED._('make-iot-smart.help.description');
+                    console.log('Test message:', testMsg);
+                } catch (e) {
+                    console.error('Error accessing RED._():', e);
+                }
+            } else {
+                console.log('Node-RED i18n system not available in this context');
+            }
+        });
+    </script>
+</body>
+</html>

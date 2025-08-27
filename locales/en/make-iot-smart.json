@@ -1,0 +1,99 @@
+{
+    "make-iot-smart": {
+        "name": "Make IoT Smart",
+        "label": {
+            "name": "Name",
+            "apiConfig": "API Configuration"
+        },
+        "placeholder": {
+            "name": "Enter node name"
+        },
+        "tips": {
+            "autoHide": "This node will automatically hide the AI sidebar when not in use."
+        },
+        "help": {
+            "description": "An intelligent IoT assistant powered by AI that can understand natural language commands and interact with IoT devices.",
+            "details": {
+                "overview": "This node provides AI-powered assistance for IoT device management and automation. It can process natural language inputs, understand device states, and execute commands through connected APIs.",
+                "features": "Key features include natural language processing, device state monitoring, automated responses, and integration with multiple AI providers.",
+                "aiSidebar": "The AI sidebar provides an interactive interface for communicating with the AI assistant directly from the Node-RED editor.",
+                "autoHide": "The auto-hide feature automatically minimizes the AI sidebar when it's not actively being used, keeping your workspace clean.",
+                "configuration": "Configure the node by selecting an API configuration, setting response parameters, and defining device interaction rules."
+            },
+            "references": {
+                "github": "GitHub Repository",
+                "npm": "NPM Package",
+                "docs": "Documentation"
+            }
+        }
+    },
+    "api-config": {
+        "name": "API Configuration",
+        "label": {
+            "name": "Name",
+            "provider": "Provider",
+            "apiKey": "API Key",
+            "model": "Model",
+            "useDifferentModels": "Use Different Models",
+            "maxTokens": "Max Tokens"
+        },
+        "placeholder": {
+            "name": "Enter configuration name",
+            "apiKey": "Enter your API key"
+        },
+        "tips": {
+            "apiKey": "Your API key will be stored securely and encrypted.",
+            "capabilities": {
+                "noImage": "No image support",
+                "noBrowser": "No browser support",
+                "promptCache": "Prompt caching supported",
+                "maxInput": "Max input tokens",
+                "cacheWritePrice": "Cache write price",
+                "cacheReadPrice": "Cache read price",
+                "outputPrice": "Output price"
+            },
+            "differentModels": "Use different models for planning and execution phases."
+        },
+        "validation": {
+            "apiKeyFiltered": "Invalid characters removed from API key. Only ASCII characters are allowed."
+        },
+        "help": {
+            "description": "Configuration node for AI service providers including DeepSeek, OpenAI, and Anthropic APIs.",
+            "details": {
+                "overview": "This configuration node manages connections to various AI service providers. It handles authentication, model selection, and API parameters for seamless integration with AI services.",
+                "providers": "Supports multiple AI providers including DeepSeek, OpenAI, Anthropic, and other compatible services. Each provider offers different models and capabilities.",
+                "apiKey": "Secure storage and management of API keys for different service providers. Keys are encrypted and stored safely in the Node-RED credential system.",
+                "models": "Configure specific AI models for each provider, including GPT-4, Claude, DeepSeek models, and custom endpoints. Model selection affects response quality and cost.",
+                "advanced": "Advanced options include custom endpoints, timeout settings, retry logic, and response formatting parameters."
+            },
+            "configuration": {
+                "steps": "1. Select your AI service provider\n2. Enter your API key\n3. Choose the appropriate model\n4. Configure advanced settings if needed\n5. Test the connection",
+                "validation": "The configuration automatically validates API keys and tests connectivity to ensure proper setup.",
+                "security": "API keys are stored using Node-RED's secure credential system and are never exposed in flows or logs."
+            },
+            "references": {
+                "deepseek": "DeepSeek API Documentation",
+                "openai": "OpenAI API Documentation",
+                "anthropic": "Anthropic API Documentation",
+                "troubleshooting": "Troubleshooting Guide"
+            }
+        }
+    },
+    "common": {
+        "label": {
+            "details": "Details",
+            "features": "Features",
+            "aiSidebar": "AI Sidebar",
+            "autoHide": "Auto Hide",
+            "configuration": "Configuration",
+            "references": "References",
+            "providers": "Providers",
+            "apiKey": "API Key",
+            "models": "Models",
+            "advanced": "Advanced Options",
+            "steps": "Steps",
+            "validation": "Validation",
+            "security": "Security"
+        }
+    }
+}

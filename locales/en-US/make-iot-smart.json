@@ -12,11 +12,39 @@
         },
         "tips": {
             "autoHide": "This node will be automatically hidden and used to connect AI configuration. If deleted, the system will automatically recreate it."
+        },
+        "help": {
+            "description": "Make IoT Smart AI Assistant node provides intelligent AI assistance for Node-RED, supporting automated development and optimization for various IoT scenarios.",
+            "details": {
+                "overview": "This node integrates advanced AI models to help users quickly build IoT solutions, optimize existing flows, learn Node-RED concepts, and manage system configurations.",
+                "features": "Supports seven core scenarios: Learning, Solution Design, Integration Development, Flow Optimization, Configuration Management, System Management, and General Conversation.",
+                "aiSidebar": "The node adds an AI assistant panel to the right sidebar, providing an intuitive chat interface and scenario selection functionality.",
+                "autoHide": "The node automatically hides in the canvas without affecting flow visualization, while maintaining background functionality.",
+                "configuration": "Requires configuring an API config node to set up AI service providers, API keys, and model selection."
+            },
+            "references": {
+                "github": "Project GitHub Repository",
+                "npm": "NPM Package Page",
+                "docs": "Complete Documentation"
+            }
         }
     },
     "common": {
         "label": {
-            "tip": "Tip:"
+            "tip": "Tip:",
+            "details": "Details",
+            "features": "Features",
+            "aiSidebar": "AI Sidebar",
+            "autoHide": "Auto Hide",
+            "configuration": "Configuration",
+            "references": "References",
+            "providers": "Providers",
+            "apiKey": "API Key",
+            "models": "Models",
+            "advanced": "Advanced Options",
+            "steps": "Steps",
+            "validation": "Validation",
+            "security": "Security"
         }
     },
     "api-config": {
@@ -46,9 +74,25 @@
             }
         },
         "help": {
-            "description": "API configuration node is used to store API keys and model selection for AI service providers.",
-            "providers": "Supported providers include DeepSeek, OpenAI, and Anthropic.",
-            "usage": "You can select different models for different usage scenarios and choose to use different models for Plan and Act modes."
+            "description": "API configuration node for setting up AI service provider connection parameters, including API keys, model selection, and advanced configuration options.",
+            "details": {
+                "overview": "This configuration node is the core component of Make IoT Smart AI Assistant, responsible for managing connections and authentication with various AI service providers.",
+                "providers": "Supports multiple mainstream AI service providers: DeepSeek, OpenAI, and Anthropic, each with different model options and pricing strategies.",
+                "apiKey": "API key is the authentication credential for accessing AI services, which needs to be obtained from the respective service provider. Keys are stored securely and will not appear in logs.",
+                "models": "Different models can be selected for different use cases, supporting separate model configuration for Plan and Act modes to optimize performance and cost.",
+                "advanced": "Advanced options include custom API endpoints, request timeout settings, retry mechanisms, etc., suitable for users with special requirements."
+            },
+            "configuration": {
+                "steps": "Configuration steps: 1. Select AI service provider; 2. Enter valid API key; 3. Choose appropriate model; 4. Adjust advanced settings as needed.",
+                "validation": "The system automatically validates API key validity and model availability to ensure correct configuration.",
+                "security": "All sensitive information is encrypted and stored following Node-RED security best practices."
+            },
+            "references": {
+                "deepseek": "DeepSeek API Documentation",
+                "openai": "OpenAI API Documentation",
+                "anthropic": "Anthropic API Documentation",
+                "troubleshooting": "Troubleshooting Guide"
+            }
         },
         "validation": {
             "apiKeyFiltered": "Illegal characters filtered, API key can only contain numbers, letters and symbols"

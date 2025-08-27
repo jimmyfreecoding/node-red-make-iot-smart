@@ -62,7 +62,35 @@
 </script>
 
 <script type="text/x-red" data-help-name="make-iot-smart">
-    <p>Configuration for the 'Auto Layout' sidebar.</p>
+    <p>AI-powered smart IoT assistant that can understand natural language commands and interact with IoT devices.</p>
+    
+    <h3>Details</h3>
+    <p>This node provides AI-driven assistance for IoT device management and automation. It can process natural language input, understand device states, and execute commands through connected APIs.</p>
+    
+    <h4>Features</h4>
+    <p>Key features include natural language processing, device state monitoring, automated responses, and integration with multiple AI providers.</p>
+    
+    <h4>AI Sidebar</h4>
+    <p>The AI sidebar provides an interactive interface for communicating with the AI assistant directly from the Node-RED editor.</p>
+    
+    <h4>Auto Hide</h4>
+    <p>The auto-hide feature automatically minimizes the AI sidebar when not actively in use, keeping the workspace clean.</p>
+    
+    <h3>Configuration</h3>
+    <p>Configure the node by selecting an API configuration, setting response parameters, and defining device interaction rules.</p>
+    
+    <h3>Usage</h3>
+    <p>1. Connect an API configuration node<br/>
+    2. Deploy the flow<br/>
+    3. Use the AI sidebar to interact with the assistant<br/>
+    4. The node will process messages and provide intelligent responses</p>
+    
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://github.com/your-repo/node-red-make-iot-smart" target="_blank">GitHub Repository</a></li>
+        <li><a href="https://www.npmjs.com/package/@jimmyfreecoding/node-red-make-iot-smart" target="_blank">NPM Package</a></li>
+        <li><a href="https://github.com/your-repo/node-red-make-iot-smart/blob/main/README.md" target="_blank">Documentation</a></li>
+    </ul>
 </script>
 
 <!-- API配置节点的HTML模板 -->
@@ -313,7 +341,42 @@
 
 <!-- API配置节点的帮助信息 -->
 <script type="text/x-red" data-help-name="api-config">
-    <p data-i18n="api-config.help.description"></p>
-    <p data-i18n="api-config.help.providers"></p>
-    <p data-i18n="api-config.help.usage"></p>
+    <p>Configuration node for AI service providers including DeepSeek, OpenAI, and Anthropic APIs.</p>
+    
+    <h3>Details</h3>
+    <p>This configuration node manages connections to various AI service providers. It handles authentication, model selection, and API parameters for seamless integration with AI services.</p>
+    
+    <h4>Providers</h4>
+    <p>Supports multiple AI providers including DeepSeek, OpenAI, Anthropic, and other compatible services. Each provider offers different models and capabilities.</p>
+    
+    <h4>API Key</h4>
+    <p>Securely store and manage API keys for different service providers. Keys are encrypted and stored securely in the Node-RED credentials system.</p>
+    
+    <h4>Model Selection</h4>
+    <p>Configure specific AI models for each provider, including GPT-4, Claude, DeepSeek models, and custom endpoints. Model selection affects response quality and cost.</p>
+    
+    <h4>Advanced Options</h4>
+    <p>Advanced options include custom endpoints, timeout settings, retry logic, and response formatting parameters.</p>
+    
+    <h3>Configuration</h3>
+    <h4>Setup Steps</h4>
+    <p>1. Select your AI service provider<br/>
+    2. Enter your API key<br/>
+    3. Choose the appropriate model<br/>
+    4. Configure advanced settings if needed<br/>
+    5. Test the connection</p>
+    
+    <h4>Validation</h4>
+    <p>Configuration automatically validates API keys and tests connections to ensure proper setup.</p>
+    
+    <h4>Security</h4>
+    <p>API keys are stored using Node-RED's secure credentials system and are never exposed in flows or logs.</p>
+    
+    <h3>References</h3>
+    <ul>
+        <li><a href="https://platform.deepseek.com/api-docs" target="_blank">DeepSeek API Documentation</a></li>
+        <li><a href="https://platform.openai.com/docs/api-reference" target="_blank">OpenAI API Documentation</a></li>
+        <li><a href="https://docs.anthropic.com/claude/reference" target="_blank">Anthropic API Documentation</a></li>
+        <li><a href="https://github.com/your-repo/node-red-make-iot-smart/blob/main/TROUBLESHOOTING.md" target="_blank">Troubleshooting Guide</a></li>
+    </ul>
 </script>
