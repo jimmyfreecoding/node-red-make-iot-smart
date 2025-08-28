@@ -1032,8 +1032,8 @@ SOFTWARE.
             case 'tool_call':
                 // Show tool call information (only when tool name is valid)
                 if (currentStreamMessageId && data.tool_name && data.tool_name !== 'undefined') {
-                    var toolInfo = `🔧 ${_("sidebar.messages.toolCalling")}: ${data.tool_name}\n${_("sidebar.messages.parameters")}: ${JSON.stringify(data.arguments, null, 2)}\n`;
-                    appendToMessage(currentStreamMessageId, toolInfo);
+                    // var toolInfo = `🔧 ${_("sidebar.messages.toolCalling")}: ${data.tool_name}\n${_("sidebar.messages.parameters")}: ${JSON.stringify(data.arguments, null, 2)}\n`;
+                    // appendToMessage(currentStreamMessageId, toolInfo);
                 }
                 break;
                 
