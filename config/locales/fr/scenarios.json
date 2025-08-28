@@ -157,7 +157,7 @@
       {
         "key": ["créer flux", "générer flux", "créer flux", "nouveau flux"],
         "scenario": "development",
-        "newHumanPrompt": "Veuillez répondre dans le format suivant :\n1. Générez d'abord le code JSON complet du flux Node-RED\n2. Expliquez ensuite en détail la fonction et la configuration de chaque nœud dans le flux\n3. Terminez par \"Cliquez sur le bouton Apply pour créer\"\n\nDemande originale de l'utilisateur :"
+        "newHumanPrompt": "Veuillez répondre dans le format suivant :\n1. Générez d'abord le code JSON complet du flux Node-RED, où chaque ID de nœud et de flux est généré en utilisant uuid pour éviter la duplication\n2. Expliquez ensuite en détail la fonction et la configuration de chaque nœud dans le flux\n3. Terminez par \"Cliquez sur le bouton Apply pour créer\"\n\nDemande originale de l'utilisateur :"
       },
       {
         "key": ["nœud actuel", "nœud sélectionné", "ce nœud", "informations du nœud", "détails du nœud"],

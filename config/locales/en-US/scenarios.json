@@ -157,7 +157,7 @@
       {
         "key": ["create flow", "generate flow", "new flow", "build flow"],
         "scenario": "development",
-        "newHumanPrompt": "Please reply in the following format:\n1. First generate complete Node-RED flow JSON code\n2. Then explain in detail the role and configuration of each node in the flow\n3. Finally end with \"Click Apply button to create\"\n\nUser original request: "
+        "newHumanPrompt": "Please reply in the following format:\n1. First generate complete Node-RED flow JSON code, where each node and flow ID is generated using uuid to avoid duplication\n2. Then explain in detail the role and configuration of each node in the flow\n3. Finally end with \"Click Apply button to create\"\n\nUser original request: "
       },
       {
         "key": ["current node", "selected node", "this node", "node info", "node details"],

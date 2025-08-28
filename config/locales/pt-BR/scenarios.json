@@ -157,7 +157,7 @@
       {
         "key": ["criar fluxo", "gerar fluxo", "criar fluxo", "novo fluxo"],
         "scenario": "development",
-        "newHumanPrompt": "Por favor responda no seguinte formato:\n1. Primeiro gere o código JSON completo do fluxo Node-RED\n2. Em seguida explique detalhadamente a função e configuração de cada nó no fluxo\n3. Termine com \"Clique no botão Apply para criar\"\n\nSolicitação original do usuário:"
+        "newHumanPrompt": "Por favor responda no seguinte formato:\n1. Primeiro gere o código JSON completo do fluxo Node-RED, onde cada nó e fluxo tem ID gerado com uuid para evitar duplicação\n2. Em seguida explique detalhadamente a função e configuração de cada nó no fluxo\n3. Termine com \"Clique no botão Apply para criar\"\n\nSolicitação original do usuário:"
       },
       {
         "key": ["nó atual", "nó selecionado", "este nó", "informações do nó", "detalhes do nó"],

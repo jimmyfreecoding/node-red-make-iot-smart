@@ -157,7 +157,7 @@
       {
         "key": ["Flow erstellen", "Flow generieren", "Flow kreieren", "neuen Flow erstellen"],
         "scenario": "development",
-        "newHumanPrompt": "Bitte antworten Sie im folgenden Format:\n1. Generieren Sie zunächst den vollständigen Node-RED Flow JSON-Code\n2. Erklären Sie dann detailliert die Funktion und Konfiguration jedes Knotens im Flow\n3. Beenden Sie mit \"Klicken Sie auf die Apply-Schaltfläche zum Erstellen\"\n\nUrsprüngliche Benutzeranfrage:"
+        "newHumanPrompt": "Bitte antworten Sie im folgenden Format:\n1. Generieren Sie zunächst den vollständigen Node-RED Flow JSON-Code, wobei jede Knoten- und Flow-ID mit uuid generiert wird, um Duplikate zu vermeiden\n2. Erklären Sie dann detailliert die Funktion und Konfiguration jedes Knotens im Flow\n3. Beenden Sie mit \"Klicken Sie auf die Apply-Schaltfläche zum Erstellen\"\n\nUrsprüngliche Benutzeranfrage:"
       }
     ],
     "prompt": [
