@@ -57,6 +57,7 @@
                 "loading": "Cargando...",
                 "error": "Error ocurrido",
                 "noResponse": "No se recibió respuesta",
+                "noNodesSelected": "Por favor seleccione primero los nodos a operar",
                 "scenarioSwitched": "🔄 Cambiado al escenario **{scenarioName}**\n\n📝 **Descripción del escenario**: {description}",
                 "welcome": "👋 ¡Bienvenido al Asistente IA de Make IoT Smart!\n\n🎯 **Escenario actual**: {scenarioName}\n\nPor favor seleccione un escenario apropiado y comience la conversación:\n• 🎓 **Aprendizaje** - Entender conceptos y nodos de Node-RED\n• 💡 **Soluciones** - Obtener sugerencias de soluciones IoT\n• 🔌 **Integración** - Integrar protocolos y sistemas\n• 💻 **Desarrollo** - Optimizar y desarrollar flujos\n• ⚙️ **Configuración** - Configurar entorno Node-RED\n• 🖥️ **Gestión** - Gestionar y desplegar aplicaciones",
                 "fallbackWelcome": "👋 ¡Bienvenido al Asistente de IA Make IoT Smart!\n\n🎯 **Escenario actual**: Aprendizaje\n\nPor favor, comience la conversación. Le ayudo a entender cómo usar Node-RED."

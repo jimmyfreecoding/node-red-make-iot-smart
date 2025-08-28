@@ -56,6 +56,7 @@
                 "loading": "Loading...",
                 "error": "An error occurred",
                 "noResponse": "No response received",
+                "noNodesSelected": "Please select nodes to operate on first",
                 "scenarioSwitched": "🔄 Switched to **{scenarioName}** scenario\n\n📝 **Scenario Description**: {description}",
                 "welcome": "👋 Welcome to Make IoT Smart AI Assistant!\n\n🎯 **Current Scenario**: {scenarioName}\n\nPlease select an appropriate scenario and start the conversation:\n• 🎓 **Learning** - Understand Node-RED concepts and nodes\n• 💡 **Solutions** - Get IoT solution suggestions\n• 🔌 **Integration** - Integrate protocols and systems\n• 💻 **Development** - Optimize and develop flows\n• ⚙️ **Configuration** - Configure Node-RED environment\n• 🖥️ **Management** - Manage and deploy applications",
                 "fallbackWelcome": "👋 Welcome to Make IoT Smart AI Assistant!\n\n🎯 **Current Scenario**: Learning\n\nPlease start the conversation, I will help you understand how to use Node-RED."

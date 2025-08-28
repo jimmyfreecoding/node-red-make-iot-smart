@@ -58,6 +58,7 @@
                 "loading": "로딩 중...",
                 "error": "오류 발생",
                 "noResponse": "응답을 받지 못했습니다",
+                "noNodesSelected": "먼저 작업할 노드를 선택해 주세요",
                 "scenarioSwitched": "🔄 **{scenarioName}** 시나리오로 전환됨\n\n📝 **시나리오 설명**: {description}",
                 "welcome": "👋 Make IoT Smart AI 어시스턴트에 오신 것을 환영합니다!\n\n🎯 **현재 시나리오**: {scenarioName}\n\n적절한 시나리오를 선택하고 대화를 시작하세요:\n• 🎓 **학습** - Node-RED 개념과 노드 이해\n• 💡 **솔루션** - IoT 솔루션 제안 받기\n• 🔌 **통합** - 프로토콜과 시스템 통합\n• 💻 **개발** - 플로우 최적화 및 개발\n• ⚙️ **구성** - Node-RED 환경 구성\n• 🖥️ **관리** - 애플리케이션 관리 및 배포",
                 "fallbackWelcome": "👋 Make IoT Smart AI 어시스턴트에 오신 것을 환영합니다!\n\n🎯 **현재 시나리오**: 학습\n\n대화를 시작해 주세요. Node-RED 사용법을 이해하는 데 도움을 드리겠습니다."

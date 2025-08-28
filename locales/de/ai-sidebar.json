@@ -58,6 +58,7 @@
                 "loading": "Lade...",
                 "error": "Fehler aufgetreten",
                 "noResponse": "Keine Antwort erhalten",
+                "noNodesSelected": "Bitte wählen Sie zuerst die zu bearbeitenden Knoten aus",
                 "scenarioSwitched": "🔄 Gewechselt zu **{scenarioName}** Szenario\n\n📝 **Szenario-Beschreibung**: {description}",
                 "welcome": "👋 Willkommen beim Make IoT Smart KI-Assistenten!\n\n🎯 **Aktuelles Szenario**: {scenarioName}\n\nBitte wählen Sie ein geeignetes Szenario und beginnen Sie das Gespräch:\n• 🎓 **Lernen** - Node-RED Konzepte und Knoten verstehen\n• 💡 **Lösungen** - IoT-Lösungsvorschläge erhalten\n• 🔌 **Integration** - Protokolle und Systeme integrieren\n• 💻 **Entwicklung** - Flows optimieren und entwickeln\n• ⚙️ **Konfiguration** - Node-RED Umgebung konfigurieren\n• 🖥️ **Verwaltung** - Anwendungen verwalten und bereitstellen",
                 "fallbackWelcome": "👋 Willkommen beim Make IoT Smart KI-Assistenten!\n\n🎯 **Aktuelles Szenario**: Lernen\n\nBitte beginnen Sie das Gespräch, ich helfe Ihnen dabei zu verstehen, wie Node-RED verwendet wird."

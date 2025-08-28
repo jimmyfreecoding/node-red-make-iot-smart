@@ -60,7 +60,8 @@
       "internalError": "Error interno del servidor",
       "serviceUnavailable": "Servicio no disponible",
       "badGateway": "Puerta de enlace incorrecta",
-      "gatewayTimeout": "Tiempo de espera de la puerta de enlace agotado"
+      "gatewayTimeout": "Tiempo de espera de la puerta de enlace agotado",
+      "noNodesSelected": "Por favor seleccione primero los nodos a operar"
     }
   }
 }
