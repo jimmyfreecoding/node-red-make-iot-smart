@@ -859,6 +859,12 @@ SOFTWARE.
                 // Handle node keywords
                 if (matchedNodeKeyword && selectedNodes && selectedNodes.length > 0) {
                     dynamicData.selectedNodes = selectedNodes;
+                } else if (matchedNodeKeyword && (!selectedNodes || selectedNodes.length === 0)) {
+                    // Show error message when node keywords detected but no nodes selected
+                    var errorMessage = "❌ " + _("sidebar.messages.noNodesSelected");
+                    addMessageToChat("error", errorMessage);
+                    setSendButtonLoading(false);
+                    return;
                 }
             }
         }
@@ -1104,6 +1110,12 @@ SOFTWARE.
                 } else {
                     // Show general error notification
                     RED.notify(data.message || data.content || data.error || '发生未知错误', 'error');
+                }
+                
+                // Reset send button loading state and clear abort controller
+                setSendButtonLoading(false);
+                if (window.currentAbortController) {
+                    window.currentAbortController = null;
                 }
                 break;
                 
@@ -3065,8 +3077,8 @@ SOFTWARE.
             messageHtml += '</div>';
             
             // Message content with markdown rendering
-            var renderedContent = renderMarkdown(content);
-            
+            var renderedContent;
+            renderedContent = renderMarkdown(content);
             messageHtml += '<div class="message-content" style="background: ' + (isUser ? '#f3f4f6' : '#ffffff') + 
                           '; padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e7eb; word-wrap: break-word; line-height: 1.5;">';
             messageHtml += renderedContent;

@@ -61,6 +61,7 @@
                 "loading": "加载中...",
                 "error": "发生错误",
                 "noResponse": "未收到响应",
+                "noNodesSelected": "请先选择要操作的节点",
                 "scenarioSwitched": "🔄 已切换到 **{scenarioName}** 场景\n\n📝 **场景描述**: {description}",
                 "welcome": "👋 欢迎使用Make IoT Smart AI助手！\n\n🎯 **当前场景**: {scenarioName}\n\n请选择合适的场景并开始对话：\n• 🎓 **学习** - 理解Node-RED概念和节点\n• 💡 **解决方案** - 获取IoT解决方案建议\n• 🔌 **集成** - 集成协议和系统\n• 💻 **开发** - 优化和开发流程\n• ⚙️ **配置** - 配置Node-RED环境\n• 🖥️ **管理** - 管理和部署应用程序",
                 "fallbackWelcome": "👋 欢迎使用Make IoT Smart AI助手！\n\n🎯 **当前场景**: 学习\n\n请开始对话，我将帮助您了解如何使用Node-RED。"
