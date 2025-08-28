@@ -1861,10 +1861,7 @@ SOFTWARE.
                         "✅ Flow added to current workspace!";
                     addMessageToChat("system", successMsg);
                     
-                    // Refresh view
-                    if (typeof RED !== 'undefined' && RED.view) {
-                        RED.view.redraw();
-                    }
+                    // Refresh logic removed - using apply button refresh only
                 } else {
                     // Execution failed
                     addMessageToChat("error", "❌ " + _("sidebar.messages.toolExecutionFailed") + ": " + data.error);
@@ -2023,10 +2020,7 @@ SOFTWARE.
                 // Show success message
                 addMessageToChat("system", "✅ " + _("sidebar.messages.flowCreationSuccess"));
                 
-                // Refresh view
-                if (typeof RED !== 'undefined' && RED.view) {
-                    RED.view.redraw();
-                }
+                // Refresh logic removed - using apply button refresh only
             } else {
                 // Execution failed
                 $button.prop('disabled', false)
@@ -3497,37 +3491,7 @@ SOFTWARE.
                     // Add success message
                     addMessageToChat("assistant", `✅ ${toolName} executed successfully!\n\n${response.result}`);
                     
-                    // If it's a flow creation related tool, refresh workspace
-                    if (['create-flow', 'update-flows', 'update-flow'].includes(toolName)) {
-                        
-                        // Refresh workspace list
-                        if (RED.workspaces && RED.workspaces.refresh) {
-                            RED.workspaces.refresh();
-                        }
-                        
-                        // Reload flows
-                        if (RED.deploy && RED.deploy.setDeployInflight) {
-                            RED.deploy.setDeployInflight(false);
-                        }
-                        
-                        // Trigger view redraw
-                        setTimeout(function() {
-                            if (RED.view && RED.view.redraw) {
-                                RED.view.redraw();
-                            }
-                            
-                            // If response contains flow ID, try to switch to new flow
-                            var flowIdMatch = response.result.match(/ID:\s*([a-f0-9]+)/);
-                            if (flowIdMatch && flowIdMatch[1]) {
-                                var newFlowId = flowIdMatch[1];
-                                
-                                // Switch to newly created flow
-                                if (RED.workspaces && RED.workspaces.show) {
-                                    RED.workspaces.show(newFlowId);
-                                }
-                            }
-                        }, 1000);
-                    }
+                    // Refresh logic removed - using apply button refresh only
                 } else {
                     // Show execution failed
                     button.prop('disabled', false)
@@ -3721,9 +3685,132 @@ SOFTWARE.
                 // Show success message
                 addMessageToChat("system", "✅ " + _("sidebar.messages.flowCreationSuccess"));
                 
-                // Optional: refresh page or update flow list
-                if (typeof RED !== 'undefined' && RED.view) {
-                    RED.view.redraw();
+                // Enhanced refresh logic with detailed logging
+                console.log('=== APPLY BUTTON REFRESH LOGIC START ===');
+                console.log('Flow creation successful, refreshing workspace...');
+                console.log('Response data:', data);
+                
+                // Check initial state
+                checkRefreshStatus();
+                
+                // Force reload flows from server
+                if (RED.nodes && RED.nodes.load) {
+                    console.log('RED.nodes.load is available, starting reload...');
+                    RED.nodes.load().then(function() {
+                        console.log('RED.nodes.load completed successfully');
+                        
+                        // Check state after reload
+                        console.log('Checking state after RED.nodes.load...');
+                        checkRefreshStatus();
+                        
+                        // Refresh workspace list
+                        if (RED.workspaces && RED.workspaces.refresh) {
+                            console.log('Calling RED.workspaces.refresh()...');
+                            RED.workspaces.refresh();
+                            console.log('RED.workspaces.refresh() completed');
+                        } else {
+                            console.warn('RED.workspaces.refresh not available');
+                        }
+                        
+                        // Trigger view redraw
+                        if (RED.view && RED.view.redraw) {
+                            console.log('Calling RED.view.redraw()...');
+                            RED.view.redraw();
+                            console.log('RED.view.redraw() completed');
+                        } else {
+                            console.warn('RED.view.redraw not available');
+                        }
+                        
+                        // Check state after refresh
+                        setTimeout(function() {
+                            console.log('Checking state 1 second after refresh...');
+                            checkRefreshStatus();
+                        }, 1000);
+                        
+                        // Extract flow ID from response and switch to new flow
+                        console.log('Searching for flow ID in response result:', data.result);
+                        var flowIdMatch = data.result.match(/(?:ID|id):\s*([a-f0-9-]+)/i);
+                        if (flowIdMatch && flowIdMatch[1]) {
+                            var newFlowId = flowIdMatch[1];
+                            console.log('Found new flow ID:', newFlowId);
+                            
+                            // Wait a bit more for UI to update, then switch
+                            setTimeout(function() {
+                                if (RED.workspaces && RED.workspaces.show) {
+                                    console.log('Switching to new flow:', newFlowId);
+                                    RED.workspaces.show(newFlowId);
+                                    console.log('Flow switch completed');
+                                } else {
+                                    console.warn('RED.workspaces.show not available');
+                                }
+                                
+                                // Force another redraw after switching
+                                if (RED.view && RED.view.redraw) {
+                                    console.log('Final redraw after flow switch...');
+                                    RED.view.redraw();
+                                    console.log('Final redraw completed');
+                                }
+                                
+                                // Final state check
+                                setTimeout(function() {
+                                    console.log('Final state check after flow switch...');
+                                    checkRefreshStatus();
+                                    console.log('=== APPLY BUTTON REFRESH LOGIC END ===');
+                                }, 500);
+                            }, 500);
+                        } else {
+                            console.log('No flow ID found in response:', data.result);
+                            console.log('FlowIdMatch result:', flowIdMatch);
+                            console.log('=== APPLY BUTTON REFRESH LOGIC END ===');
+                        }
+                    }).catch(function(error) {
+                        console.error('Failed to reload flows:', error);
+                        // Fallback to basic refresh
+                        console.log('Using fallback refresh methods...');
+                        if (RED.workspaces && RED.workspaces.refresh) {
+                            console.log('Fallback: calling RED.workspaces.refresh()...');
+                            RED.workspaces.refresh();
+                        }
+                        if (RED.view && RED.view.redraw) {
+                            console.log('Fallback: calling RED.view.redraw()...');
+                            RED.view.redraw();
+                        }
+                        console.log('=== APPLY BUTTON REFRESH LOGIC END (with error) ===');
+                    });
+                } else {
+                    console.log('RED.nodes.load not available, using fallback refresh...');
+                    // Fallback refresh method
+                    if (RED.workspaces && RED.workspaces.refresh) {
+                        console.log('Fallback: calling RED.workspaces.refresh()...');
+                        RED.workspaces.refresh();
+                    } else {
+                        console.warn('RED.workspaces.refresh not available in fallback');
+                    }
+                    
+                    if (RED.view && RED.view.redraw) {
+                        console.log('Fallback: calling RED.view.redraw()...');
+                        RED.view.redraw();
+                    } else {
+                        console.warn('RED.view.redraw not available in fallback');
+                    }
+                    
+                    // Try to extract and switch to new flow
+                    console.log('Fallback: searching for flow ID in response result:', data.result);
+                    var flowIdMatch = data.result.match(/(?:ID|id):\s*([a-f0-9-]+)/i);
+                    if (flowIdMatch && flowIdMatch[1]) {
+                        var newFlowId = flowIdMatch[1];
+                        console.log('Fallback: found new flow ID:', newFlowId);
+                        setTimeout(function() {
+                            if (RED.workspaces && RED.workspaces.show) {
+                                console.log('Fallback: switching to new flow:', newFlowId);
+                                RED.workspaces.show(newFlowId);
+                                console.log('Fallback: flow switch completed');
+                            } else {
+                                console.warn('Fallback: RED.workspaces.show not available');
+                            }
+                        }, 500);
+                    }
+                    console.log('=== APPLY BUTTON REFRESH LOGIC END (fallback) ===');
                 }
             } else {
                 // Execution failed
