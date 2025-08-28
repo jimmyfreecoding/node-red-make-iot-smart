@@ -1075,7 +1075,7 @@ SOFTWARE.
                             resultInfo += '**' + _('sidebar.messages.result') + '**\n\n```\n' + (typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult, null, 2)) + '\n```\n\n';
                         }
                     } catch (e) {
-                        resultInfo += '**结果：**\n\n```\n' + data.result + '\n```\n\n';
+                        resultInfo += '**' + _('sidebar.messages.result') + '**\n\n```\n' + data.result + '\n```\n\n';
                     }
                 }
                 console.log("+++++++++++++++++++++++++++resultInfo",resultInfo)

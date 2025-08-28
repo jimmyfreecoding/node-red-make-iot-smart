@@ -50,6 +50,7 @@
                 "toolExecutionSuccess": "Tool execution successful",
                 "toolCalling": "Calling tool",
                 "parameters": "Parameters",
+                "result": "Result:",
                 "viewCode": "View Code",
                 "networkError": "Network error",
                 "applied": "Applied",

@@ -48,6 +48,7 @@
                 "toolExecutionSuccess": "Herramienta ejecutada con éxito",
                 "toolCalling": "Llamando herramienta",
                 "parameters": "Parámetros",
+                "result": "Resultado:",
                 "viewCode": "Ver código",
                 "networkError": "Error de red",
                 "applied": "Aplicado",
