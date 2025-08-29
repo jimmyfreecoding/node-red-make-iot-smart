@@ -420,7 +420,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. 執行模式選擇
+3. **多語言意圖檢測**：
+
+**分層檢測策略**
+
+優先級順序：
+
+1. **精確匹配**：配置檔案中的查詢關鍵字（排除查詢請求）
+2. **配置驅動**：當前語言配置檔案中的意圖模式
+3. **正則匹配**：硬編碼的多語言正則表達式
+4. **語義分析**：使用LangChain進行深度語義理解
+
+**檢測流程**：
+```javascript
+// 1. 精確匹配檢查
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. 配置驅動檢測
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. 增強正則檢測
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. 語義分析（可選）
+const semanticResult = await this.detectSemanticIntent(input);
+
+// 綜合評分
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. 執行模式選擇
 
 **純LLM模式**：
 - 獲取會話上下文

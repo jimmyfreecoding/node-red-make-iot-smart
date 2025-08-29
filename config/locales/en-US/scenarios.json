@@ -321,6 +321,28 @@
     ],
     "tools": ["get-flows", "create-flow", "update-flow", "create-subflow"]
   },
+  "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["create", "generate", "build", "make", "design", "develop", "construct", "write", "do"],
+      "flowNouns": ["flow", "workflow", "automation", "control flow", "process"],
+      "intentPatterns": [
+        "i want to {verb} {noun}",
+        "i need to {verb} {noun}",
+        "help me {verb} a {noun}",
+        "how to {verb} {noun}",
+        "can you {verb} {noun}",
+        "please {verb} {noun}",
+        "{verb} a {noun}",
+        "need to {verb} {noun}"
+      ],
+      "contextKeywords": {
+        "devices": ["sensor", "switch", "plug", "bulb", "camera", "alarm", "temperature", "humidity", "light", "motion", "door"],
+        "scenarios": ["smart home", "environmental monitoring", "security system", "automation control", "data collection", "remote monitoring", "alarm notification", "timer control", "linkage control"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
+  },
   "general": {
     "name": "General",
     "description": "General AI assistant, handling various Node-RED related issues",

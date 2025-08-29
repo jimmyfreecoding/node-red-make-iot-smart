@@ -427,7 +427,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. Ausführungsmodus-Auswahl
+3. **Mehrsprachige Absichtserkennung**:
+
+**Schichtweise Erkennungsstrategie**
+
+Prioritätsreihenfolge:
+
+1. **Exakte Übereinstimmung**: Abfrage-Schlüsselwörter in Konfigurationsdateien (Abfragen ausschließen)
+2. **Konfigurationsgesteuert**: Absichtsmuster in aktuellen Sprachkonfigurationsdateien
+3. **Regex-Übereinstimmung**: Hartcodierte mehrsprachige reguläre Ausdrücke
+4. **Semantische Analyse**: Tiefe semantische Verständnis mit LangChain
+
+**Erkennungsablauf**:
+```javascript
+// 1. Exakte Übereinstimmungsprüfung
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. Konfigurationsgesteuerte Erkennung
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. Erweiterte Regex-Erkennung
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. Semantische Analyse (optional)
+const semanticResult = await this.detectSemanticIntent(input);
+
+// Kombinierte Bewertung
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. Ausführungsmodus-Auswahl
 
 **Reiner LLM-Modus**:
 - Sitzungskontext abrufen

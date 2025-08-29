@@ -424,7 +424,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. 実行モード選択
+3. **多言語意図検出**：
+
+**階層検出戦略**
+
+優先順位：
+
+1. **完全一致**：設定ファイル内のクエリキーワード（クエリを除外）
+2. **設定駆動**：現在の言語設定ファイル内の意図パターン
+3. **正規表現マッチング**：ハードコードされた多言語正規表現
+4. **セマンティック分析**：LangChainを使用した深層セマンティック理解
+
+**検出フロー**：
+```javascript
+// 1. 完全一致チェック
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. 設定駆動検出
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. 拡張正規表現検出
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. セマンティック分析（オプション）
+const semanticResult = await this.detectSemanticIntent(input);
+
+// 総合スコアリング
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. 実行モード選択
 
 **純粋LLMモード**：
 - セッションコンテキストを取得

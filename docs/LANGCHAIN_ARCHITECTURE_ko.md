@@ -424,7 +424,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. 실행 모드 선택
+3. **다국어 의도 감지**:
+
+**계층적 감지 전략**
+
+우선순위:
+
+1. **정확한 매칭**: 구성 파일의 쿼리 키워드 (쿼리 제외)
+2. **구성 기반**: 현재 언어 구성 파일의 의도 패턴
+3. **정규식 매칭**: 하드코딩된 다국어 정규 표현식
+4. **의미 분석**: LangChain을 사용한 심층 의미 이해
+
+**감지 흐름**:
+```javascript
+// 1. 정확한 매칭 확인
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. 구성 기반 감지
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. 향상된 정규식 감지
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. 의미 분석 (선택사항)
+const semanticResult = await this.detectSemanticIntent(input);
+
+// 종합 점수 계산
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. 실행 모드 선택
 
 **순수 LLM 모드**:
 - 세션 컨텍스트 가져오기

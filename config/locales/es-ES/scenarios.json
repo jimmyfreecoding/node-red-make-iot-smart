@@ -254,6 +254,29 @@
       "get-flow"
     ]
   },
+  "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["crear", "generar", "fabricar", "diseñar", "desarrollar", "construir", "establecer", "escribir", "hacer"],
+      "flowNouns": ["flujo", "flujo de trabajo", "proceso", "automatización", "flujo de control"],
+      "intentPatterns": [
+        "quiero {verb} {noun}",
+        "necesito {verb} {noun}",
+        "ayúdame a {verb} un {noun}",
+        "cómo {verb} {noun}",
+        "cómo puedo {verb} {noun}",
+        "puedes {verb} {noun}",
+        "por favor {verb} {noun}",
+        "{verb} un {noun}",
+        "necesito {verb} {noun}"
+      ],
+      "contextKeywords": {
+        "devices": ["sensor", "interruptor", "enchufe", "bombilla", "cámara", "alarma", "temperatura", "humedad", "iluminación", "movimiento", "puerta"],
+        "scenarios": ["hogar inteligente", "monitoreo ambiental", "sistema de seguridad", "control automatizado", "recolección de datos", "monitoreo remoto", "notificación de alarma", "control de tiempo", "control de enlace"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
+  },
   "configuration": {
     "name": "Modo de Configuración",
     "description": "Experto en configuración de sistemas, maneja configuración de entorno y nodos de Node-RED",

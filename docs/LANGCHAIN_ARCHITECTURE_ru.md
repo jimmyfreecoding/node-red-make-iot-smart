@@ -428,7 +428,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. Выбор режима выполнения
+3. **Многоязычное обнаружение намерений**:
+
+**Многослойная стратегия обнаружения**
+
+Порядок приоритета:
+
+1. **Точное совпадение**: Ключевые слова запроса в файлах конфигурации (исключить запросы)
+2. **На основе конфигурации**: Шаблоны намерений в файлах конфигурации текущего языка
+3. **Совпадение регулярных выражений**: Жестко закодированные многоязычные регулярные выражения
+4. **Семантический анализ**: Глубокое семантическое понимание с использованием LangChain
+
+**Поток обнаружения**:
+```javascript
+// 1. Проверка точного совпадения
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. Обнаружение на основе конфигурации
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. Расширенное обнаружение регулярных выражений
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. Семантический анализ (опционально)
+const semanticResult = await this.detectSemanticIntent(input);
+
+// Комбинированная оценка
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. Выбор режима выполнения
 
 **Чистый режим LLM**:
 - Получение контекста сессии

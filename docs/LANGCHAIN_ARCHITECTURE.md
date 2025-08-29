@@ -420,7 +420,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. 执行模式选择
+3. **多语言意图检测**：
+
+**分层检测策略**
+
+优先级顺序：
+
+1. **精确匹配**：配置文件中的查询关键字（排除查询）
+2. **配置驱动**：当前语言配置文件中的意图模式
+3. **正则匹配**：硬编码的多语言正则表达式
+4. **语义分析**：使用 LangChain 进行深度语义理解
+
+**检测流程**：
+```javascript
+// 1. 精确匹配检查
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. 配置驱动检测
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. 增强正则表达式检测
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. 语义分析（可选）
+const semanticResult = await this.detectSemanticIntent(input);
+
+// 综合评分
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. 执行模式选择
 
 **纯LLM模式**：
 - 获取会话上下文
@@ -434,7 +470,7 @@ if (shouldForceTools.shouldForce) {
 - 构建解释性提示词
 - 调用LLM生成自然语言解释
 
-#### 6. 工具调用执行阶段
+#### 5. 工具调用执行阶段
 
 **可用工具类型**：
 

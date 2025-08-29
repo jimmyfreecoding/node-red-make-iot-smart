@@ -426,7 +426,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. Seleção de Modo de Execução
+3. **Detecção de Intenção Multilíngue**:
+
+**Estratégia de Detecção em Camadas**
+
+Ordem de Prioridade:
+
+1. **Correspondência Exata**: Palavras-chave de consulta em arquivos de configuração (excluir consultas)
+2. **Baseado em Configuração**: Padrões de intenção em arquivos de configuração do idioma atual
+3. **Correspondência Regex**: Expressões regulares multilíngues codificadas
+4. **Análise Semântica**: Compreensão semântica profunda usando LangChain
+
+**Fluxo de Detecção**:
+```javascript
+// 1. Verificação de correspondência exata
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. Detecção baseada em configuração
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. Detecção regex aprimorada
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. Análise semântica (opcional)
+const semanticResult = await this.detectSemanticIntent(input);
+
+// Pontuação combinada
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. Seleção de Modo de Execução
 
 **Modo LLM Puro**:
 - Obter contexto de sessão

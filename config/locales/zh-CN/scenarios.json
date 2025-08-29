@@ -320,6 +320,29 @@
     ],
     "tools": ["get-flows", "create-flow", "update-flow", "create-subflow"]
   },
+  "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["创建", "生成", "制作", "设计", "开发", "构建", "建立", "编写", "做"],
+      "flowNouns": ["流程", "工作流", "流", "自动化", "控制流程"],
+      "intentPatterns": [
+        "我想{verb}{noun}",
+        "我要{verb}{noun}",
+        "帮我{verb}一个{noun}",
+        "如何{verb}{noun}",
+        "怎么{verb}{noun}",
+        "能否{verb}{noun}",
+        "请{verb}{noun}",
+        "{verb}一个{noun}",
+        "需要{verb}{noun}"
+      ],
+      "contextKeywords": {
+        "devices": ["传感器", "开关", "插座", "灯泡", "摄像头", "报警器", "温度", "湿度", "光照", "运动", "门磁"],
+        "scenarios": ["智能家居", "环境监控", "安防系统", "自动化控制", "数据采集", "远程监控", "报警通知", "定时控制", "联动控制"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
+  },
   "general": {
     "name": "通用模式",
     "description": "通用AI助手，处理各种Node-RED相关问题",

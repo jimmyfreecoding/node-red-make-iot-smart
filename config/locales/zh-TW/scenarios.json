@@ -254,6 +254,29 @@
       "get-flow"
     ]
   },
+  "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["創建", "生成", "製作", "設計", "開發", "構建", "建立", "編寫", "做"],
+      "flowNouns": ["流程", "工作流", "流", "自動化", "控制流程"],
+      "intentPatterns": [
+        "我想{verb}{noun}",
+        "我要{verb}{noun}",
+        "幫我{verb}一個{noun}",
+        "如何{verb}{noun}",
+        "怎麼{verb}{noun}",
+        "能否{verb}{noun}",
+        "請{verb}{noun}",
+        "{verb}一個{noun}",
+        "需要{verb}{noun}"
+      ],
+      "contextKeywords": {
+        "devices": ["感測器", "開關", "插座", "燈泡", "攝影機", "警報器", "溫度", "濕度", "光照", "運動", "門磁"],
+        "scenarios": ["智慧家居", "環境監控", "安防系統", "自動化控制", "資料採集", "遠端監控", "警報通知", "定時控制", "聯動控制"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
+  },
   "configuration": {
     "name": "配置模式",
     "description": "系统配置专家，处理Node-RED环境和节点配置",

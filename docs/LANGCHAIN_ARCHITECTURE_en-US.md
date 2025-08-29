@@ -423,7 +423,43 @@ if (shouldForceTools.shouldForce) {
 }
 ```
 
-#### 5. Execution Mode Selection
+3. **Multilingual Intent Detection**:
+
+**Layered Detection Strategy**
+
+Priority Order:
+
+1. **Exact Match**: Query keywords in configuration files (exclude queries)
+2. **Configuration-Driven**: Intent patterns in current language configuration files
+3. **Regex Matching**: Hard-coded multilingual regular expressions
+4. **Semantic Analysis**: Deep semantic understanding using LangChain
+
+**Detection Flow**:
+```javascript
+// 1. Exact match check
+const isQueryKeyword = this.isExactQueryKeywordMatch(input);
+if (isQueryKeyword) {
+    return { isFlowCreation: false, reason: 'Query keyword detected' };
+}
+
+// 2. Configuration-driven detection
+const configResult = this.detectConfigDrivenIntent(input);
+
+// 3. Enhanced regex detection
+const regexResult = this.detectEnhancedRegexPatterns(input);
+
+// 4. Semantic analysis (optional)
+const semanticResult = await this.detectSemanticIntent(input);
+
+// Combined scoring
+const finalConfidence = this.calculateCombinedScore({
+    configDriven: configResult,
+    enhancedRegex: regexResult,
+    semantic: semanticResult
+});
+```
+
+#### 4. Execution Mode Selection
 
 **Pure LLM Mode**:
 - Retrieve session context
@@ -437,7 +473,7 @@ if (shouldForceTools.shouldForce) {
 - Build explanatory prompts
 - Call LLM for natural language explanation
 
-#### 6. Tool Call Execution Phase
+#### 5. Tool Call Execution Phase
 
 **Available Tool Types**:
 
