@@ -1207,12 +1207,15 @@ module.exports = function (RED) {
                             // create-flow tool expects object format with nodes property, but needs to filter out tab nodes
                             const functionalNodes = flowData.filter(node => node.type !== 'tab');
                             
-                            // Generate unique ID for each node
+                            // Generate unique tab ID
+                            const tabId = RED.util.generateId();
+                            
+                            // Generate unique ID for each node and set z property to tab ID
                             const nodesWithUniqueIds = functionalNodes.map(node => {
                                 const newNode = { ...node };
                                 newNode.id = RED.util.generateId();
-                                // Remove z property, let Node-RED auto-assign
-                                delete newNode.z;
+                                // Set z property to tab ID for all functional nodes
+                                newNode.z = tabId;
                                 return newNode;
                             });
                             
@@ -1233,10 +1236,11 @@ module.exports = function (RED) {
                             const flowObject = {
                                 nodes: nodesWithUniqueIds,
                                 label: toolArgs.label || 'New Flow',
-                                description: toolArgs.description || ''
+                                description: toolArgs.description || '',
+                                tabId: tabId
                             };
                             toolArgs.flowJson = JSON.stringify(flowObject);
-                            console.log('API endpoint create-flow processing completed, generated unique IDs, retained functional node count:', nodesWithUniqueIds.length);
+                            console.log('API endpoint create-flow processing completed, generated unique IDs and tab ID:', tabId, ', retained functional node count:', nodesWithUniqueIds.length);
                         }
                     }
                 }
