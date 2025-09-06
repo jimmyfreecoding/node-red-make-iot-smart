@@ -261,14 +261,39 @@ module.exports = function (RED) {
             // 获取LLM配置
             const llmConfig = node.getLLMConfig();
 
+            // 获取MCP工具
+            let mcpTools = [];
+            try {
+                if (node.langchainManager && node.langchainManager.mcpClient) {
+                    const serverInfo = await node.langchainManager.mcpClient.getServerInfo();
+                    mcpTools = serverInfo.tools || [];
+                }
+            } catch (error) {
+                // console.warn('Failed to get MCP tools:', error.message);
+            }
+
+            // 获取当前语言
+            const currentLanguage = node.getCurrentLanguage();
+
             // Prepare dynamic data
             const contextData = {
-                nodeRedVersion: RED.version || 'unknown',
+                nodeRedVersion: RED.version || RED.settings?.version || 'unknown',
                 nodeVersion: process.version,
                 currentTime: new Date().toISOString(),
+                mcpTools: Array.isArray(mcpTools) ? mcpTools.map(tool => typeof tool === 'object' ? `${tool.name || 'unknown'}: ${tool.description || ''}` : tool).join(', ') : '',
+                lang: currentLanguage,
+                userLevel: dynamicData.userLevel || 'beginner',
+                projectRequirements: dynamicData.projectRequirements || '',
+                developmentTask: dynamicData.developmentTask || '',
+                configurationNeeds: dynamicData.configurationNeeds || '',
+                projectStatus: dynamicData.projectStatus || '',
                 ...dynamicData
             };
-
+            
+            // Add integration targets for integration scenario
+            if (scenario === 'integration') {
+                contextData.integrationTargets = dynamicData.integrationTargets || [];
+            }
             try {
                 const result = await node.langchainManager.executeScenarioChat(
                     scenario,
@@ -311,6 +336,42 @@ module.exports = function (RED) {
                     sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
                 }
                 
+                // 获取MCP工具
+                let mcpTools = [];
+                try {
+                    if (node.langchainManager && node.langchainManager.mcpClient) {
+                        const serverInfo = await node.langchainManager.mcpClient.getServerInfo();
+                        mcpTools = serverInfo.tools || [];
+                    }
+                } catch (error) {
+                    // console.warn('Failed to get MCP tools:', error.message);
+                }
+
+                // 获取当前语言
+                const currentLanguage = node.getCurrentLanguage();
+
+                // Prepare complete context data (same as executeChat)
+                const contextData = {
+                    nodeRedVersion: RED.version || RED.settings?.version || 'unknown',
+                    nodeVersion: process.version,
+                    currentTime: new Date().toISOString(),
+                    mcpTools: Array.isArray(mcpTools) ? mcpTools.map(tool => typeof tool === 'object' ? `${tool.name || 'unknown'}: ${tool.description || ''}` : tool).join(', ') : '',
+                    lang: currentLanguage,
+                    userLevel: dynamicData.userLevel || 'beginner',
+                    projectRequirements: dynamicData.projectRequirements || '',
+                    developmentTask: dynamicData.developmentTask || '',
+                    configurationNeeds: dynamicData.configurationNeeds || '',
+                    projectStatus: dynamicData.projectStatus || '',
+                    ...dynamicData
+                };
+                
+                // Add integration targets for integration scenario
+                if (scenario === 'integration') {
+                    contextData.integrationTargets = dynamicData.integrationTargets || [];
+                }
+                
+                // console.log('streamChat contextData:', contextData);
+                
                 // console.log('Starting streaming chat:', { message, scenario, sessionId });
                 
                 // Use LangChain's real streaming functionality
@@ -319,7 +380,7 @@ module.exports = function (RED) {
                     message, 
                     llmConfig, 
                     sessionId, 
-                    dynamicData, 
+                    contextData, 
                     onChunk
                 );
                 
