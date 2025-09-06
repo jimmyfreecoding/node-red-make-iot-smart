@@ -2,7 +2,6 @@
     "ai-sidebar": {
         "sidebar": {
             "title": "AIアシスタント",
-
             "labels": {
                 "chatHistory": "チャット履歴",
                 "noChatHistory": "チャット履歴がありません",
@@ -50,9 +49,9 @@
                 "unregisteredNodesSuggestion": "提案：\n1. Node-REDの管理パレットで不足しているノードモジュールをインストール\n2. または、これらの未登録ノードを削除\n3. その後、メッセージの送信を再試行",
                 "toolCalling": "ツール呼び出し",
                 "parameters": "パラメータ",
-    "viewCode": "コードを表示",
-    "nodeRedConfigInfo": "Node-RED設定情報：",
-    "result": "結果：",
+                "viewCode": "コードを表示",
+                "nodeRedConfigInfo": "Node-RED設定情報：",
+                "result": "結果：",
                 "networkError": "ネットワークエラー",
                 "applied": "適用されました",
                 "thinking": "考え中...",

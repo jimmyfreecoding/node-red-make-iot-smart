@@ -1,5 +1,6 @@
 {
-  "learning": {
+"scenarios":{
+    "learning": {
     "name": "학습 모드",
     "description": "Node-RED 학습 도우미, 교육 지도 및 지식 답변 제공",
     "prompt": [
@@ -429,5 +430,29 @@
       "selectedNodes",
       "lang"
     ]
+  }
+  },
+    "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["생성", "만들기", "제작", "설계", "개발", "구축", "설립", "작성", "실행"],
+      "flowNouns": ["플로우", "워크플로우", "스트림", "자동화", "제어 플로우"],
+      "intentPatterns": [
+        "{noun}를 {verb}하고 싶어요",
+        "{noun}를 {verb}해야 해요",
+        "{noun}를 {verb}하는 것을 도와주세요",
+        "{noun}를 {verb}하는 방법",
+        "어떻게 {noun}를 {verb}하나요",
+        "{noun}를 {verb}할 수 있나요",
+        "{noun}를 {verb}해 주세요",
+        "{noun}를 {verb}하기",
+        "{noun}를 {verb}해야 함"
+      ],
+      "contextKeywords": {
+        "devices": ["센서", "스위치", "소켓", "전구", "카메라", "알람", "온도", "습도", "조명", "움직임", "도어 센서"],
+        "scenarios": ["스마트 홈", "환경 모니터링", "보안 시스템", "자동화 제어", "데이터 수집", "원격 모니터링", "알람 알림", "타이머 제어", "연동 제어"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
   }
 }

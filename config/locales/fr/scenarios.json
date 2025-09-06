@@ -1,5 +1,6 @@
 {
-  "learning": {
+"scenarios":{
+    "learning": {
     "name": "Mode d'Apprentissage",
     "description": "Assistant d'apprentissage Node-RED, fournit des conseils pédagogiques et des réponses aux questions",
     "prompt": [
@@ -429,5 +430,29 @@
       "selectedNodes",
       "lang"
     ]
+  }
+  },
+    "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["créer", "générer", "faire", "concevoir", "développer", "construire", "établir", "écrire", "réaliser"],
+      "flowNouns": ["flux", "flux de travail", "flot", "automatisation", "flux de contrôle"],
+      "intentPatterns": [
+        "Je veux {verb} {noun}",
+        "J'ai besoin de {verb} {noun}",
+        "Aidez-moi à {verb} un {noun}",
+        "Comment {verb} {noun}",
+        "Comment puis-je {verb} {noun}",
+        "Pouvez-vous {verb} {noun}",
+        "Veuillez {verb} {noun}",
+        "{verb} un {noun}",
+        "Besoin de {verb} {noun}"
+      ],
+      "contextKeywords": {
+        "devices": ["capteur", "interrupteur", "prise", "ampoule", "caméra", "alarme", "température", "humidité", "lumière", "mouvement", "capteur de porte"],
+        "scenarios": ["maison intelligente", "surveillance environnementale", "système de sécurité", "contrôle d'automatisation", "collecte de données", "surveillance à distance", "notification d'alarme", "contrôle de minuterie", "contrôle de liaison"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
   }
 }

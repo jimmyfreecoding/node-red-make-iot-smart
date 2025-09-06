@@ -1,5 +1,6 @@
 {
-  "learning": {
+"scenarios":{
+    "learning": {
     "name": "Lernmodus",
     "description": "Node-RED Lernassistent, bietet Lehranleitungen und Wissensantworten",
     "prompt": [
@@ -429,5 +430,29 @@
       "selectedNodes",
       "lang"
     ]
+  }
+  },
+    "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["erstellen", "generieren", "machen", "entwerfen", "entwickeln", "bauen", "aufbauen", "schreiben", "tun"],
+      "flowNouns": ["Flow", "Workflow", "Ablauf", "Automatisierung", "Steuerungsablauf"],
+      "intentPatterns": [
+        "Ich möchte {verb} {noun}",
+        "Ich muss {verb} {noun}",
+        "Hilf mir {verb} einen {noun}",
+        "Wie {verb} ich {noun}",
+        "Wie kann ich {verb} {noun}",
+        "Können Sie {verb} {noun}",
+        "Bitte {verb} {noun}",
+        "{verb} einen {noun}",
+        "Muss {verb} {noun}"
+      ],
+      "contextKeywords": {
+        "devices": ["Sensor", "Schalter", "Steckdose", "Glühbirne", "Kamera", "Alarm", "Temperatur", "Feuchtigkeit", "Licht", "Bewegung", "Türsensor"],
+        "scenarios": ["Smart Home", "Umgebungsüberwachung", "Sicherheitssystem", "Automatisierungssteuerung", "Datensammlung", "Fernüberwachung", "Alarmbenachrichtigung", "Zeitsteuerung", "Verknüpfungssteuerung"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
   }
 }

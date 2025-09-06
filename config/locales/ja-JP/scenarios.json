@@ -1,5 +1,6 @@
 {
-  "learning": {
+"scenarios":{
+    "learning": {
     "name": "学習モード",
     "description": "Node-RED学習アシスタント、教育指導と知識解答を提供",
     "prompt": [
@@ -406,5 +407,29 @@
       "selectedNodes",
       "lang"
     ]
+  }
+  },
+    "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["作成", "生成", "作る", "設計", "開発", "構築", "確立", "書く", "実行"],
+      "flowNouns": ["フロー", "ワークフロー", "ストリーム", "自動化", "制御フロー"],
+      "intentPatterns": [
+        "{noun}を{verb}したい",
+        "{noun}を{verb}する必要がある",
+        "{noun}を{verb}するのを手伝って",
+        "{noun}を{verb}する方法",
+        "どうやって{noun}を{verb}するか",
+        "{noun}を{verb}できますか",
+        "{noun}を{verb}してください",
+        "{noun}を{verb}する",
+        "{noun}を{verb}する必要がある"
+      ],
+      "contextKeywords": {
+        "devices": ["センサー", "スイッチ", "ソケット", "電球", "カメラ", "アラーム", "温度", "湿度", "光", "動き", "ドアセンサー"],
+        "scenarios": ["スマートホーム", "環境監視", "セキュリティシステム", "自動化制御", "データ収集", "リモート監視", "アラーム通知", "タイマー制御", "連携制御"],
+        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
+        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
+      }
+    }
   }
 }

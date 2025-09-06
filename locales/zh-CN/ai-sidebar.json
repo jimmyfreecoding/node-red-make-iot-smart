@@ -2,7 +2,6 @@
     "ai-sidebar": {
         "sidebar": {
             "title": "AI助手",
-
             "labels": {
                 "chatHistory": "聊天历史",
                 "noChatHistory": "无聊天历史",
@@ -41,7 +40,21 @@
                 "chatHistoryRecalled": "聊天历史已召回",
                 "newSessionCreatedSuccess": "新会话创建成功",
                 "unknownTime": "未知时间",
-                "msgs": "条消息"
+                "msgs": "条消息",
+                "nodeType": "类型:",
+                "validJsonNotFound": "未找到有效的JSON配置",
+                "configNodeNotFound": "未找到配置节点，请先创建并配置API密钥",
+                "actionProcessingFailed": "操作处理失败",
+                "validConfigNotFound": "未找到有效的配置内容",
+                "defaultConfigCreated": "默认AI配置节点已创建，请配置API密钥并点击部署按钮",
+                "errorOpeningConfig": "打开配置界面时出错",
+                "noHistoryInDatabase": "数据库中没有历史记录，正在从DOM获取当前会话消息",
+                "frontendStopAI": "前端停止AI响应被调用",
+                "executingAbort": "执行AbortController.abort()",
+                "noAbortController": "没有找到currentAbortController",
+                "aiResponseStopped": "AI响应已停止",
+                "installNodeAction": "安装节点",
+                "deleteNodeAction": "删除节点"
             },
             "buttons": {
                 "showConfig": "显示配置",
@@ -52,7 +65,7 @@
                 "apply": "应用"
             },
             "placeholders": {
-                "inputMessage": "输入您的消息..."
+                "inputMessage": "输入消息"
             },
             "messages": {
                 "developing": "此功能正在开发中",
@@ -102,29 +115,8 @@
                 "failedToLoadScenarioData": "加载场景数据失败，请刷新页面后重试",
                 "applicationFailed": "应用失败",
                 "errorDisplayingConfigNode": "显示配置节点时出错"
-    },
-    "placeholders": {
-        "inputMessage": "询问或指导 Augment"
-    },
-    "labels": {
-        "noFlowSelected": "未选择流程",
-        "noNodeSelected": "未选择节点",
-        "nodeType": "类型:",
-        "general": "通用",
-                "validJsonNotFound": "未找到有效的JSON配置",
-                "configNodeNotFound": "未找到配置节点，请先创建并配置API密钥",
-                "actionProcessingFailed": "操作处理失败",
-                "validConfigNotFound": "未找到有效的配置内容",
-                "defaultConfigCreated": "默认AI配置节点已创建，请配置API密钥并点击部署按钮",
-                "errorOpeningConfig": "打开配置界面时出错",
-                "noHistoryInDatabase": "数据库中没有历史记录，正在从DOM获取当前会话消息",
-                "frontendStopAI": "前端停止AI响应被调用",
-                "executingAbort": "执行AbortController.abort()",
-                "noAbortController": "没有找到currentAbortController",
-                "aiResponseStopped": "AI响应已停止",
-                "installNodeAction": "安装节点",
-                "deleteNodeAction": "删除节点"
             },
+
             "toolCalls": {
                 "noFlowSelectedWarning": "注意：当前没有选中具体的流程，请先在Node-RED编辑器中选择要分析的流程标签页。",
                 "noNodeSelectedWarning": "注意：当前没有选中具体的节点，请先在Node-RED编辑器中选择要分析的节点。",

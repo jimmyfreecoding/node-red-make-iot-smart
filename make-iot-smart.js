@@ -864,12 +864,12 @@ module.exports = function (RED) {
                     return res.status(404).json({ error: 'Scenarios configuration file not found' });
                 }
                 const fallbackData = fs.readFileSync(fallbackPath, 'utf8');
-                const fallbackScenarios = JSON.parse(fallbackData);
+                const fallbackScenarios = JSON.parse(fallbackData).scenarios;
                 return res.json({ scenarios: fallbackScenarios });
             }
             
             const scenariosData = fs.readFileSync(scenariosPath, 'utf8');
-            const scenarios = JSON.parse(scenariosData);
+            const scenarios = JSON.parse(scenariosData).scenarios;
             
             res.json({ scenarios });
         } catch (error) {

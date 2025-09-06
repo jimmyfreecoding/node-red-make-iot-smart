@@ -1,5 +1,6 @@
 {
-  "learning": {
+"scenarios":{
+    "learning": {
     "name": "學習模式",
     "description": "Node-RED学习助手，提供教学指导和知识解答",
     "prompt": [
@@ -429,5 +430,20 @@
       "selectedNodes",
       "lang"
     ]
+  },
+  "flowCreation": {
+    "intentKeywords": {
+      "createVerbs": ["創建", "建立", "製作", "生成", "新增", "添加", "構建", "設計", "開發", "實現"],
+      "flowNouns": ["流程", "工作流", "自動化", "流", "節點流", "邏輯流", "數據流", "控制流", "處理流", "業務流程"],
+      "intentPatterns": [
+        "我想{createVerbs}一個{flowNouns}",
+        "幫我{createVerbs}{flowNouns}",
+        "如何{createVerbs}{flowNouns}",
+        "請{createVerbs}一個{flowNouns}",
+        "我需要{createVerbs}{flowNouns}"
+      ],
+      "contextKeywords": ["Node-RED", "節點", "連接", "配置", "部署", "調試", "物聯網", "IoT", "傳感器", "執行器", "MQTT", "HTTP", "數據庫", "API"]
+    }
   }
+}
 }

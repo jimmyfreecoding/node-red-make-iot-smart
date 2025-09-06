@@ -2,7 +2,6 @@
     "ai-sidebar": {
         "sidebar": {
             "title": "AI助手",
-
             "labels": {
                 "chatHistory": "聊天歷史",
                 "noChatHistory": "無聊天歷史",
@@ -50,9 +49,9 @@
                 "unregisteredNodesSuggestion": "建議：\n1. 在Node-RED管理面板中安裝缺失的節點模組\n2. 或者刪除這些未註冊的節點\n3. 然後重新嘗試發送訊息",
                 "toolCalling": "調用工具",
                 "parameters": "參數",
-    "viewCode": "查看代碼",
-    "nodeRedConfigInfo": "Node-RED 配置資訊：",
-    "result": "結果：",
+                "viewCode": "查看代碼",
+                "nodeRedConfigInfo": "Node-RED 配置資訊：",
+                "result": "結果：",
                 "networkError": "網路錯誤",
                 "applied": "已應用",
                 "thinking": "思考中...",

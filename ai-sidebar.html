@@ -180,6 +180,7 @@ SOFTWARE.
             const newLang = RED.i18n.lang() || 'zh-CN';
             const settingsLang = RED.settings ? RED.settings.get('lang') : 'unknown';
             console.log('🔍 Language check - Current:', currentLang, 'New:', newLang, 'Settings:', settingsLang);
+            
             if (newLang !== currentLang) {
                 console.log('🔄 Language changed from', currentLang, 'to', newLang);
                 currentLang = newLang;
@@ -2607,7 +2608,7 @@ SOFTWARE.
                 text-align: center;
                 color: #6b7280;
                 font-size: 12px;
-            " data-i18n="ai-sidebar.sidebar.labels.loadingHistory">Loading session history...</div>
+            " >Loading session history...</div>
         `);
         
         // Get session list
@@ -2763,7 +2764,7 @@ SOFTWARE.
                         text-align: center;
                         color: #ef4444;
                         font-size: 12px;
-                    " data-i18n="ai-sidebar.sidebar.labels.loadSessionFailed">Failed to load session, please retry</div>
+                    " >Failed to load session, please retry</div>
                 `);
             }
         });
@@ -4746,7 +4747,7 @@ SOFTWARE.
                 ">
                     <span style="display: flex; align-items: center; gap: 6px;">
                         <i class="fa fa-history" style="font-size: 11px;"></i>
-                        <span id="chat-history-label" data-i18n="ai-sidebar.sidebar.labels.chatHistory">Chat History</span>
+                        <span id="chat-history-label" >Chat History</span>
                     </span>
                     <i class="fa fa-chevron-down" style="font-size: 10px;"></i>
                 </button>
@@ -4775,7 +4776,7 @@ SOFTWARE.
                         text-align: center;
                         color: #9ca3af;
                         font-size: 12px;
-                    " data-i18n="ai-sidebar.sidebar.labels.noHistoryAvailable">No chat history available</div>
+                    " >No chat history available</div>
                 </div>
             </div>
         </div>
@@ -4817,16 +4818,16 @@ SOFTWARE.
                 <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <span style="display: flex; align-items: center;">
                         <i class="fa fa-sitemap" style="margin-right: 6px; color: #374151;"></i> 
-                        <span id="current-flow-name" style="font-weight: 500; color: #1f2937;" data-i18n="ai-sidebar.sidebar.labels.noFlowSelected">No flow selected</span>
+                        <span id="current-flow-name" style="font-weight: 500; color: #1f2937;" >No flow selected</span>
                     </span>
                     <span style="color: #d1d5db;">></span>
                     <span style="display: flex; align-items: center;">
                         <i class="fa fa-cube" style="margin-right: 6px; color: #374151;"></i>
-                        <span id="current-selected-node" style="font-weight: 500; color: #1f2937;" data-i18n="ai-sidebar.sidebar.labels.noNodeSelected">No node selected</span>
+                        <span id="current-selected-node" style="font-weight: 500; color: #1f2937;" >No node selected</span>
                     </span>
                     <span id="selected-node-type-container" style="display: none;">
                         <span style="color: #d1d5db;">|</span>
-                        <span style="color: #6b7280;" data-i18n="ai-sidebar.sidebar.labels.nodeType">Type: <span id="current-selected-node-type" style="font-weight: 500; color: #1f2937;"></span></span>
+                        <span style="color: #6b7280;" >Type: <span id="current-selected-node-type" style="font-weight: 500; color: #1f2937;"></span></span>
                     </span>
                 </div>
             </div>
@@ -4839,7 +4840,7 @@ SOFTWARE.
                 position: relative;
                 transition: border-color 0.2s, box-shadow 0.2s;
             " onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'">
-                <textarea id="augment-chat-input" placeholder="Ask or instruct Augment" data-i18n="[placeholder]ai-sidebar.sidebar.placeholders.inputMessage" 
+                <textarea id="augment-chat-input" placeholder="Ask "  
                           style="
                               width: 100%; 
                               min-height: 80px; 
@@ -4907,7 +4908,7 @@ SOFTWARE.
                                 padding: 0 4px;
                                 line-height: 1;
                             ">
-                                <span id="current-scenario-name" style="font-weight: 500;" data-i18n="ai-sidebar.sidebar.labels.general">General</span>
+                                <span id="current-scenario-name" style="font-weight: 500;" >General</span>
                             </span>
                         </button>
                     
@@ -4929,7 +4930,7 @@ SOFTWARE.
                         gap: 6px;
                     " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
                         <i class="fa fa-paper-plane"></i>
-                        <span id="send-button-text"  data-i18n="ai-sidebar.sidebar.buttons.send">Send</span>
+                        <span id="send-button-text"  >Send</span>
                     </button>
                 </div>
             </div>
