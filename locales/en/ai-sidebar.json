@@ -45,6 +45,8 @@
                 "flowCreationSuccess": "Flow created successfully!",
                 "toolExecutionFailed": "Tool execution failed",
                 "toolExecutionSuccess": "Tool execution successful",
+                "unregisteredNodesDetected": "Detected the following unregistered node types, please install the corresponding node modules first:",
+                "unregisteredNodesSuggestion": "Suggestions:\n1. Install missing node modules in Node-RED manage palette\n2. Or delete these unregistered nodes\n3. Then try sending the message again",
                 "toolCalling": "Calling tool",
                 "parameters": "Parameters",
                 "result": "Result:",

@@ -46,6 +46,8 @@
                 "flowCreationSuccess": "流程創建成功！",
                 "toolExecutionFailed": "工具執行失敗",
                 "toolExecutionSuccess": "工具執行成功",
+                "unregisteredNodesDetected": "檢測到以下未註冊的節點類型，請先安裝相應的節點模組後再繼續：",
+                "unregisteredNodesSuggestion": "建議：\n1. 在Node-RED管理面板中安裝缺失的節點模組\n2. 或者刪除這些未註冊的節點\n3. 然後重新嘗試發送訊息",
                 "toolCalling": "調用工具",
                 "parameters": "參數",
     "viewCode": "查看代碼",

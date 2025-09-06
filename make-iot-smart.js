@@ -146,31 +146,31 @@ module.exports = function (RED) {
         
         // Initialize MCP connection
         node.initMCP = async function() {
-            console.log('🔧 [MCP DEBUG] initMCP called, checking conditions:', {
-                enableMcp: node.enableMcp,
-                mcpCommand: node.mcpCommand,
-                hasCommand: !!node.mcpCommand
-            });
+            // console.log('🔧 [MCP DEBUG] initMCP called, checking conditions:', {
+            //     enableMcp: node.enableMcp,
+            //     mcpCommand: node.mcpCommand,
+            //     hasCommand: !!node.mcpCommand
+            // });
             
             if (!node.enableMcp) {
-                console.log('❌ [MCP DEBUG] MCP not enabled:', RED._('messages.mcpNotEnabled'));
+                // console.log('❌ [MCP DEBUG] MCP not enabled:', RED._('messages.mcpNotEnabled'));
                 return false;
             }
             
             if (!node.mcpCommand) {
-                console.log('❌ [MCP DEBUG] MCP command not configured:', RED._('messages.mcpCommandNotConfigured'));
+                // console.log('❌ [MCP DEBUG] MCP command not configured:', RED._('messages.mcpCommandNotConfigured'));
                 return false;
             }
 
             try {
-                console.log('🚀 [MCP DEBUG] ' + RED._('messages.mcpInitStart') + ':', {
-                    command: node.mcpCommand,
-                    args: node.mcpArgs,
-                    env: node.mcpEnv
-                });
+                // console.log('🚀 [MCP DEBUG] ' + RED._('messages.mcpInitStart') + ':', {
+                //     command: node.mcpCommand,
+                //     args: node.mcpArgs,
+                //     env: node.mcpEnv
+                // });
                 
                 const args = node.mcpArgs ? node.mcpArgs.split(' ').filter(arg => arg.trim()) : [];
-                console.log('📋 [MCP DEBUG] Parsed args:', args);
+                // console.log('📋 [MCP DEBUG] Parsed args:', args);
                 
                 let env = {};
                 if (node.mcpEnv) {
@@ -182,42 +182,42 @@ module.exports = function (RED) {
                         }
                     }
                 }
-                console.log('🌍 [MCP DEBUG] Environment variables:', env);
+                // console.log('🌍 [MCP DEBUG] Environment variables:', env);
 
-                console.log('🔌 [MCP DEBUG] Attempting to connect to MCP server...');
+                // console.log('🔌 [MCP DEBUG] Attempting to connect to MCP server...');
                 const success = await node.mcpClient.connect(node.mcpCommand, args, env);
-                console.log('🔌 [MCP DEBUG] MCP connection result:', success);
+                // console.log('🔌 [MCP DEBUG] MCP connection result:', success);
                 
                 if (success) {
-                    console.log('✅ [MCP DEBUG] ' + RED._('messages.mcpInitSuccess'));
+                    // console.log('✅ [MCP DEBUG] ' + RED._('messages.mcpInitSuccess'));
                     
                     // Test getting server info
                     try {
-                        console.log('🔍 [MCP DEBUG] Testing MCP server info...');
+                        // console.log('🔍 [MCP DEBUG] Testing MCP server info...');
                         const serverInfo = await node.mcpClient.getServerInfo();
-                        console.log('📊 [MCP DEBUG] Server info:', {
-                            toolsCount: serverInfo.tools ? serverInfo.tools.length : 0,
-                            toolNames: serverInfo.tools ? serverInfo.tools.map(t => t.name) : []
-                        });
+                        // console.log('📊 [MCP DEBUG] Server info:', {
+                        //     toolsCount: serverInfo.tools ? serverInfo.tools.length : 0,
+                        //     toolNames: serverInfo.tools ? serverInfo.tools.map(t => t.name) : []
+                        // });
                     } catch (serverInfoError) {
-                        console.error('❌ [MCP DEBUG] Failed to get server info:', serverInfoError.message);
+                        // console.error('❌ [MCP DEBUG] Failed to get server info:', serverInfoError.message);
                     }
                     
                     // Reinitialize LangChain manager to get MCP tools
                     if (node.langchainManager) {
-                        console.log('🔄 [MCP DEBUG] Reinitializing LangChain manager tools...');
+                        // console.log('🔄 [MCP DEBUG] Reinitializing LangChain manager tools...');
                         await node.langchainManager.initializeTools();
-                        console.log('✅ [MCP DEBUG] LangChain manager tools reinitialized');
+                        // console.log('✅ [MCP DEBUG] LangChain manager tools reinitialized');
                     }
                     
                     return true;
                 } else {
-                    console.error('❌ [MCP DEBUG] MCP server connection failed');
+                    // console.error('❌ [MCP DEBUG] MCP server connection failed');
                     return false;
                 }
             } catch (error) {
-                console.error('💥 [MCP DEBUG] ' + RED._('messages.mcpInitFailed') + ':', error.message);
-                console.error('💥 [MCP DEBUG] Error stack:', error.stack);
+                // console.error('💥 [MCP DEBUG] ' + RED._('messages.mcpInitFailed') + ':', error.message);
+                // console.error('💥 [MCP DEBUG] Error stack:', error.stack);
                 return false;
             }
         };
@@ -1290,7 +1290,7 @@ module.exports = function (RED) {
                 res.json({ success: true, language: language });
                 
             } catch (error) {
-                console.error('❌ Error updating language:', error);
+                // console.error('❌ Error updating language:', error);
                 res.status(500).json({ error: 'Internal server error' });
             }
         });

@@ -46,6 +46,8 @@
                 "flowCreationSuccess": "Flux créé avec succès !",
                 "toolExecutionFailed": "Échec de l'exécution de l'outil",
                 "toolExecutionSuccess": "Outil exécuté avec succès",
+                "unregisteredNodesDetected": "Les types de nœuds non enregistrés suivants ont été détectés. Veuillez d'abord installer les modules de nœuds correspondants :",
+                "unregisteredNodesSuggestion": "Suggestions :\n1. Installer les modules de nœuds manquants dans la palette de gestion Node-RED\n2. Ou supprimer ces nœuds non enregistrés\n3. Puis réessayer d'envoyer le message",
                 "toolCalling": "Appel d'outil",
                 "parameters": "Paramètres",
     "viewCode": "Voir le code",

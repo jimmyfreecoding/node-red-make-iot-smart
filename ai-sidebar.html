@@ -175,40 +175,40 @@ SOFTWARE.
     function watchLanguageChange() {
         let currentLang = RED.i18n.lang() || 'zh-CN';
         console.log('🌐 Initial language detected:', currentLang);
-        
         // Check for language setting changes once after startup
         setTimeout(async () => {
             const newLang = RED.i18n.lang() || 'zh-CN';
             const settingsLang = RED.settings ? RED.settings.get('lang') : 'unknown';
-            
             console.log('🔍 Language check - Current:', currentLang, 'New:', newLang, 'Settings:', settingsLang);
-            
-
             if (newLang !== currentLang) {
                 console.log('🔄 Language changed from', currentLang, 'to', newLang);
                 currentLang = newLang;
                 await loadI18nMessages(); // Reload language files
+                // Check for unregistered nodes before updating backend language
+                const unregisteredNodes = checkForUnregisteredNodes();
                 
-                // Notify backend to update LangChainManager language
-                try {
-                    console.log('📡 Sending language update to backend:', newLang);
-                    const response = await fetch('/ai-sidebar/update-language', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ language: newLang })
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('✅ Backend language updated successfully:', result);
-                    } else {
-                        console.warn('❌ Failed to update backend language:', response.status);
+                if (unregisteredNodes.length == 0) {
+                    // Notify backend to update LangChainManager language
+                    try {
+                        console.log('📡 Sending language update to backend:', newLang);
+                        const response = await fetch('/ai-sidebar/update-language', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ language: newLang })
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log('✅ Backend language updated successfully:', result);
+                        } else {
+                            console.warn('❌ Failed to update backend language:', response.status);
+                        }
+                    } catch (error) {
+                        console.warn('❌ Error updating backend language:', error);
                     }
-                } catch (error) {
-                    console.warn('❌ Error updating backend language:', error);
-                }
+                 }
             }
         }, 2000);
     }
@@ -219,24 +219,29 @@ SOFTWARE.
         
         // Initialize backend language on page load
         const initialLang = getCurrentLanguage();
-        try {
-            console.log('🚀 Initializing backend language:', initialLang);
-            const response = await fetch('/ai-sidebar/update-language', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ language: initialLang })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log('✅ Backend language initialized successfully:', result);
-            } else {
-                console.warn('❌ Failed to initialize backend language:', response.status);
+        
+        // Check for unregistered nodes before initializing backend language
+        const unregisteredNodes = checkForUnregisteredNodes();
+        if (unregisteredNodes.length == 0) {
+            try {
+                console.log('🚀 Initializing backend language:', initialLang);
+                const response = await fetch('/ai-sidebar/update-language', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ language: initialLang })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Backend language initialized successfully:', result);
+                } else {
+                    console.warn('❌ Failed to initialize backend language:', response.status);
+                }
+            } catch (error) {
+                console.warn('❌ Error initializing backend language:', error);
             }
-        } catch (error) {
-            console.warn('❌ Error initializing backend language:', error);
         }
         
         watchLanguageChange(); // Start language change monitoring
@@ -529,9 +534,140 @@ SOFTWARE.
             }
         });
     }
+    // Function to check for unregistered nodes in current flow
+    function checkForUnregisteredNodes() {
+        var unregisteredNodes = [];
+        RED.nodes.eachNode(function(node) {
+            // Check if node type is registered
+            // console.log("checkForUnregisteredNodes",node)
+            var nodeType = node.type;
+            if (nodeType=='unknown') {
+                unregisteredNodes.push({
+                    id: node.id,
+                    type: node.type,
+                    name: node.name || node.type
+                });
+            }
+        });
+        return unregisteredNodes;
+    }
+    
+    // Function to show unregistered nodes dialog
+     function showUnregisteredNodesDialog(unregisteredNodes) {
+         var nodeListMarkdown = unregisteredNodes.map(function(node, index) {
+             return `**${index + 1}. ${node.name}** \`(${node.type})\`\n\n` +
+                    `🔧 [安装节点](javascript:installNode('${node.name}')) | ` +
+                    `🗑️ [删除节点](javascript:deleteNode('${node.id}'))`;
+         }).join('\n\n---\n\n');
+         
+         var message = `${_('sidebar.messages.unregisteredNodesDetected')}\n\n` +
+                      `${nodeListMarkdown}\n\n` +
+                      `${_('sidebar.messages.unregisteredNodesSuggestion')}`;
+         
+         addMessageToChat("system", message);
+         return false;
+     }
+
+     // Function to install a node using Node-RED HTTP API
+     async function installNode(nodeType) {
+         try {
+             addMessageToChat("system", _("sidebar.messages.installingNode", {nodeType: nodeType}));
+             
+             // Use Node-RED Admin API to install the node
+             const response = await fetch('/nodes', {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json'
+                 },
+                 body: JSON.stringify({
+                     module: nodeType
+                 })
+             });
+             
+             if (response.ok) {
+                 const result = await response.json();
+                 addMessageToChat("system", _("sidebar.messages.nodeInstallSuccess", {nodeType: nodeType, version: result.version}));
+                 
+                 // Refresh the palette to show the new node
+                 if (RED && RED.palette && RED.palette.refresh) {
+                     RED.palette.refresh();
+                 }
+                 
+                 // Check if there are still unregistered nodes
+                 setTimeout(() => {
+                     var remainingUnregistered = checkForUnregisteredNodes();
+                     if (remainingUnregistered.length === 0) {
+                         addMessageToChat("system", _("sidebar.messages.allNodesInstalled"));
+                     }
+                 }, 1000);
+                 
+             } else {
+                 const error = await response.text();
+                 addMessageToChat("system", _("sidebar.messages.nodeInstallFailed", {nodeType: nodeType, error: error}));
+                 
+                 // Fallback: show manual installation instructions
+                 var installMessage = `\n\n${_("sidebar.messages.manualInstallTitle")}\n\n` +
+                                    _("sidebar.messages.manualInstallStep1", {nodeType: nodeType}) + "\n\n" +
+                                    _("sidebar.messages.manualInstallStep2");
+                 addMessageToChat("system", installMessage);
+             }
+         } catch (error) {
+             addMessageToChat("system", _("sidebar.messages.nodeInstallError", {error: error.message}));
+             
+             // Fallback: show manual installation instructions
+             var installMessage = `\n\n${_("sidebar.messages.manualInstallTitle")}\n\n` +
+                                _("sidebar.messages.manualInstallStep1", {nodeType: nodeType}) + "\n\n" +
+                                _("sidebar.messages.manualInstallStep2");
+             addMessageToChat("system", installMessage);
+         }
+     }
+
+     // Function to delete a node
+     function deleteNode(nodeId) {
+         // Remove the node from the workspace
+         var node = RED.nodes.node(nodeId);
+         if (node) {
+             RED.nodes.remove(nodeId);
+             RED.view.redraw();
+             addMessageToChat("system", _("sidebar.messages.nodeDeleted", {nodeName: node.name || node.type}));
+             
+             // Deploy the changes to make them effective
+             if (RED && RED.deploy) {
+                //  RED.deploy.setDeployInflight(true);
+                //    RED.nodes.dirty(true);
+
+            RED.deploy.setDeployInflight(false);
+            RED.nodes.dirty(true);
+
+
+                //  RED.deploy();
+                //  addMessageToChat("system", "🚀 正在部署流程变更...");
+             }
+             
+             // Check if there are still unregistered nodes
+             var remainingUnregistered = checkForUnregisteredNodes();
+             if (remainingUnregistered.length === 0) {
+                 addMessageToChat("system", _("sidebar.messages.allNodesProcessed"));
+             }
+         } else {
+             addMessageToChat("system", _("sidebar.messages.nodeNotFound", {nodeId: nodeId}));
+         }
+     }
+
     async function sendMessage() {
         var message = $("#augment-chat-input").val().trim();
+        console.log(_("sidebar.messages.startingChat"), message)
         if (message) {
+            // 1. Check for unregistered nodes in current flow
+            var unregisteredNodes = checkForUnregisteredNodes();
+            
+            // 2. If unregistered nodes exist, show dialog and stop
+            if (unregisteredNodes.length > 0) {
+                showUnregisteredNodesDialog(unregisteredNodes);
+                return; // Stop further chat process
+            }
+            
+            // 3. If no unregistered nodes, continue with normal chat process
             // Set send button to loading state
             setSendButtonLoading(true);
 
@@ -590,15 +726,15 @@ SOFTWARE.
     
     // Function to stop AI response
     function stopAIResponse() {
-        console.log('🛑 前端停止AI响应被调用');
+        console.log(_("sidebar.messages.frontendStopAI"));
         
         if (window.currentAbortController) {
-            console.log('🛑 执行AbortController.abort()');
+            console.log(_("sidebar.messages.executingAbort"));
             // Abort the current request
             window.currentAbortController.abort();
             window.currentAbortController = null;
         } else {
-            console.log('⚠️ 没有找到currentAbortController');
+            console.log(_("sidebar.messages.noAbortController"));
         }
         
         // Reset send button state
@@ -611,7 +747,7 @@ SOFTWARE.
             window.currentStreamMessageId = null;
         }
         
-        console.log('🛑 AI响应已停止');
+        console.log(_("sidebar.messages.aiResponseStopped"));
     }
 
     // Get development scenario keywords for current node detection
@@ -757,7 +893,7 @@ SOFTWARE.
         var configNode = RED.nodes.node(nodeId);
         if (!configNode) {
             if (!silent) {
-                addMessageToChat("error", "❌ 配置节点未部署，请点击部署按钮后重试");
+                addMessageToChat("error", _("sidebar.messages.configNodeNotDeployed"));
             }
             throw new Error("Configuration node not deployed");
         }
@@ -765,7 +901,7 @@ SOFTWARE.
         // Check if there are undeployed changes
         if (RED.nodes.dirty()) {
             if (!silent) {
-                addMessageToChat("warning", "⚠️ 检测到未部署的更改，请先点击部署按钮");
+                addMessageToChat("warning", _("sidebar.messages.undeployedChanges"));
             }
             throw new Error("Undeployed changes detected");
         }
@@ -821,7 +957,7 @@ SOFTWARE.
         var sendMessage = message.trim();
         if (!sendMessage) {
             var scenario = ScenarioManager.scenarios[currentScenario];
-            sendMessage = `请为${scenario.name}场景提供初始指导信息和建议。`;
+            sendMessage = _("sidebar.messages.scenarioInitialGuidance", {scenarioName: scenario.name});
         }
 
         // Initialize dynamic data for tool usage
@@ -1092,7 +1228,7 @@ SOFTWARE.
                 
             case 'error':
                 if (currentStreamMessageId) {
-                    appendToMessage(currentStreamMessageId, `❌ 错误: ${data.message || data.content || data.error}`);
+                    appendToMessage(currentStreamMessageId, `❌ ${_('sidebar.messages.error')}: ${data.message || data.content || data.error}`);
                 }
                 
                 // Check if it's API key authentication failure error
@@ -1109,7 +1245,7 @@ SOFTWARE.
                     }, 1000);
                 } else {
                     // Show general error notification
-                    RED.notify(data.message || data.content || data.error || '发生未知错误', 'error');
+                    RED.notify(data.message || data.content || data.error || _('sidebar.messages.unknownError'), 'error');
                 }
                 
                 // Reset send button loading state and clear abort controller
@@ -1265,10 +1401,10 @@ SOFTWARE.
             if (successful) {
                 RED.notify("JSON data copied to clipboard", "success");
             } else {
-                RED.notify("复制失败，请手动复制", "error");
+                RED.notify(_("sidebar.messages.copyFailed"), "error");
             }
         } catch (err) {
-            RED.notify("复制失败，请手动复制", "error");
+            RED.notify(_("sidebar.messages.copyFailed"), "error");
         }
         
         document.body.removeChild(textArea);
@@ -1868,7 +2004,7 @@ SOFTWARE.
                 }
             })
             .catch(error => {
-                addMessageToChat("error", "❌ Network error: " + error.message);
+                addMessageToChat("error", "❌ " + _("sidebar.messages.networkError") + ": " + error.message);
             });
         }
     });
@@ -1890,12 +2026,12 @@ SOFTWARE.
         try {
             var successful = document.execCommand('copy');
             if (successful) {
-                RED.notify("JSON数据已复制到剪贴板", "success");
+                RED.notify(_("sidebar.messages.jsonCopied"), "success");
             } else {
-                RED.notify("Copy failed", "error");
+                RED.notify(_("sidebar.messages.copyFailed"), "error");
             }
         } catch (err) {
-            RED.notify("Copy failed", "error");
+            RED.notify(_("sidebar.messages.copyFailed"), "error");
         }
         
         document.body.removeChild(textArea);
@@ -1945,14 +2081,14 @@ SOFTWARE.
         // Code block run button clicked
         
         if (!jsonContent) {
-            RED.notify('Valid JSON configuration not found', 'error');
+            RED.notify(_("sidebar.messages.validJsonNotFound"), 'error');
             return;
         }
         
         // Get configuration node ID
         var nodeId = getSelectedConfigNodeId();
         if (!nodeId) {
-            RED.notify('Configuration node not found, please create and configure API key first', 'error');
+            RED.notify(_("sidebar.messages.configNodeNotFound"), 'error');
             return;
         }
         
@@ -2042,7 +2178,7 @@ SOFTWARE.
                 .css('background', '#dc3545')
                 .html('<i class="fa fa-exclamation" style="font-size: 9px;"></i> Error');
             
-            addMessageToChat("error", "❌ Network error: " + error.message);
+            addMessageToChat("error", "❌ " + _("sidebar.messages.networkError") + ": " + error.message);
             
             // Restore button after 3 seconds
             setTimeout(() => {
@@ -2108,10 +2244,10 @@ SOFTWARE.
                 }
                 
             } catch (error) {
-                RED.notify('Action processing failed: ' + error.message, 'error');
+                RED.notify(_("sidebar.messages.actionProcessingFailed") + ': ' + error.message, 'error');
             }
         } else {
-            RED.notify('Valid configuration content not found', 'warning');
+            RED.notify(_("sidebar.messages.validConfigNotFound"), 'warning');
         }
     });
 
@@ -2271,8 +2407,8 @@ SOFTWARE.
                 type: "api-config",
                 hasUsers: false,
                 users: [],
-                name: "Default AI Config",
-                label: function() { return this.name || "Default AI Config"; },
+                name: _("sidebar.labels.defaultAIConfig"),
+                label: function() { return this.name || _("sidebar.labels.defaultAIConfig"); },
                 provider: "openai",
                 model: "gpt-4o-mini",
                 temperature: 0.1,
@@ -2281,7 +2417,7 @@ SOFTWARE.
                 planningModel: "",
                 executionModel: "",
                 credentials: {
-                    apiKey: "Please configure API key" // Temporary placeholder
+                    apiKey: _("sidebar.labels.pleaseConfigureApiKey") // Temporary placeholder
                 }
             };
             
@@ -2297,7 +2433,7 @@ SOFTWARE.
             
             // Prompt user to configure and deploy
             setTimeout(function() {
-                RED.notify("Default AI configuration node created, please configure API key and click deploy button", "info");
+                RED.notify(_("sidebar.messages.defaultConfigCreated"), "info");
                 RED.editor.editConfig("", "api-config", defaultConfigNode.id);
             }, 1000);
             
@@ -2330,7 +2466,7 @@ SOFTWARE.
                 }
             }
         } catch (error) {
-            RED.notify("Error opening configuration interface: " + error.message, "error");
+            RED.notify(_("sidebar.messages.errorOpeningConfig") + ": " + error.message, "error");
         }
     }
 
@@ -2377,7 +2513,7 @@ SOFTWARE.
                 
                 // If no history in database, get current session messages from DOM
                 if (history.length === 0) {
-                    console.log('No history in database, getting current session messages from DOM');
+                    console.log(_("sidebar.messages.noHistoryInDatabase"));
                     $("#augment-chat-messages .augment-message-container").each(function() {
                         var role = $(this).hasClass("user-message") ? "user" : "assistant";
                         var content = $(this).find(".message-content").text().trim();
@@ -2488,7 +2624,7 @@ SOFTWARE.
                             text-align: center;
                             color: #9ca3af;
                             font-size: 12px;
-                        ">No session history</div>
+                        ">${_("sidebar.labels.noSessionHistory")}</div>
                     `);
                     return;
                 }
@@ -2548,8 +2684,8 @@ SOFTWARE.
                             ? (session.first_user_message.length > 30 
                                 ? session.first_user_message.substring(0, 30) + '...' 
                                 : session.first_user_message)
-                            : (session.title || `Session ${session.id.substring(0, 8)}`);
-                        var lastMessageTime = session.last_message_time ? new Date(session.last_message_time).toLocaleString() : 'Unknown time';
+                            : (session.title || `${_("sidebar.labels.session")} ${session.id.substring(0, 8)}`);
+                        var lastMessageTime = session.last_message_time ? new Date(session.last_message_time).toLocaleString() : _("sidebar.labels.unknownTime");
                         var messageCount = session.message_count || 0;
                         var scenarioIcon = session.scenario === 'learning' ? '📚' : (session.scenario === 'solution' ? '🔧' : '💡');
                         
@@ -2583,7 +2719,7 @@ SOFTWARE.
                                         background: #f3f4f6;
                                         padding: 2px 6px;
                                         border-radius: 10px;
-                                    ">${messageCount} msgs</span>
+                                    ">${messageCount} ${_("sidebar.labels.msgs")}</span>
                                 </div>
                                 <div style="
                                     font-size: 10px;
@@ -2695,7 +2831,7 @@ SOFTWARE.
             $('#augment-chat-messages').empty();
             
             // Add system prompt message
-            addMessageToChat('system', '📋 Chat history recalled');
+            addMessageToChat('system', '📋 ' + _("sidebar.labels.chatHistoryRecalled"));
             
             // Redisplay historical conversations
             history.forEach(function(msg, index) {
@@ -2909,7 +3045,7 @@ SOFTWARE.
         addMessageToChat('system', `🆕 ${_('sidebar.labels.newSessionCreated') || 'New session created'}: ${newSessionId.substring(0, 8)}`);
         
         // Show success notification
-        showNotification(_('sidebar.labels.newSessionCreated') || 'New session created successfully', 'success');
+        showNotification(_("sidebar.labels.newSessionCreatedSuccess"), 'success');
         
         // Focus on input
         $('#augment-input').focus();
@@ -3415,7 +3551,7 @@ SOFTWARE.
                             onmouseover="this.style.background='#059669'"
                             onmouseout="this.style.background='#10b981'">
                         <i class="fa fa-check" style="font-size: 12px;"></i>
-                        Apply
+                        ${_("sidebar.buttons.apply")}
                     </button>
                 </div>
             `;
@@ -3450,7 +3586,7 @@ SOFTWARE.
         
         // Disable button and show loading state
         button.prop('disabled', true)
-              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> Executing...')
+              .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> ' + _("sidebar.labels.executing"))
               .css({
                   'background': '#f3f4f6',
                   'color': '#6b7280',
@@ -3481,7 +3617,7 @@ SOFTWARE.
             success: function(response) {
                 if (response.success) {
                     // Show execution success
-                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> Completed')
+                    button.html('<i class="fa fa-check" style="font-size: 12px;"></i> ' + _("sidebar.labels.completed"))
                           .css({
                               'background': '#dcfce7',
                               'color': '#166534',
@@ -3495,7 +3631,7 @@ SOFTWARE.
                 } else {
                     // Show execution failed
                     button.prop('disabled', false)
-                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> Retry')
+                          .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> ' + _("sidebar.buttons.retry"))
                           .css({
                               'background': '#fef2f2',
                               'color': '#dc2626',
@@ -3510,7 +3646,7 @@ SOFTWARE.
                 
                 // Restore button state
                 button.prop('disabled', false)
-                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> Retry')
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> ' + _("sidebar.buttons.retry"))
                       .css({
                           'background': '#fef2f2',
                           'color': '#dc2626',
@@ -3532,7 +3668,7 @@ SOFTWARE.
             var editorHtml = `
                 <div class="json-editor-container" style="margin-top: 16px;">
                     <div style="margin-bottom: 8px;">
-                        <strong>${editorData.editorTitle || 'Flow Configuration'}</strong>
+                        <strong>${editorData.editorTitle || _("sidebar.labels.flowConfiguration")}</strong>
                     </div>
                     <div style="margin-bottom: 12px; color: #6b7280; font-size: 14px;">
                         ${editorData.description || ''}
@@ -3565,7 +3701,7 @@ SOFTWARE.
                                 onmouseover="this.style.background='#059669'"
                                 onmouseout="this.style.background='#10b981'">
                             <i class="fa fa-check" style="font-size: 12px;"></i>
-                            Apply
+                            ${_("sidebar.buttons.apply")}
                         </button>
                     </div>
                 </div>
@@ -3588,7 +3724,7 @@ SOFTWARE.
                 // Get editor content
                 var editor = window.jsonEditors && window.jsonEditors[editorId];
                 if (!editor) {
-                    RED.notify("Editor not found", "error");
+                    RED.notify(_("sidebar.messages.editorNotFound"), "error");
                     return;
                 }
                 
@@ -3608,7 +3744,7 @@ SOFTWARE.
                     
                     // Disable button
                     $(this).prop('disabled', true)
-                           .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> Executing...')
+                           .html('<i class="fa fa-spinner fa-spin" style="font-size: 12px;"></i> ' + _("sidebar.labels.executing"))
                            .css({
                                'background': '#f3f4f6',
                                'color': '#6b7280',
@@ -3619,7 +3755,7 @@ SOFTWARE.
                     executeJSONEditorTool(toolName, updatedToolArgs, $(this));
                     
                 } catch (e) {
-                    RED.notify("JSON format error: " + e.message, "error");
+                    RED.notify(_("sidebar.messages.jsonFormatError") + ": " + e.message, "error");
                     // Highlight error line
                     document.getElementById(editorId).style.borderColor = '#dc3545';
                 }
@@ -3679,7 +3815,7 @@ SOFTWARE.
                         'background': '#059669',
                         'cursor': 'default'
                     })
-                    .html('<i class="fa fa-check"></i> Applied')
+                    .html('<i class="fa fa-check"></i> ' + _("sidebar.labels.applied"))
                     .prop('disabled', true);
                 
                 // Show success message
@@ -3829,7 +3965,7 @@ SOFTWARE.
         .catch(error => {
             // Tool execution error
             buttonElement.prop('disabled', false)
-                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> Retry')
+                      .html('<i class="fa fa-exclamation-triangle" style="font-size: 12px;"></i> ' + _("sidebar.buttons.retry"))
                       .css({
                           'background': '#fef2f2',
                           'color': '#dc2626',
@@ -3936,7 +4072,7 @@ SOFTWARE.
             }).catch(error => {
                 // Failed to reload scenario data
                 // Show error message
-                addMessageToChat('error', '❌ Failed to load scenario data, please refresh the page and try again');
+                addMessageToChat('error', '❌ ' + _("sidebar.messages.failedToLoadScenarioData"));
             });
             return;
         }
@@ -4161,7 +4297,7 @@ SOFTWARE.
                                             onmouseout="this.style.background='#28a745'"
                                             title="Create Flow">
                                         <i class="fa fa-check" style="font-size: 9px;"></i>
-                                        Apply
+                                        ${_("sidebar.buttons.apply")}
                                     </button>
                                 </div>
                             </div>
@@ -4224,7 +4360,7 @@ SOFTWARE.
             
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(content).then(function() {
-                    RED.notify("Content copied to clipboard", "success");
+                    RED.notify(_("sidebar.messages.contentCopied"), "success");
                 }).catch(function(err) {
                     fallbackCopyTextToClipboard(content);
                 });
@@ -4233,7 +4369,7 @@ SOFTWARE.
             }
         } catch (error) {
             console.error("Error copying editor content:", error);
-            RED.notify("Copy failed: " + error.message, "error");
+            RED.notify(_("sidebar.messages.copyFailed") + ": " + error.message, "error");
         }
     }
 
@@ -4250,7 +4386,7 @@ SOFTWARE.
             // Validate JSON format
             try {
                 JSON.parse(content);
-                RED.notify("JSON format is valid, content applied", "success");
+                RED.notify(_("sidebar.messages.jsonValidApplied"), "success");
                 
                 // Here you can add actual application logic, such as:
                 // - Save to configuration file
@@ -4262,7 +4398,7 @@ SOFTWARE.
             }
             
         } catch (error) {
-            RED.notify("Application failed: " + error.message, "error");
+            RED.notify(_("sidebar.messages.applicationFailed") + ": " + error.message, "error");
         }
     }
 
@@ -4282,12 +4418,12 @@ SOFTWARE.
         try {
             var successful = document.execCommand('copy');
             if (successful) {
-                RED.notify("Content copied to clipboard", "success");
+                RED.notify(_("sidebar.messages.contentCopied"), "success");
             } else {
-                RED.notify("Copy failed", "error");
+                RED.notify(_("sidebar.messages.copyFailed"), "error");
             }
         } catch (err) {
-            RED.notify("Copy failed", "error");
+            RED.notify(_("sidebar.messages.copyFailed"), "error");
         }
         
         document.body.removeChild(textArea);
@@ -4561,7 +4697,7 @@ SOFTWARE.
                     RED.editor.editConfig("", "api-config");
                 }
             } catch (error) {
-                RED.notify("Error displaying configuration node: " + error.message, "error");
+                RED.notify(_("sidebar.messages.errorDisplayingConfigNode") + ": " + error.message, "error");
             }
         });
         
@@ -4681,16 +4817,16 @@ SOFTWARE.
                 <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <span style="display: flex; align-items: center;">
                         <i class="fa fa-sitemap" style="margin-right: 6px; color: #374151;"></i> 
-                        <span id="current-flow-name" style="font-weight: 500; color: #1f2937;">No flow selected</span>
+                        <span id="current-flow-name" style="font-weight: 500; color: #1f2937;" data-i18n="ai-sidebar.sidebar.labels.noFlowSelected">No flow selected</span>
                     </span>
                     <span style="color: #d1d5db;">></span>
                     <span style="display: flex; align-items: center;">
                         <i class="fa fa-cube" style="margin-right: 6px; color: #374151;"></i>
-                        <span id="current-selected-node" style="font-weight: 500; color: #1f2937;">No node selected</span>
+                        <span id="current-selected-node" style="font-weight: 500; color: #1f2937;" data-i18n="ai-sidebar.sidebar.labels.noNodeSelected">No node selected</span>
                     </span>
                     <span id="selected-node-type-container" style="display: none;">
                         <span style="color: #d1d5db;">|</span>
-                        <span style="color: #6b7280;">Type: <span id="current-selected-node-type" style="font-weight: 500; color: #1f2937;"></span></span>
+                        <span style="color: #6b7280;" data-i18n="ai-sidebar.sidebar.labels.nodeType">Type: <span id="current-selected-node-type" style="font-weight: 500; color: #1f2937;"></span></span>
                     </span>
                 </div>
             </div>
@@ -4703,7 +4839,7 @@ SOFTWARE.
                 position: relative;
                 transition: border-color 0.2s, box-shadow 0.2s;
             " onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'">
-                <textarea id="augment-chat-input" placeholder="Ask or instruct Augment" 
+                <textarea id="augment-chat-input" placeholder="Ask or instruct Augment" data-i18n="[placeholder]ai-sidebar.sidebar.placeholders.inputMessage" 
                           style="
                               width: 100%; 
                               min-height: 80px; 
@@ -4771,7 +4907,7 @@ SOFTWARE.
                                 padding: 0 4px;
                                 line-height: 1;
                             ">
-                                <span id="current-scenario-name" style="font-weight: 500;">General</span>
+                                <span id="current-scenario-name" style="font-weight: 500;" data-i18n="ai-sidebar.sidebar.labels.general">General</span>
                             </span>
                         </button>
                     
