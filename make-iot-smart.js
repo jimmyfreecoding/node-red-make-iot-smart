@@ -575,10 +575,10 @@ module.exports = function (RED) {
             // Ensure flowId is correctly passed
             if (requestDynamicData && requestDynamicData.flowId) {
                 dynamicData.flowId = requestDynamicData.flowId;
-                console.log('✅ Got flowId from frontend:', requestDynamicData.flowId);
+                // console.log('✅ Got flowId from frontend:', requestDynamicData.flowId);
             } else if (selectedFlow && selectedFlow.id) {
                 dynamicData.flowId = selectedFlow.id;
-                console.log('✅ Got flowId from selectedFlow:', selectedFlow.id);
+                // console.log('✅ Got flowId from selectedFlow:', selectedFlow.id);
             }
 
             // Execute conversation
@@ -592,7 +592,7 @@ module.exports = function (RED) {
                 intermediateSteps: result.intermediateSteps
             });
         } catch (error) {
-            console.error('Chat endpoint error:', error);
+            // console.error('Chat endpoint error:', error);
             res.status(500).json({ 
                 error: 'Internal server error',
                 message: error.message 
@@ -625,20 +625,20 @@ module.exports = function (RED) {
             }
             
             const llmConfig = configNode.getLLMConfig();
-            console.log('Testing AI call, configuration:', llmConfig);
+            // console.log('Testing AI call, configuration:', llmConfig);
             
             // Call LLM directly
             const llm = configNode.langchainManager.getLLM(llmConfig);
             const result = await llm.invoke(message || 'Hello');
             
-            console.log('AI response:', result);
+            // console.log('AI response:', result);
             res.json({ 
                 success: true, 
                 response: result.content || result,
                 config: llmConfig
             });
         } catch (error) {
-            console.error('AI test failed:', error);
+            // console.error('AI test failed:', error);
             res.json({ error: error.message, stack: error.stack });
         }
     });
@@ -670,7 +670,7 @@ module.exports = function (RED) {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Cache-Control'
             });
-            console.log('✅ SSE headers set completed');
+            // console.log('✅ SSE headers set completed');
 
             // Get API configuration node
             const { nodeId } = req.body;
@@ -702,7 +702,7 @@ module.exports = function (RED) {
 
             // If frontend passed language parameter, update LangChain manager's language
             if (language) {
-                console.log('🌐 Language passed from frontend:', language);
+                // console.log('🌐 Language passed from frontend:', language);
                 configNode.updateLanguageFromFrontend(language);
             }
 
@@ -715,7 +715,7 @@ module.exports = function (RED) {
             };
             
             // console.log('📝 Request parameters:', { message, scenario, sessionId, dynamicData });
-            console.log('🚀 Starting streaming chat...');
+            // console.log('🚀 Starting streaming chat...');
             
             let chunkCount = 0;
             let isClientDisconnected = false;
@@ -728,7 +728,7 @@ module.exports = function (RED) {
                 // Listen for client abort request events
                 req.on('aborted', () => {
                     if (connectionEstablished) {
-                        console.log('🛑 Backend received client abort request event, stopping LLM response');
+                        // console.log('🛑 Backend received client abort request event, stopping LLM response');
                         isClientDisconnected = true;
                     }
                 });
@@ -736,7 +736,7 @@ module.exports = function (RED) {
                 // Listen for connection errors
                 req.on('error', (err) => {
                     if (connectionEstablished) {
-                        console.log('🔌 Backend received connection error, stopping LLM response:', err.message);
+                        // console.log('🔌 Backend received connection error, stopping LLM response:', err.message);
                         isClientDisconnected = true;
                     }
                 });
@@ -744,7 +744,7 @@ module.exports = function (RED) {
                 // Listen for connection close events (more reliable disconnect detection)
                 req.on('close', () => {
                     if (connectionEstablished) {
-                        console.log('📡 Backend received connection close event, stopping LLM response');
+                        // console.log('📡 Backend received connection close event, stopping LLM response');
                         isClientDisconnected = true;
                     }
                 });
@@ -752,26 +752,26 @@ module.exports = function (RED) {
                 // Add response object finish and close event listeners
                 res.on('close', () => {
                     if (connectionEstablished) {
-                        console.log('📡 Response connection closed, stopping LLM response');
+                        // console.log('📡 Response connection closed, stopping LLM response');
                         isClientDisconnected = true;
                     }
                 });
                 
                 res.on('error', (err) => {
                     if (connectionEstablished) {
-                        console.log('🔌 Response connection error, stopping LLM response:', err.message);
+                        // console.log('🔌 Response connection error, stopping LLM response:', err.message);
                         isClientDisconnected = true;
                     }
                 });
                 
-                console.log('🔍 Backend has set event listeners, connection established');
+                // console.log('🔍 Backend has set event listeners, connection established');
             }, 100); // Delay 100ms to set event listeners
 
             // Execute streaming conversation
             await configNode.streamChat(message, scenario, sessionId, dynamicData, (chunk) => {
                 // Check if client has disconnected
                 if (isClientDisconnected) {
-                    console.log('🛑 Detected client disconnect, stopping data transmission');
+                    // console.log('🛑 Detected client disconnect, stopping data transmission');
                     return false; // Return false to stop streaming processing
                 }
                 
@@ -786,7 +786,7 @@ module.exports = function (RED) {
                 try {
                     res.write(`data: ${JSON.stringify(chunk)}\n\n`);
                 } catch (writeError) {
-                    console.log('🔌 Failed to write response, client may have disconnected:', writeError.message);
+                    // console.log('🔌 Failed to write response, client may have disconnected:', writeError.message);
                     isClientDisconnected = true;
                     return false;
                 }
@@ -795,14 +795,14 @@ module.exports = function (RED) {
             });
 
             if (!isClientDisconnected) {
-                console.log(`✅ Streaming chat completed, sent ${chunkCount} data chunks`);
+                // console.log(`✅ Streaming chat completed, sent ${chunkCount} data chunks`);
                 res.end();
             } else {
-                console.log(`🛑 Streaming chat interrupted, sent ${chunkCount} data chunks`);
+                // console.log(`🛑 Streaming chat interrupted, sent ${chunkCount} data chunks`);
             }
         } catch (error) {
-            console.error('❌ Streaming chat endpoint error:', error);
-            console.error('❌ Error stack:', error.stack);
+            // console.error('❌ Streaming chat endpoint error:', error);
+            // console.error('❌ Error stack:', error.stack);
             res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
             res.end();
         }
@@ -810,8 +810,8 @@ module.exports = function (RED) {
 
     // Static file service - provide locales directory access
     RED.httpAdmin.get('/ai-sidebar/locales/:lang/:file', function(req, res) {
-        console.log('Locales route called:', req.path);
-        console.log('Route params:', req.params);
+        // console.log('Locales route called:', req.path);
+        // console.log('Route params:', req.params);
         try {
             const { lang, file } = req.params;
             const filePath = path.join(__dirname, 'locales', lang, file);
@@ -873,7 +873,7 @@ module.exports = function (RED) {
             
             res.json({ scenarios });
         } catch (error) {
-            console.error('Scenarios endpoint error:', error);
+            // console.error('Scenarios endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -894,7 +894,7 @@ module.exports = function (RED) {
             const stats = configNode.getMemoryStats();
             res.json({ stats });
         } catch (error) {
-            console.error('Memory stats endpoint error:', error);
+            // console.error('Memory stats endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -1131,7 +1131,7 @@ module.exports = function (RED) {
             const templates = configNode.getFlowTemplates(scenario, parseInt(limit));
             res.json({ templates });
         } catch (error) {
-            console.error('Templates endpoint error:', error);
+            // console.error('Templates endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -1158,7 +1158,7 @@ module.exports = function (RED) {
             const templateId = configNode.saveFlowTemplate(name, description, flowJson, scenario, tags);
             res.json({ success: true, templateId });
         } catch (error) {
-            console.error('Save template endpoint error:', error);
+            // console.error('Save template endpoint error:', error);
             res.status(500).json({ error: error.message });
         }
     });
@@ -1182,26 +1182,26 @@ module.exports = function (RED) {
                 
                 // Special handling for flowJson parameter of create-flow and update-flow tools
                 if ((toolName === 'create-flow' || toolName === 'update-flow') && toolArgs.flowJson) {
-                    console.log('API endpoint starts processing flowJson parameter, tool:', toolName);
+                    // console.log('API endpoint starts processing flowJson parameter, tool:', toolName);
                     let flowData;
                     
                     // If it's a string, try to parse as JSON
                     if (typeof toolArgs.flowJson === 'string') {
                         try {
                             flowData = JSON.parse(toolArgs.flowJson);
-                            console.log('API endpoint parsed flowJson string to object, type:', Array.isArray(flowData) ? 'array' : 'object');
+                            // console.log('API endpoint parsed flowJson string to object, type:', Array.isArray(flowData) ? 'array' : 'object');
                         } catch (error) {
-                            console.error('API endpoint failed to parse flowJson:', error);
+                            // console.error('API endpoint failed to parse flowJson:', error);
                             return res.status(400).json({ error: 'Invalid flowJson format: ' + error.message });
                         }
                     } else {
                         flowData = toolArgs.flowJson;
-                        console.log('API endpoint flowJson is already an object, type:', Array.isArray(flowData) ? 'array' : 'object');
+                        // console.log('API endpoint flowJson is already an object, type:', Array.isArray(flowData) ? 'array' : 'object');
                     }
                     
                     // Ensure flowData is in array format (Node-RED flow format)
                     if (Array.isArray(flowData)) {
-                        console.log('API endpoint enters array processing branch, original node count:', flowData.length);
+                        // console.log('API endpoint enters array processing branch, original node count:', flowData.length);
                         
                         if (toolName === 'create-flow') {
                             // create-flow tool expects object format with nodes property, but needs to filter out tab nodes
@@ -1240,7 +1240,7 @@ module.exports = function (RED) {
                                 tabId: tabId
                             };
                             toolArgs.flowJson = JSON.stringify(flowObject);
-                            console.log('API endpoint create-flow processing completed, generated unique IDs and tab ID:', tabId, ', retained functional node count:', nodesWithUniqueIds.length);
+                            // console.log('API endpoint create-flow processing completed, generated unique IDs and tab ID:', tabId, ', retained functional node count:', nodesWithUniqueIds.length);
                         }
                     }
                 }
@@ -1286,7 +1286,7 @@ module.exports = function (RED) {
                 // Update language settings
                 configNode.updateLanguageFromFrontend(language);
                 
-                console.log('🌐 Language updated from frontend:', language);
+                // console.log('🌐 Language updated from frontend:', language);
                 res.json({ success: true, language: language });
                 
             } catch (error) {
@@ -1336,7 +1336,7 @@ module.exports = function (RED) {
 
                 res.json({ providers });
             } catch (error) {
-                console.error('Failed to get LLM providers list:', error);
+                // console.error('Failed to get LLM providers list:', error);
                 res.status(500).json({ error: 'Failed to get LLM providers list' });
             }
         });
@@ -1359,7 +1359,7 @@ module.exports = function (RED) {
             
             // If no AI assistant node exists, create one through HTTP API
             if (!hasAIHelper) {
-                console.log(RED._('messages.aiHelperNodeCreating'));
+                // console.log(RED._('messages.aiHelperNodeCreating'));
                 
                 // Find the first API configuration node
                 let apiConfigId = null;
@@ -1429,7 +1429,7 @@ module.exports = function (RED) {
                                     y: 100,
                                     z: workspaceId
                                 });
-                                console.log('Auto-created AI assistant node (set as valid but disabled by default):', newNodeId);
+                                // console.log('Auto-created AI assistant node (set as valid but disabled by default):', newNodeId);
                                 
                                 // Update flows
                                 const updateOptions = {
