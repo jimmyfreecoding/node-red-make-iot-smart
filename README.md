@@ -423,6 +423,7 @@ AI development is more like art than technology. Mastering LLMs is not a simple 
 **Zheng He**
 - Email: jhe.zheng@gmail.com
 - GitHub: [@jimmyfreecoding](https://github.com/jimmyfreecoding)
+- Website: [https://www.makeiotsmart.com](https://www.makeiotsmart.com)
 
 ---
 

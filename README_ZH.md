@@ -287,7 +287,7 @@ AI开发更像艺术而非技术，驾驭LLM不是一项简单的任务，需要
 **Zheng He**
 - Email: jhe.zheng@gmail.com
 - GitHub: [@jimmyfreecoding](https://github.com/jimmyfreecoding)
-
+- Website: [https://www.makeiotsmart.com](https://www.makeiotsmart.com)
 ---
 
 *让AI驱动的辅助让您的IoT开发更智能！*
