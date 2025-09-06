@@ -1,0 +1,59 @@
+# Development files
+.env
+.env.*
+!.env.example
+
+# Test files
+test/
+*.test.js
+*.spec.js
+
+# Documentation (keep only essential)
+docs/
+*.md
+!README.md
+!README_ZH.md
+
+# Development tools
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# GitHub workflows (optional, you might want to keep them)
+.github/
+
+# Backup files
+*.backup
+*.bak
+
+# Temporary files
+tmp/
+temp/
+
+# AI sidebar config (development only)
+ai-sidebar-config.json
+
+# Memory database cleaner (development tool)
+clear-memory-db.js
+
+# Data directory (runtime data)
+data/
+
+# MCP directory (if not needed for runtime)
+mcp/

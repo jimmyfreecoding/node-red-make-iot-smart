@@ -27,6 +27,12 @@
     "engines": {
         "node": ">=18.0.0"
     },
+    "scripts": {
+        "test": "echo \"No tests specified\" && exit 0",
+        "prepublishOnly": "npm run test",
+        "version": "git add -A src",
+        "postversion": "git push && git push --tags"
+    },
     "dependencies": {
         "@langchain/anthropic": "^0.3.0",
         "@langchain/community": "^0.3.0",
