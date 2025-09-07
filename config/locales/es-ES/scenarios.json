@@ -188,7 +188,7 @@
           "detalles del nodo"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Por favor usa la herramienta get-node-info para obtener información detallada del nodo, luego analiza y explica la funcionalidad, configuración y propósito del nodo.\n\nSolicitud original del usuario:"
+        "newHumanPrompt": "get-node-info"
       },
       {
         "key": [
@@ -199,7 +199,7 @@
           "análisis del flujo"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Por favor usa la herramienta get-flow para obtener información detallada del flujo actual, luego analiza y explica la estructura del flujo, funcionalidad y el propósito de cada nodo.\n\nSolicitud original del usuario:"
+        "newHumanPrompt": "get-flow"
       }
     ],
     "prompt": [
@@ -291,7 +291,7 @@
           "configuraciones actuales"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "Por favor usa la herramienta get-settings para obtener información de configuración actual de Node-RED, luego analiza y explica detalladamente en lenguaje natural las diversas configuraciones, funciones y propósitos del archivo de configuración, finalmente usa una tabla para mostrar todo el contenido de elementos de configuración.\n\nSolicitud original del usuario:"
+        "newHumanPrompt": "get-settings"
       },
       {
         "key": [
@@ -301,7 +301,7 @@
           "verificación de salud"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "Por favor usa la herramienta get-diagnostics para obtener información de diagnóstico del sistema actual de Node-RED, luego analiza y explica detalladamente en lenguaje natural el estado del sistema, métricas de rendimiento y problemas potenciales, por favor no devuelvas directamente formato JSON, sino explica en español comprensible. Al final de la respuesta usa una tabla para mostrar los datos específicos del diagnóstico actual.\n\nSolicitud original del usuario:"
+        "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [

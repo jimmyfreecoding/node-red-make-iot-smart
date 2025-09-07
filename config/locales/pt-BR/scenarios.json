@@ -188,7 +188,7 @@
           "detalhes do nó"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Por favor use a ferramenta get-node-info para obter informações detalhadas do nó, depois analise e explique a função, configuração e papel do nó.\n\nSolicitação original do usuário:"
+        "newHumanPrompt": "get-node-info"
       },
       {
         "key": [
@@ -199,7 +199,7 @@
           "análise do fluxo"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Por favor use a ferramenta get-flow para obter informações detalhadas do fluxo atual, depois analise e explique a estrutura, função e papel de cada nó do fluxo.\n\nSolicitação original do usuário:"
+        "newHumanPrompt": "get-flow"
       }
     ],
     "prompt": [
@@ -291,7 +291,7 @@
           "configurações atuais"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "Por favor use a ferramenta get-settings para obter informações de configuração do Node-RED atual, depois analise e explique detalhadamente em linguagem natural as várias configurações, funções e papéis do arquivo de configuração, finalmente use uma tabela para exibir todo o conteúdo dos itens de configuração.\n\nSolicitação original do usuário:"
+        "newHumanPrompt": "get-settings"
       },
       {
         "key": [
@@ -301,7 +301,7 @@
           "verificação de saúde"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "Por favor use a ferramenta get-diagnostics para obter informações de diagnóstico do sistema Node-RED atual, depois analise e explique detalhadamente em linguagem natural o estado do sistema, indicadores de performance e problemas potenciais, por favor não retorne diretamente formato JSON, mas use português compreensível para explicação. No final da resposta use uma tabela para exibir os dados específicos do diagnóstico atual.\n\nSolicitação original do usuário:"
+        "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [

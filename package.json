@@ -8,6 +8,11 @@
     "license": "MIT",
     "keywords": [
         "node-red",
+        "mcp",
+        "modelcontextprotocol",
+        "llm",
+        "agent",
+        "langchain",
         "ai",
         "assistant",
         "iot",

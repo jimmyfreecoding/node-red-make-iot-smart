@@ -974,35 +974,38 @@ SOFTWARE.
                 ScenarioManager.switchScenario(keywordDetected.scenario);
             }
             
-            // Use new prompt from config file
+            // Get tool name from newHumanPrompt
+            const toolName = keywordDetected.newHumanPrompt;
             const originalMessage = sendMessage;
-            sendMessage = keywordDetected.newHumanPrompt + sendMessage;
             
-            // Handle flow-related keywords
-            if (keywordDetected.scenario === 'development') {
-                const lowerMessage = sendMessage.toLowerCase();
-                const flowKeywords = await getDevelopmentFlowKeywords();
-                const nodeKeywords = await getDevelopmentNodeKeywords();
-                
-                const matchedFlowKeyword = flowKeywords.some(keyword => lowerMessage.includes(keyword.toLowerCase()));
-                const matchedNodeKeyword = nodeKeywords.some(keyword => lowerMessage.includes(keyword.toLowerCase()));
-                
-                // Handle flow keywords
-                if (matchedFlowKeyword && selectedFlow && selectedFlow.id) {
+            // Build @tools format message based on tool requirements
+            if (toolName === 'get-flow') {
+                if (selectedFlow && selectedFlow.id) {
+                    sendMessage = `@tools:get-flow|['${selectedFlow.id}']`;
                     dynamicData.flowId = selectedFlow.id;
                     console.log(_('sidebar.toolCalls.flowDetectionLog'), selectedFlow.id);
+                } else {
+                    sendMessage = `@tools:get-flow`;
                 }
-                
-                // Handle node keywords
-                if (matchedNodeKeyword && selectedNodes && selectedNodes.length > 0) {
+            } else if (toolName === 'get-node-info') {
+                if (selectedNodes && selectedNodes.length > 0) {
+                    const nodeIds = selectedNodes.map(node => `'${node.id}'`).join(',');
+                    sendMessage = `@tools:get-node-info|[${nodeIds}]`;
                     dynamicData.selectedNodes = selectedNodes;
-                } else if (matchedNodeKeyword && (!selectedNodes || selectedNodes.length === 0)) {
-                    // Show error message when node keywords detected but no nodes selected
+                } else {
+                    // Show error message when node tool detected but no nodes selected
                     var errorMessage = "❌ " + _("sidebar.messages.noNodesSelected");
                     addMessageToChat("error", errorMessage);
                     setSendButtonLoading(false);
                     return;
                 }
+            } else if (toolName === 'get-settings') {
+                sendMessage = `@tools:get-settings`;
+            } else if (toolName === 'get-diagnostics') {
+                sendMessage = `@tools:get-diagnostics`;
+            } else {
+                // Fallback to original behavior for unknown tools
+                sendMessage = originalMessage;
             }
         }
 
@@ -1021,7 +1024,28 @@ SOFTWARE.
         
         // Send request after asynchronously getting chat history
         getChatHistory(function(history) {
-
+            // Reconstruct sendMessage to ensure proper @tools format
+            if (sendMessage.startsWith('@tools:')) {
+                // Message already in @tools format, keep as is
+                console.log('Using @tools format message:', sendMessage);
+            } else {
+                // Regular message, keep as is
+                console.log('Using regular message:', sendMessage);
+            }
+            
+                console.log('Request sent',JSON.stringify({
+                    message: sendMessage,
+                    scenario: currentScenario,  // Add scenario information
+                    sessionId: getCurrentSessionId(),  // Add session ID
+                    nodeId: nodeId,
+                    selectedFlow: selectedFlow,
+                    selectedNodes: selectedNodes,
+                    flowData: flowData,
+                    history: history,  // Use asynchronously obtained history
+                    silent: silent,  // Add silent flag
+                    dynamicData: dynamicData,  // Add dynamic data
+                    language: getCurrentLanguage()  // Add current page language
+                }));
             fetch('/ai-sidebar/stream-chat', {
                 signal: window.currentAbortController.signal,
                 method: 'POST',
@@ -1041,6 +1065,7 @@ SOFTWARE.
                     dynamicData: dynamicData,  // Add dynamic data
                     language: getCurrentLanguage()  // Add current page language
                 })
+                
             })
         .then(response => {
             if (!response.ok) {

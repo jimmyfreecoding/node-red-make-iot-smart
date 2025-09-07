@@ -188,7 +188,7 @@
           "ノード詳細"
         ],
         "scenario": "development",
-        "newHumanPrompt": "get-node-infoツールを使用してノードの詳細情報を取得し、ノードの機能、設定、役割を分析・説明してください。\n\nユーザーの元のリクエスト："
+        "newHumanPrompt": "get-node-info"
       },
       {
         "key": [
@@ -199,7 +199,7 @@
           "フロー分析"
         ],
         "scenario": "development",
-        "newHumanPrompt": "get-flowツールを使用して現在のフローの詳細情報を取得し、フローの構造、機能、各ノードの役割を分析・説明してください。\n\nユーザーの元のリクエスト："
+        "newHumanPrompt": "get-flow"
       }
     ],
     "prompt": [
@@ -291,7 +291,7 @@
           "現在の設定"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "get-settingsツールを使用して現在のNode-REDの設定情報を取得し、自然言語で設定ファイルの各項目、機能、役割を詳細に分析・説明し、最後にテーブルを使用してすべての設定項目内容を表示してください。\n\nユーザーの元のリクエスト："
+        "newHumanPrompt": "get-settings"
       },
       {
         "key": [
@@ -301,7 +301,7 @@
           "ヘルスチェック"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "get-diagnosticsツールを使用して現在のNode-REDのシステム診断情報を取得し、自然言語でシステム状態、パフォーマンス指標、潜在的問題を詳細に分析・説明してください。JSON形式を直接返すのではなく、分かりやすい日本語で説明してください。回答の最後にテーブルを使用して現在の診断の具体的データを表示してください。\n\nユーザーの元のリクエスト："
+        "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [

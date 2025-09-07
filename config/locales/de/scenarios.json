@@ -188,7 +188,7 @@
           "Knotendetails"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Bitte verwenden Sie das get-node-info Tool, um detaillierte Knoteninformationen zu erhalten, und analysieren und erklären Sie dann die Funktion, Konfiguration und Rolle des Knotens.\n\nUrsprüngliche Benutzeranfrage:"
+        "newHumanPrompt": "get-node-info"
       },
       {
         "key": [
@@ -199,7 +199,7 @@
           "Flow-Analyse"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Bitte verwenden Sie das get-flow Tool, um detaillierte Informationen über den aktuellen Flow zu erhalten, und analysieren und erklären Sie dann die Struktur, Funktion und Rolle jedes Knotens im Flow.\n\nUrsprüngliche Benutzeranfrage:"
+        "newHumanPrompt": "get-flow"
       }
     ],
     "prompt": [
@@ -291,7 +291,7 @@
           "aktuelle Einstellungen"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "Bitte verwenden Sie das get-settings Tool, um die aktuellen Node-RED-Konfigurationsinformationen zu erhalten, analysieren und erklären Sie dann in natürlicher Sprache detailliert die verschiedenen Einstellungen, Funktionen und Rollen der Konfigurationsdatei und zeigen Sie schließlich alle Konfigurationselemente in einer Tabelle an.\n\nUrsprüngliche Benutzeranfrage:"
+        "newHumanPrompt": "get-settings"
       },
       {
         "key": [
@@ -301,7 +301,7 @@
           "Gesundheitscheck"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "Bitte verwenden Sie das get-diagnostics Tool, um die aktuellen Node-RED-Systemdiagnoseinformationen zu erhalten, analysieren und erklären Sie dann in natürlicher Sprache detailliert den Systemstatus, Leistungsmetriken und potenzielle Probleme. Geben Sie nicht direkt das JSON-Format zurück, sondern verwenden Sie verständliches Deutsch zur Erklärung. Zeigen Sie am Ende der Antwort die spezifischen Diagnosedaten in einer Tabelle an.\n\nUrsprüngliche Benutzeranfrage:"
+        "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [

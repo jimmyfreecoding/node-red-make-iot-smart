@@ -188,7 +188,7 @@
           "détails du nœud"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Veuillez utiliser l'outil get-node-info pour obtenir des informations détaillées sur le nœud, puis analyser et expliquer les fonctions, la configuration et le rôle du nœud.\n\nDemande originale de l'utilisateur :"
+        "newHumanPrompt": "get-node-info"
       },
       {
         "key": [
@@ -199,7 +199,7 @@
           "analyse du flux"
         ],
         "scenario": "development",
-        "newHumanPrompt": "Veuillez utiliser l'outil get-flow pour obtenir des informations détaillées sur le flux actuel, puis analyser et expliquer la structure, les fonctions du flux et le rôle de chaque nœud.\n\nDemande originale de l'utilisateur :"
+        "newHumanPrompt": "get-flow"
       }
     ],
     "prompt": [
@@ -291,7 +291,7 @@
           "paramètres actuels"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "请使用get-settings工具获取当前Node-RED的配置信息，然后用自然语言详细分析和解释配置文件的各项设置、功能和作用，最后使用表格来显示所有配置项内容。\n\n用户原始请求："
+        "newHumanPrompt": "get-settings"
       },
       {
         "key": [
@@ -301,7 +301,7 @@
           "vérification de santé"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "Veuillez utiliser l'outil get-diagnostics pour obtenir les informations de diagnostic système actuelles de Node-RED, puis analyser et expliquer en détail l'état du système, les indicateurs de performance et les problèmes potentiels en langage naturel. Ne retournez pas directement le format JSON, mais expliquez en français compréhensible. Affichez les données de diagnostic spécifiques dans un tableau à la fin de la réponse.\n\nDemande originale de l'utilisateur :"
+        "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [

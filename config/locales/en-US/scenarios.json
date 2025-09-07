@@ -159,12 +159,12 @@
       {
         "key": ["current node", "selected node", "this node", "node info", "node details"],
         "scenario": "development",
-        "newHumanPrompt": "Please use get-node-info tool to get detailed node information, then analyze and explain the node's functionality, configuration and purpose.\n\nUser original request: "
+        "newHumanPrompt": "get-node-info"
       },
       {
         "key": ["current flow", "flow info", "flow details", "this flow", "flow analysis"],
         "scenario": "development",
-        "newHumanPrompt": "Please use get-flow tool to get detailed information about the current flow, then analyze and explain the flow structure, functionality and the role of each node.\n\nUser original request: "
+        "newHumanPrompt": "get-flow"
       }
     ],
     "prompt": [
@@ -220,12 +220,12 @@
       {
         "key": ["current config", "current settings","current setting","system config", "configuration info","Current Node-RED configuration"],
         "scenario": "configuration",
-        "newHumanPrompt": "Please use get_settings tool to get current Node-RED configuration information, then analyze and explain the various settings, functions and roles of the configuration file.\n\nUser original request: "
+        "newHumanPrompt": "get-settings"
       },
       {
         "key": ["current diagnostics", "system diagnostics", "diagnostic info", "health check","Current Node-RED diagnostics"],
         "scenario": "configuration",
-        "newHumanPrompt": "Please use get-diagnostics tool to get current Node-RED system diagnostic information, then use natural language to analyze and explain system status, performance metrics and potential issues in detail. Please do not return JSON format directly, but use understandable English for explanation. Display specific diagnostic data in a table at the end of the reply.\n\nUser original request: "
+        "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [

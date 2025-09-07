@@ -188,7 +188,7 @@
           "노드 세부사항"
         ],
         "scenario": "development",
-        "newHumanPrompt": "请使用get-node-info工具获取节点详细信息，然后分析和解释节点的功能、配置和作用。\n\n用户原始请求："
+        "newHumanPrompt": "get-node-info"
       },
       {
         "key": [
@@ -199,7 +199,7 @@
           "플로우 분석"
         ],
         "scenario": "development",
-        "newHumanPrompt": "请使用get-flow工具获取当前流程的详细信息，然后分析和解释流程的结构、功能和各个节点的作用。\n\n用户原始请求："
+        "newHumanPrompt": "get-flow"
       }
     ],
     "prompt": [
@@ -291,7 +291,7 @@
           "현재 설정"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "请使用get-settings工具获取当前Node-RED的配置信息，然后用自然语言详细分析和解释配置文件的各项设置、功能和作用，最后使用表格来显示所有配置项内容。\n\n用户原始请求："
+        "newHumanPrompt": "get-settings"
       },
       {
         "key": [
@@ -301,7 +301,7 @@
           "상태 확인"
         ],
         "scenario": "configuration",
-        "newHumanPrompt": "请使用get-diagnostics工具获取当前Node-RED的系统诊断信息，然后用自然语言详细分析和解释系统状态、性能指标和潜在问题，请不要直接返回JSON格式，而是用易懂的中文进行说明。在回复最后用表格显示当前诊断的具体数据。\n\n用户原始请求："
+        "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [
