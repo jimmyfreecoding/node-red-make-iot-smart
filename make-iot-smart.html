@@ -22,7 +22,7 @@ SOFTWARE.
 <script type="text/javascript">
 (function ($) {
     RED.nodes.registerType('make-iot-smart', {
-        category: 'config',
+        category: 'AI Assistant',
         defaults: {
             name: { value: "" },
             apiConfig: { value: "", type: "api-config", required: true },
@@ -49,7 +49,7 @@ SOFTWARE.
                     node.y = -1000;
                     RED.view.redraw();
                 }
-            }, 100);
+            }, 300);
         }
     });
 })(jQuery);

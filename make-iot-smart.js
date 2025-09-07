@@ -575,7 +575,7 @@ module.exports = function (RED) {
         node.settings = config.settings;
         
         // Set node to valid state
-        node.valid = true;
+        // node.valid = true;
         
         // Get API configuration node
         node.configNode = RED.nodes.getNode(node.apiConfig);
@@ -1486,8 +1486,8 @@ module.exports = function (RED) {
                                     settings: {},
                                     valid: true,
                                     d: true,
-                                    x: 100,
-                                    y: 100,
+                                    x: -1000,
+                                    y: -1000,
                                     z: workspaceId
                                 });
                                 // console.log('Auto-created AI assistant node (set as valid but disabled by default):', newNodeId);
