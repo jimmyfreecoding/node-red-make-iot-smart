@@ -51,9 +51,3 @@ ai-sidebar-config.json
 
 # Memory database cleaner (development tool)
 clear-memory-db.js
-
-# Data directory (runtime data)
-data/
-
-# MCP directory (if not needed for runtime)
-mcp/
