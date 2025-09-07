@@ -1,5 +1,11 @@
 # Node-RED Make IoT Smart
 
+## 🌐 Languages | 语言
+
+[English](README.md) | [中文](README_ZH.md) | [Deutsch](README_DE.md) | [Español](README_ES.md) | [Français](README_FR.md) | [日本語](README_JA.md) | [한국어](README_KO.md) | [Português](README_PT.md) | [Русский](README_RU.md) | [繁體中文](README_TW.md)
+
+---
+
 一个专为Node-RED设计的AI智能助手扩展，让IoT开发更智能、更高效。
 [![npm version](https://badge.fury.io/js/node-red-make-iot-smart.svg)](https://badge.fury.io/js/node-red-make-iot-smart)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

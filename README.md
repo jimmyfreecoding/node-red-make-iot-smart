@@ -1,6 +1,10 @@
 # Node-RED Make IoT Smart
 
+## 🌐 Languages | 语言
 
+[English](README.md) | [中文](README_ZH.md) | [Deutsch](README_DE.md) | [Español](README_ES.md) | [Français](README_FR.md) | [日本語](README_JA.md) | [한국어](README_KO.md) | [Português](README_PT.md) | [Русский](README_RU.md) | [繁體中文](README_TW.md)
+
+---
 
 A powerful AI assistant for Node-RED that makes IoT development smarter and more efficient. Built on **LangChain.js** framework with modular architecture design, supporting multiple LLM providers, intelligent memory management, and comprehensive tool integration.
 [![npm version](https://badge.fury.io/js/node-red-make-iot-smart.svg)](https://badge.fury.io/js/node-red-make-iot-smart)
