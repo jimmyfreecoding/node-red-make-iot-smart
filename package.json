@@ -34,6 +34,7 @@
     },
     "scripts": {
         "test": "echo \"No tests specified\" && exit 0",
+        "build": "node build-script.js",
         "prepublishOnly": "npm run test",
         "version": "git add -A",
         "postversion": "git push && git push --tags"

@@ -51,3 +51,5 @@ ai-sidebar-config.json
 
 # Memory database cleaner (development tool)
 clear-memory-db.js
+
+dist/
