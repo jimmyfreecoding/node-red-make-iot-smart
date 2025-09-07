@@ -536,12 +536,14 @@ module.exports = function (RED) {
                     node.mcpClient.disconnect();
                 }
                 
-                // Close memory manager
+                // Force close memory manager to release database locks
                 if (node.memoryManager) {
-                    node.memoryManager.close();
+                    if (typeof node.memoryManager.forceClose === 'function') {
+                        node.memoryManager.forceClose();
+                    } else {
+                        node.memoryManager.close();
+                    }
                 }
-                
-
                 
                 // Clean up LangChain manager
                 if (node.langchainManager) {
@@ -1562,4 +1564,45 @@ module.exports = function (RED) {
     RED.events.on('flows:started', function() {
         setTimeout(ensureAIHelperNode, 2000);
     });
+
+    // Return cleanup function for proper module uninstallation
+    return {
+        // This function is called when the module is being uninstalled
+        remove: function() {
+            // Force close database connections to release file locks
+            if (global.apiConfigNode && global.apiConfigNode.memoryManager) {
+                try {
+                    if (typeof global.apiConfigNode.memoryManager.forceClose === 'function') {
+                        global.apiConfigNode.memoryManager.forceClose();
+                    } else {
+                        global.apiConfigNode.memoryManager.close();
+                    }
+                } catch (error) {
+                    // Ignore database close errors during uninstall
+                }
+            }
+            
+            // Clean up event listeners
+            RED.events.removeAllListeners('flows:stopped');
+            RED.events.removeAllListeners('flows:started');
+            
+            // Clean up HTTP routes
+            try {
+                // Remove AI sidebar routes
+                RED.httpAdmin._router.stack = RED.httpAdmin._router.stack.filter(function(layer) {
+                    return !layer.route || !layer.route.path.startsWith('/ai-sidebar');
+                });
+            } catch (error) {
+                // Ignore cleanup errors
+            }
+            
+            // Clean up global variables
+            if (global.apiConfigNode) {
+                delete global.apiConfigNode;
+            }
+            if (global.RED) {
+                delete global.RED;
+            }
+        }
+    };
 }
