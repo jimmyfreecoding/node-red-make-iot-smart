@@ -1,6 +1,6 @@
 {
     "name": "@jhe.zheng/node-red-make-iot-smart",
-    "version": "0.0.9",
+    "version": "0.1.0",
     "description": "A AI tools for Node-RED",
     "author": {
         "name": "Zheng He"
