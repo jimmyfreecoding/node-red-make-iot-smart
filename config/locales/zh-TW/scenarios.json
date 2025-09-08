@@ -255,29 +255,7 @@
       "get-flow"
     ]
   },
-  "flowCreation": {
-    "intentKeywords": {
-      "createVerbs": ["創建", "生成", "製作", "設計", "開發", "構建", "建立", "編寫", "做"],
-      "flowNouns": ["流程", "工作流", "流", "自動化", "控制流程"],
-      "intentPatterns": [
-        "我想{verb}{noun}",
-        "我要{verb}{noun}",
-        "幫我{verb}一個{noun}",
-        "如何{verb}{noun}",
-        "怎麼{verb}{noun}",
-        "能否{verb}{noun}",
-        "請{verb}{noun}",
-        "{verb}一個{noun}",
-        "需要{verb}{noun}"
-      ],
-      "contextKeywords": {
-        "devices": ["感測器", "開關", "插座", "燈泡", "攝影機", "警報器", "溫度", "濕度", "光照", "運動", "門磁"],
-        "scenarios": ["智慧家居", "環境監控", "安防系統", "自動化控制", "資料採集", "遠端監控", "警報通知", "定時控制", "聯動控制"],
-        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
-        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
-      }
-    }
-  },
+
   "configuration": {
     "name": "配置模式",
     "description": "系统配置专家，处理Node-RED环境和节点配置",
@@ -305,8 +283,8 @@
       }
     ],
     "prompt": [
-      "NodeRed当前配置情况如何",
-      "NodeRed当前诊断情况如何",
+      "當前配置",
+      "健康檢查",
       "如何配置Node-RED的安全设置，包括用户认证和HTTPS？",
       "请帮我优化Node-RED的性能配置，提高系统运行效率",
       "如何在Node-RED中安装和管理第三方节点包？",
@@ -430,7 +408,9 @@
       "selectedNodes",
       "lang"
     ]
-  },
+  }
+
+},
   "flowCreation": {
     "intentKeywords": {
       "createVerbs": ["創建", "建立", "製作", "生成", "新增", "添加", "構建", "設計", "開發", "實現"],
@@ -445,5 +425,4 @@
       "contextKeywords": ["Node-RED", "節點", "連接", "配置", "部署", "調試", "物聯網", "IoT", "傳感器", "執行器", "MQTT", "HTTP", "數據庫", "API"]
     }
   }
-}
 }

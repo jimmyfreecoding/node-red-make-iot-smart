@@ -255,29 +255,7 @@
       "get-flow"
     ]
   },
-  "flowCreation": {
-    "intentKeywords": {
-      "createVerbs": ["作成", "生成", "制作", "設計", "開発", "構築", "建設", "書く", "作る"],
-      "flowNouns": ["フロー", "ワークフロー", "流れ", "自動化", "制御フロー"],
-      "intentPatterns": [
-        "{verb}{noun}したい",
-        "{verb}{noun}が必要",
-        "{noun}を{verb}手伝って",
-        "{noun}を{verb}方法",
-        "{noun}を{verb}やり方",
-        "{noun}を{verb}できますか",
-        "{noun}を{verb}してください",
-        "{noun}を{verb}",
-        "{noun}を{verb}する必要がある"
-      ],
-      "contextKeywords": {
-        "devices": ["センサー", "スイッチ", "コンセント", "電球", "カメラ", "アラーム", "温度", "湿度", "照明", "動き", "ドア"],
-        "scenarios": ["スマートホーム", "環境監視", "セキュリティシステム", "自動化制御", "データ収集", "リモート監視", "アラーム通知", "タイマー制御", "連動制御"],
-        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
-        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
-      }
-    }
-  },
+
   "configuration": {
     "name": "設定モード",
     "description": "システム設定専門家、Node-RED環境とノード設定を処理",
@@ -305,8 +283,8 @@
       }
     ],
     "prompt": [
-      "NodeRedの現在の設定状況はどうですか",
-      "NodeRedの現在の診断状況はどうですか",
+      "現在の診断",
+      "システム診断",
       "ユーザー認証とHTTPSを含むNode-REDのセキュリティ設定を構成するにはどうすればよいですか？",
       "Node-REDのパフォーマンス設定を最適化し、システム実行効率を向上させてください",
       "Node-REDでサードパーティノードパッケージをインストール・管理するにはどうすればよいですか？",

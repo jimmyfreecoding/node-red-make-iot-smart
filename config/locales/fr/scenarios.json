@@ -255,29 +255,7 @@
       "get-flow"
     ]
   },
-  "flowCreation": {
-    "intentKeywords": {
-      "createVerbs": ["créer", "générer", "fabriquer", "concevoir", "développer", "construire", "établir", "écrire", "faire"],
-      "flowNouns": ["flux", "workflow", "processus", "automatisation", "flux de contrôle"],
-      "intentPatterns": [
-        "je veux {verb} {noun}",
-        "j'ai besoin de {verb} {noun}",
-        "aidez-moi à {verb} un {noun}",
-        "comment {verb} {noun}",
-        "comment faire pour {verb} {noun}",
-        "pouvez-vous {verb} {noun}",
-        "veuillez {verb} {noun}",
-        "{verb} un {noun}",
-        "besoin de {verb} {noun}"
-      ],
-      "contextKeywords": {
-        "devices": ["capteur", "interrupteur", "prise", "ampoule", "caméra", "alarme", "température", "humidité", "éclairage", "mouvement", "porte"],
-        "scenarios": ["maison intelligente", "surveillance environnementale", "système de sécurité", "contrôle automatisé", "collecte de données", "surveillance à distance", "notification d'alarme", "contrôle temporisé", "contrôle de liaison"],
-        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
-        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
-      }
-    }
-  },
+
   "configuration": {
     "name": "Mode de Configuration",
     "description": "系统配置专家，处理Node-RED环境和节点配置",
@@ -305,8 +283,8 @@
       }
     ],
     "prompt": [
-      "Quelle est la situation de configuration actuelle de NodeRed",
-      "Quelle est la situation de diagnostic actuelle de NodeRed",
+      "diagnostic actuel",
+      "diagnostic système",
       "Comment configurer les paramètres de sécurité de Node-RED, y compris l'authentification utilisateur et HTTPS ?",
       "Veuillez m'aider à optimiser la configuration de performance de Node-RED pour améliorer l'efficacité du système",
       "Comment installer et gérer les packages de nœuds tiers dans Node-RED ?",

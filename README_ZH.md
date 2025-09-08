@@ -82,6 +82,10 @@ npm install @jhe.zheng/node-red-make-iot-smart
 
 ### 输入”创建一个示例流程“
 <img src="https://github.com/jimmyfreecoding/node-red-make-iot-smart/raw/main/public/create-flow.gif" width="800" height="450" alt="演示动画" />
+
+### 输入”健康检查“
+<img src="https://github.com/jimmyfreecoding/node-red-make-iot-smart/raw/main/public/health-check.gif" width="800" height="450" alt="演示动画" />
+
 ## 配置
 
 ### LangSmith调试配置（可选）

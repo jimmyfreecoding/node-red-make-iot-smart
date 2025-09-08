@@ -218,19 +218,19 @@
     "description": "System configuration expert, handling Node-RED environment and node configuration",
     "keywords": [
       {
-        "key": ["current config", "current settings","current setting","system config", "configuration info","Current Node-RED configuration"],
+        "key": ["current configure", "current settings","current setting","system configure", "configuration info"],
         "scenario": "configuration",
         "newHumanPrompt": "get-settings"
       },
       {
-        "key": ["current diagnostics", "system diagnostics", "diagnostic info", "health check","Current Node-RED diagnostics"],
+        "key": ["current diagnostics", "system diagnostics", "diagnostic info", "health check"],
         "scenario": "configuration",
         "newHumanPrompt": "get-diagnostics"
       }
     ],
     "prompt": [
-      "Current Node-RED configuration",
-      "Current Node-RED diagnostics",
+      "current configure",
+      "current diagnostics",
       "How to configure Node-RED security settings, including user authentication and HTTPS?",
       "Please help me optimize Node-RED performance configuration to improve system efficiency",
       "How to install and manage third-party node packages in Node-RED?",
@@ -321,29 +321,7 @@
     ],
     "tools": ["get-flows", "create-flow", "update-flow", "create-subflow"]
   },
-  "flowCreation": {
-    "intentKeywords": {
-      "createVerbs": ["create", "generate", "build", "make", "design", "develop", "construct", "write", "do"],
-      "flowNouns": ["flow", "workflow", "automation", "control flow", "process"],
-      "intentPatterns": [
-        "i want to {verb} {noun}",
-        "i need to {verb} {noun}",
-        "help me {verb} a {noun}",
-        "how to {verb} {noun}",
-        "can you {verb} {noun}",
-        "please {verb} {noun}",
-        "{verb} a {noun}",
-        "need to {verb} {noun}"
-      ],
-      "contextKeywords": {
-        "devices": ["sensor", "switch", "plug", "bulb", "camera", "alarm", "temperature", "humidity", "light", "motion", "door"],
-        "scenarios": ["smart home", "environmental monitoring", "security system", "automation control", "data collection", "remote monitoring", "alarm notification", "timer control", "linkage control"],
-        "protocols": ["mqtt", "http", "websocket", "modbus", "zigbee", "wifi"],
-        "platforms": ["homeassistant", "openhab", "influxdb", "grafana"]
-      }
-    }
-  },
-  "general": {
+   "general": {
     "name": "General",
     "description": "General AI assistant, handling various Node-RED related issues",
     "prompt": [
