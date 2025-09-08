@@ -7,7 +7,7 @@
 ---
 
 一个专为Node-RED设计的AI智能助手扩展，让IoT开发更智能、更高效。
-[![npm version](https://badge.fury.io/js/node-red-make-iot-smart.svg)](https://badge.fury.io/js/node-red-make-iot-smart)
+[![npm version](https://badge.fury.io/js/@jhe.zheng%2Fnode-red-make-iot-smart.svg)](https://badge.fury.io/js/@jhe.zheng%2Fnode-red-make-iot-smart)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node-RED](https://img.shields.io/badge/Node--RED-2.0%2B-red)](https://nodered.org/)
 ## 概述
@@ -56,28 +56,32 @@ Node-RED Make IoT Smart 是一个专为Node-RED开发设计的综合性AI智能�
 ### 从npm安装
 
 ```bash
-npm install @jimmyfreecoding/node-red-make-iot-smart
+npm install @jhe.zheng/node-red-make-iot-smart
 ```
 
 ### 从Node-RED调色板管理器安装
 
 1. 打开Node-RED编辑器。
 2. 转到**菜单 → 管理调色板**。
-3. 搜索 `@jimmyfreecoding/node-red-make-iot-smart`。
+3. 搜索 `@jhe.zheng/node-red-make-iot-smart`。
 4. 点击**安装**。
-
-## 配置
-
-### 基本配置
-
-1. 安装后，您将在Node-RED侧边栏中看到一个新的**MIS**选项卡。
-2. 点击配置按钮设置您的AI提供商。
-3. 从支持的提供商中选择：
+5. 安装完成后，重启Node-RED。
+6. 安装完成后，您将在Node-RED侧边栏中看到一个新的**AI 助手**选项卡。
+7. 点击**配置**按钮，设置您的AI提供商。
+8. 从支持的提供商中选择：
    - **DeepSeek**：具有强大编码能力的经济高效选择。
    - **OpenAI**：行业领先的GPT模型。
    - **Anthropic**：具有Claude模型的高级推理能力。
-4. 输入您的API密钥并选择适当的模型。
-5. 开始与您的AI助手交互！
+9. 输入您的API密钥并选择适当的模型。
+10. 配置完成后，您可以开始使用AI助手。注意在保存好配置后，NodeRED会自动生成一个配置节点，此时NodeRED会提示有流程变更，直接点击合并即可
+11. 开始与您的AI助手交互！
+## 快速使用
+### 输入”分析当前节点“
+<video width="1920" height="1080" controls>
+    <source src="https://github.com/jimmyfreecoding/node-red-make-iot-smart/raw/main/public/currentnode.mp4" type="video/mp4">
+    您的浏览器不支持视频标签。
+</video>
+## 配置
 
 ### LangSmith调试配置（可选）
 
@@ -105,7 +109,7 @@ npm install @jimmyfreecoding/node-red-make-iot-smart
 
 ### 基本聊天界面
 
-- 打开**MIS**侧边栏选项卡。
+- 打开**AI 助手**侧边栏选项卡。
 - 用自然语言输入您的问题或指令。
 - 获得智能回复，包含代码建议和解释。
 
