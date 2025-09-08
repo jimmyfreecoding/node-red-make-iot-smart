@@ -78,6 +78,10 @@ npm install @jhe.zheng/node-red-make-iot-smart
 ## 快速使用
 ### 输入”分析当前节点“
 <img src="https://github.com/jimmyfreecoding/node-red-make-iot-smart/raw/main/public/current-node.gif" width="800" height="450" alt="演示动画" />
+
+
+### 输入”创建一个示例流程“
+<img src="https://github.com/jimmyfreecoding/node-red-make-iot-smart/raw/main/public/create-flow.gif" width="800" height="450" alt="演示动画" />
 ## 配置
 
 ### LangSmith调试配置（可选）
