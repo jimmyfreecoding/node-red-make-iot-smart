@@ -77,7 +77,7 @@ npm install @jhe.zheng/node-red-make-iot-smart
 11. 开始与您的AI助手交互！
 ## 快速使用
 ### 输入”分析当前节点“
-<img src="https://github.com/jimmyfreecoding/node-red-make-iot-smart/raw/main/public/currentnode.gif" width="800" height="450" alt="演示动画" />
+<img src="https://github.com/jimmyfreecoding/node-red-make-iot-smart/raw/main/public/current-node.gif" width="800" height="450" alt="演示动画" />
 ## 配置
 
 ### LangSmith调试配置（可选）
